@@ -1,0 +1,47 @@
+# Contributing to Skeptic
+
+PRs reviewed within 72 hours.
+
+## Before You Start
+
+Read `SPEC.md` for architecture decisions and `references/core-principles.md` for the design contract. Changes that violate either will be rejected.
+
+## What We Accept
+
+- Bug fixes in stage-core or route files
+- New route-specific instruction files (with justification for the question type)
+- Improvements to constraint validation logic
+- Documentation fixes
+- Test cases or worked examples
+
+## What We Don't Accept
+
+- Changes that weaken sequential stage enforcement
+- Removing or softening gate conditions
+- Adding "skip stage" or "fast path" shortcuts to the core workflow
+- Generic prompt improvements that don't reference specific failure modes
+
+## Writing Standards
+
+- **README**: product language, payoff before theory
+- **SPEC.md**: engineering language, precise and contractual
+- **references/**: formal methodology language, executable by Claude Code
+- **Route files**: four sections only (What This Stage Protects, What This Stage Prohibits, What This Stage Defers, What Triggers Backtracking)
+
+## Pull Request Process
+
+1. Fork the repository
+2. Create a branch from `main`
+3. Make your changes
+4. Verify every referenced file exists and is internally consistent
+5. Test the skill in Claude Code with a real dataset
+6. Open a PR with a description of what changed and why
+
+## Consistency Checks
+
+Before submitting, verify:
+- All 30 route files exist (`references/routes/{descriptive,exploratory,inferential,predictive,causal,mechanistic}/{protocol,clean,examine,analyze,evaluate}.md`)
+- All 7 stage-core files exist in `references/`
+- No absolute paths or personal details in any file
+- `SKILL.md` subcommand table matches actual stage files
+- `VERSION` is bumped and `CHANGELOG.md` is updated

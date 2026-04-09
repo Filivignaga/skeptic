@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -e
+
+COMMANDS_SRC="$(cd "$(dirname "$0")" && pwd)/commands"
+COMMANDS_DST="${HOME}/.claude/commands/skeptic"
+
+mkdir -p "$COMMANDS_DST"
+cp "$COMMANDS_SRC"/*.md "$COMMANDS_DST/"
+
+echo "Skeptic commands installed to $COMMANDS_DST"
