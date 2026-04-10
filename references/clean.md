@@ -107,6 +107,7 @@ Verify all of the following:
 - `skeptic_documentation/metrics.md` exists
 - `README.md` exists
 - at least one raw data file exists in `data/`
+- raw file SHA-256 hashes from `01_formulation.md` `## Raw File Hashes` section match current hashes of the corresponding files on disk. Recompute the hash of each raw file and compare. Any mismatch is a blocking defect indicating the raw data was modified after formulation.
 
 Verify `01_formulation.md` contains:
 
@@ -311,6 +312,7 @@ Every evaluation gate has a stable ID used in cycle metrics. The evaluation suba
 | `C-policies-defined` | C | C01, C02 | Material cleaning policies are explicitly chosen and logged |
 | `C-transforms-auditable` | C | C03 | Every material transformation is expressed in code and traceable to a rationale |
 | `C-population-shift-stated` | C | C04 | Material row, value, or coverage changes include an explicit population-shift statement |
+| `C-row-count-reconciled` | C | C04 | A row-count reconciliation table exists showing: raw_rows - exclusion_1 - exclusion_2 - ... = cleaned_rows. The arithmetic sum must match the actual cleaned artifact row count. Any discrepancy > 0 is a blocking defect. |
 | `C-claim-impact-stated` | C | C05 | Claim consequences of cleaning decisions are stated explicitly |
 | `C-fitness-checkpoint-run` | C | C06 | Dataset fitness checkpoint is completed after material cleaning resolution |
 | `C-suspicious-cleanliness-reviewed` | C | C07 | Suspiciously neat outputs are challenged when trigger conditions appear |
@@ -449,13 +451,16 @@ Agent(
 
   EVALUATION: Cycle {X} - {focus}
 
-  DEFECT SCAN:
-  List every defect, gap, or weakness in this cycle's work. Minimum: 1 defect,
-  or "No defects found" with a 2-sentence justification of why the work has
-  no weaknesses (this justification is itself auditable).
+  DEFECT SCAN (adversarial mode):
+  Assume the work contains errors. Your job is to actively falsify each gate
+  and checklist answer rather than confirm them. For each gate you mark PASS,
+  you must state the specific failure mode you tested and ruled out.
   Categories to scan: unstated assumptions, outcome-dependent decisions,
   protocol violations, claim-widening moves, cleaning choices that change
   the analyzable population without documentation, leakage risks.
+  If after genuinely adversarial scrutiny you find zero defects, state
+  "No defects found" and name at least 3 specific failure modes you tested
+  and ruled out. Do not fabricate defects to meet a quota.
   - Defect 1: [description with evidence]
   - Defect 2: [description with evidence]
 

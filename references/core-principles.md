@@ -329,6 +329,18 @@ After each completed stage, update `README.md` with:
 - Do not create one-shot cell-injection scripts in the notebooks directory. Use `NotebookEdit` to add cells. If programmatic notebook construction is unavoidable (e.g., kernel not available), delete the build scripts during stage finalization.
 - Use only ASCII characters in notebook cell content. Use `--` instead of em dashes, straight quotes instead of curly quotes, and plain hyphens instead of en dashes. Non-ASCII punctuation causes mojibake on Windows (e.g., `—` renders as `â€"`).
 
+## Source Data Encoding
+
+Before loading any source data file for the first time (typically in Formulate Cycle A), detect its encoding:
+
+- Try reading with UTF-8 strict mode first. If it succeeds without errors, the file is UTF-8.
+- If UTF-8 fails, check for a BOM (byte order mark) that indicates UTF-16 or UTF-8-BOM.
+- If no BOM and UTF-8 fails, attempt Latin-1/Windows-1252 as a fallback. Log the detected encoding.
+- Record the detected encoding for each source file in the notebook and the stage documentation. All downstream reads of that file must use the detected encoding explicitly (e.g., `pd.read_csv(path, encoding='...')`). Do not rely on default encoding inference.
+- If the source contains non-ASCII text (accented characters, special symbols), verify that the loaded values display correctly in the notebook before proceeding.
+
+Encoding detection is mandatory for CSV, TSV, and other text-based data files. Binary formats (Parquet, HDF5, SQLite) handle encoding internally and do not need this check.
+
 ## Generated Artifact Encoding
 
 The Windows mojibake risk applies to generated project artifacts, not just notebook cells.
@@ -349,6 +361,8 @@ Bash(jupyter nbconvert --execute --inplace --to notebook --ExecutePreprocessor.t
 ```
 
 Then Claude reads the notebook to extract outputs and presents key results inline.
+
+After execution, scan all executed cell outputs for Python exception tracebacks (`Traceback (most recent call last)`, `Error`, `Exception`). Any unhandled exception in a cell output is a blocking defect that must be fixed before proceeding to subagent review, unless the cell is explicitly marked as an expected-failure demonstration (e.g., a cell that intentionally tests error handling). The `--ExecutePreprocessor.allow_errors=true` flag prevents execution from halting, but it does not mean errors are acceptable.
 
 - interactive mode: the user reviews outputs and provides feedback before subagents are dispatched
 - auto mode: follow the self-review loop in `references/auto-mode.md` and pause only on required escalation triggers or required human-input checkpoints

@@ -174,7 +174,7 @@ State schema validation and read-back verification:
 - Treat `auto_mode_state.json` as schema-validated state, not a freeform log blob.
 - Required types:
   - `mode`, `project_name`, `current_stage`, `last_decision`, `last_updated`: string
-  - `current_cycle`: single uppercase letter (`"A"` through `"G"`) or `null`. No other values.
+  - `current_cycle`: single uppercase letter (`"A"` through `"G"`), a follow-up cycle ID matching the pattern `{letter}{number}` (e.g., `"F1"`, `"D2"`), or `null`. No other values.
   - `route`: one of `"descriptive"`, `"exploratory"`, `"inferential"`, `"predictive"`, `"causal"`, `"mechanistic"`, or `null` (only before route resolution)
   - `cycle_iterations`: object keyed by stage name, each value an object keyed by cycle letter with integer counts. Stage names must be one of: `formulate`, `protocol`, `clean`, `examine`, `analyze`, `evaluate`, `communicate`.
   - `followup_counts`: object
@@ -221,9 +221,10 @@ Self-review is not a substitute for gate evaluation. It is only a fast sanity pa
 
 When the subagents return:
 
-1. synthesize the cycle assessment
-2. count `blocking_failures = blocking_defects + failed_gates`
-3. apply the stage decision matrix
+1. verify each subagent result is non-empty and contains the expected output structure. The evaluation subagent must include DEFECT SCAN, GATE ASSESSMENTS, and VERDICT sections. The research subagent must include organized findings. If a subagent returned empty, errored out, or produced output missing its required structure, escalate to the user. Do not synthesize from partial results without flagging the gap.
+2. synthesize the cycle assessment
+3. count `blocking_failures = blocking_defects + failed_gates`
+4. apply the stage decision matrix
 
 Decision rules:
 
@@ -324,7 +325,7 @@ Run every check below. If any check fails, record it as a blocking concern, reop
 
 **Check 3: Empty-section detection.** Read the current stage's documentation file (e.g., `05_analysis.md`). Every `##` section header that was created during Setup is a structural promise. If any such section contains no content between its header and the next `##` header (or end of file), that is a blocking defect. Sections that the stage file's finalization phase requires content in (e.g., `## PCS Assessment`, `## Summary`, `## Evaluation Handoff`, `## Communicate Handoff`, `## Deviation Register`, `## Support Registry`, `## Analysis Handoff`, `## Claim Survival Registry`) must have substantive content, not just a header or placeholder text.
 
-**Check 4: Notebook existence.** Verify the stage's notebook exists (e.g., `05_analysis.ipynb` for analyze, `06_evaluation.ipynb` for evaluate, `07_communication.ipynb` for communicate).
+**Check 4: Notebook existence and execution state.** Verify the stage's notebook exists (e.g., `05_analysis.ipynb` for analyze, `06_evaluation.ipynb` for evaluate, `07_communication.ipynb` for communicate). Additionally, read the notebook and verify that at least 80% of code cells have a non-null `execution_count`. If more than 20% of code cells are unexecuted, this is a blocking defect. Also scan executed cell outputs for Python exception tracebacks — any unhandled exception is a blocking defect unless the cell is explicitly marked as an expected-failure demonstration.
 
 **Check 5: Metrics scorecard.** Verify that `metrics.md` contains a scorecard section for the current stage. Each stage's finalization phase specifies the scorecard it must append. If the scorecard is missing, it is a blocking defect.
 
@@ -337,9 +338,15 @@ Run every check below. If any check fails, record it as a blocking concern, reop
 - Stale references to removed or nonexistent artifacts are blocking defects.
 - Personal workspace paths, usernames, or machine-specific absolute paths in tracked project docs are blocking defects unless they are the explicit project root for this run.
 
-**Check 9: Encoding scan.** Run the mojibake and encoding scan required by `core-principles.md` for all `.md`, `.json`, `.yaml`, `.yml`, and `.py` files produced or updated in the stage. For files in `deliverables/`, also verify zero non-ASCII typographic punctuation (em dashes, curly quotes, ellipsis characters, etc.) per the communicate `F-encoding-clean` gate.
+**Check 9: Encoding scan.** Run the mojibake and encoding scan required by `core-principles.md` for all `.md`, `.json`, `.yaml`, `.yml`, `.py`, and `.ipynb` files produced or updated in the stage. For `.ipynb` files, scan cell `source` fields for mojibake markers and unintended non-ASCII punctuation. For all files in `deliverables/` regardless of extension (including `.csv`, `.json`, `.xlsx`, etc.), also verify zero non-ASCII typographic punctuation (em dashes, curly quotes, ellipsis characters, etc.) per the communicate `F-encoding-clean` gate.
 
 **Check 10: State file sync.** Verify `auto_mode_state.json` reflects the stage just completed: `current_stage` matches, `stage_attempts` includes the stage, `cycle_iterations` has entries for the stage, and `route` is non-null if the route has been resolved.
+
+**Check 10b: State derivation and repair.** Rather than trusting the state file as-is, re-derive the expected state from authoritative documents:
+- Count actual cycles from log entries in the stage documentation file (e.g., `### Cycle A`, `### Cycle B` headers).
+- Read the route from `02_protocol.md` if protocol is complete.
+- Count stage attempts from `metrics.md` scorecards.
+- Compare the derived state against `auto_mode_state.json`. If any field diverges, overwrite the state file with the derived values and log the repair. The state file is a cache of the authoritative documents, not a source of truth. If the documents and the state file disagree, the documents win.
 
 The summary must include:
 
@@ -417,7 +424,21 @@ For each stage:
 9. present the stage summary
 10. require stage approval before continuing
 
-At the end of the full run:
+At the end of the full run, before declaring the pipeline complete, run the cross-stage consistency audit:
+
+**Cross-stage consistency audit (mandatory):**
+
+1. **Stage completeness.** Verify all 7 stages appear in `auto_mode_state.json` `stage_attempts` and `cycle_iterations`. Verify `metrics.md` contains a scorecard section for every completed stage (Formulation through Communicate). Missing scorecards are a blocking defect.
+2. **Route consistency.** Read the active route from every stage document (`02_protocol.md` through `07_communication.md`). Verify the route is identical across all stages, or that any route change was logged as a backtrack with user approval.
+3. **Claim boundary monotonicity.** Read the Claim Boundary Registry from `metrics.md` (or `claim_boundary_registry.yaml`). Verify it is parseable as YAML. Verify `narrowing_log` entries are chronologically ordered by stage. Verify no downstream stage widened `scope`, loosened `generalization_limit`, or removed entries from `verbs_forbidden` without a logged backtrack to `formulate` plus `protocol`.
+4. **File reference integrity.** For each stage document and each scorecard in `metrics.md`, verify that every file path referenced exists on disk. Stale references to removed or renamed files are blocking defects.
+5. **Protocol commitment reconciliation.** Read `02_protocol.md` `## Protocol Contract` and extract all items marked as required or committed. Cross-reference against `05_analysis.md` `## Deviation Register`. Every committed item must be either completed or logged as a deviation. Uncommitted items that were silently dropped are blocking defects.
+6. **Deliverable format verification.** For each file in `deliverables/`, verify the file is parseable in its declared format (CSV loads without error, Markdown has valid structure, JSON parses). A corrupt or unparseable deliverable is a blocking defect.
+7. **Scorecard internal consistency.** For each scorecard in `metrics.md`, verify: blocking failures resolved <= total blocking failures, no negative counts, cycle counts match the stage document log entries.
+
+If any audit check fails, reopen the relevant stage for repair before declaring the run complete.
+
+After the audit passes:
 
 - report the final deliverables produced
 - report any acknowledged gaps

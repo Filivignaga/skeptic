@@ -147,13 +147,16 @@ Agent(
 
   EVALUATION: Cycle {X} - {focus}
 
-  DEFECT SCAN:
-  List every defect, gap, or weakness in this cycle's work. Minimum: 1 defect,
-  or "No defects found" with a 2-sentence justification of why the work has
-  no weaknesses (this justification is itself auditable).
+  DEFECT SCAN (adversarial mode):
+  Assume the work contains errors. Your job is to actively falsify each gate
+  and checklist answer rather than confirm them. For each gate you mark PASS,
+  you must state the specific failure mode you tested and ruled out.
   Categories to scan: unstated assumptions, missing edge cases, unverifiable
   criteria, logical gaps between goal and method, vague or unoperationalized
   terms, protocol-relevant omissions.
+  If after genuinely adversarial scrutiny you find zero defects, state
+  "No defects found" and name at least 3 specific failure modes you tested
+  and ruled out. Do not fabricate defects to meet a quota.
   - Defect 1: [description with evidence]
   - Defect 2: [description with evidence]
 
@@ -251,6 +254,8 @@ Every cycle logs the same base fields.
 
 **Focus:** Create project structure, load data, and establish first-pass relevance.
 
+Before loading data, read `references/data-formats.md` and apply the format-specific ingest checklist for each source file's format. These checks supplement the Cycle A checklist below.
+
 **Setup actions unique to Cycle A:**
 1. Create the project folder structure:
    ```text
@@ -288,12 +293,14 @@ Every cycle logs the same base fields.
 
 | id | question | skip_when |
 |----|----------|-----------|
+| A00 | For each source data file, what is the detected character encoding? (Follow the Source Data Encoding rules in `core-principles.md`. Record detected encoding, verify loaded values display correctly, and ensure all downstream reads use the detected encoding explicitly.) | never |
 | A01 | What is the shape, column list, and dtype of each loaded source? | never |
 | A02 | What do sample rows look like? | never |
 | A03 | What are the basic statistics and missing-value counts per column? | never |
 | A04 | For low-cardinality categorical columns, what are the value distributions? | never |
 | A05 | If the question involves time, what is the date coverage and time grain? If grouping matters, what are group counts? If multiple tables, what is join-key overlap? | never |
 | A06 | Is the question framed as a real stakeholder or scientific problem, not a method request; have at least two plausible framings been considered; and is the approved framing useful, specific, not already sufficiently answered, and plausibly answerable with available evidence? | never |
+| A07 | For each raw data file, what is its SHA-256 hash? (Compute and log in the notebook and in `01_formulation.md` under a `## Raw File Hashes` section. These hashes serve as the immutability baseline for all downstream stages.) | never |
 
 **Research questions:**
 - What domain context matters for understanding this dataset?
@@ -602,7 +609,12 @@ After the PCS review clears, or the user overrides it:
 
 Append this scorecard to `skeptic_documentation/metrics.md` under `## Formulation`.
 
-**Claim Boundary Registry (mandatory - second item in finalization).** Append to `skeptic_documentation/metrics.md` under `## Claim Boundary Registry`. This is the structured, machine-checkable reference that all downstream evaluation subagents will use to verify claim-boundary compliance.
+**Claim Boundary Registry (mandatory - second item in finalization).** Write the registry to two locations:
+
+1. A standalone file at `skeptic_documentation/claim_boundary_registry.yaml`. This is the canonical, machine-parseable source. Parse it as YAML after writing to verify it is valid. If parsing fails, repair before proceeding.
+2. Append the same content to `skeptic_documentation/metrics.md` under `## Claim Boundary Registry` as a YAML code block for human readability.
+
+Both copies must be identical. The standalone YAML file is the canonical source. If the `metrics.md` copy becomes corrupted, regenerate it from the standalone file. All downstream evaluation subagents will use the registry to verify claim-boundary compliance.
 
 Generate the registry from the approved question, question type, and the question type constraints in `core-principles.md`. The `verbs_allowed` and `verbs_forbidden` lists are derived from the question type's interpretation boundary and admissible evidence pattern. The `scope` and `generalization_limit` come from Cycle D and Cycle E outputs.
 

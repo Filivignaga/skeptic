@@ -330,7 +330,7 @@ Every evaluation gate has a stable ID used in cycle metrics. The evaluation suba
 | `F-methods-grounded` | F07 | The Methods Summary states provenance, processing, route, and what was actually done in plain language without assuming shared context |
 | `F-problems-disclosed` | F08 | Material problems, caveats, and limitations are surfaced clearly rather than hidden or downplayed |
 | `F-encoding-clean` | F10 | All files in `deliverables/` pass the ASCII encoding scan with zero non-ASCII typographic punctuation |
-| `F-data-dictionary` | F11 | Every companion data file has a data dictionary defining all columns or fields |
+| `F-data-dictionary` | F11 | Every companion data file has a data dictionary defining all columns or fields. Any column name that uses a relative temporal reference (e.g., `last_year_presence`, `rolling3_years_positive`, `lag1_*`) must include the explicit year range or reference year in either (a) the column name itself (e.g., `presence_2024`) or (b) the data dictionary entry with exact year ranges. Ambiguous temporal column names without year disambiguation are a blocking defect. |
 | `F-degeneracy-disclosed` | F12 | If companion data files show value degeneracy (>30% identical values in a key output column), it is disclosed as a limitation |
 
 ## Cycle Protocol
@@ -453,14 +453,17 @@ Agent(
 
   EVALUATION: Cycle {X} - {focus}
 
-  DEFECT SCAN:
-  List every defect, gap, or weakness in this cycle's work. Minimum: 1
-  defect, or "No defects found" with a 2-sentence justification of why
-  the work has no weaknesses (this justification is itself auditable).
+  DEFECT SCAN (adversarial mode):
+  Assume the work contains errors. Your job is to actively falsify each gate
+  and checklist answer rather than confirm them. For each gate you mark PASS,
+  you must state the specific failure mode you tested and ruled out.
   Categories to scan: claim inflation, caveat suppression, boundary
   widening, computation boundary violations, recommendation overreach,
   selective reporting, visualization misleading, audience mismatch,
   narrative overreach.
+  If after genuinely adversarial scrutiny you find zero defects, state
+  "No defects found" and name at least 3 specific failure modes you tested
+  and ruled out. Do not fabricate defects to meet a quota.
   - Defect 1: [description with evidence]
   - Defect 2: [description with evidence]
 

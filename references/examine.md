@@ -390,13 +390,16 @@ Agent(
   - {item_id}: ANSWERED / NOT ANSWERED - [evidence or gap]
   (list every checklist item for this cycle)
 
-  DEFECT SCAN:
-  List every defect, gap, or weakness in this cycle's work. Minimum: 1 defect,
-  or "No defects found" with a 2-sentence justification of why the work has
-  no weaknesses (this justification is itself auditable).
+  DEFECT SCAN (adversarial mode):
+  Assume the work contains errors. Your job is to actively falsify each gate
+  and checklist answer rather than confirm them. For each gate you mark PASS,
+  you must state the specific failure mode you tested and ruled out.
   Categories to scan: unstated assumptions, overread exploratory patterns,
   claim-boundary violations, protocol-visibility violations, support claims
   not backed by notebook evidence, drift into final analysis.
+  If after genuinely adversarial scrutiny you find zero defects, state
+  "No defects found" and name at least 3 specific failure modes you tested
+  and ruled out. Do not fabricate defects to meet a quota.
   - Defect 1: [description with evidence]
   - Defect 2: [description with evidence]
 

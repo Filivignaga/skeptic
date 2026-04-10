@@ -41,6 +41,8 @@ The stage reads:
 
 Read all upstream outputs. Keep the approved question, protocol contract, cleaning summary, examination support registry, and analysis handoff in active context throughout the stage. These are not checkboxes. They are the constraints the contract must satisfy.
 
+**Cross-stage metric consistency rule:** When recomputing any metric that was also computed in `examine` (e.g., baseline performance, prevalence rates, fold-level statistics), document the exact data subset and fold range used. If the recomputed value differs from the value reported in `04_examination.md`, document the reason explicitly (e.g., different fold subset, different exclusion criteria). Unexplained metric discrepancies between stages are a blocking defect in the deviation register.
+
 No additional user input is required if upstream stages are complete. If upstream outputs are incomplete, contradictory, or missing required restrictions, stop and repair the upstream stage. Do not invent analysis permissions around gaps.
 
 ## Route Resolution
@@ -352,6 +354,7 @@ Every evaluation gate has a stable ID used in cycle metrics. The evaluation suba
 |---------|------------|-----------|
 | `F-deviation-register-complete` | F01 | Every deviation between contract and actual execution is documented with cause and impact |
 | `F-outputs-packaged` | F02 | Primary, sensitivity, and challenger outputs are assembled in one evaluation-ready bundle |
+| `F-protocol-commitments-met` | F09 | Every protocol-committed analysis is completed or logged in the deviation register with justification |
 | `F-no-interpretation` | F02 | Assembly does not contain result-quality judgments or claim-scope assertions |
 | `F-claim-boundary-stated` | F03 | Final claim boundary as-narrowed through the stage is explicitly stated |
 | `F-evaluate-ready` | F04, F05, F06 | The package contains everything `evaluate` needs without re-running the analysis |
@@ -479,13 +482,16 @@ Agent(
   - {item_id}: ANSWERED / NOT ANSWERED - [evidence location or gap]
   Auto-failed gates due to unanswered checklist items: [{gate_ids}] or "none"
 
-  DEFECT SCAN:
-  List every defect, gap, or weakness in this cycle's work. Minimum: 1 defect,
-  or "No defects found" with a 2-sentence justification of why the work has
-  no weaknesses (this justification is itself auditable).
+  DEFECT SCAN (adversarial mode):
+  Assume the work contains errors. Your job is to actively falsify each gate
+  and checklist answer rather than confirm them. For each gate you mark PASS,
+  you must state the specific failure mode you tested and ruled out.
   Categories to scan: contract drift, post-hoc analysis additions, claim-boundary
   widening, protocol violations, forbidden variable usage, unauthorized data
   access, unregistered specification changes.
+  If after genuinely adversarial scrutiny you find zero defects, state
+  "No defects found" and name at least 3 specific failure modes you tested
+  and ruled out. Do not fabricate defects to meet a quota.
   - Defect 1: [description with evidence]
   - Defect 2: [description with evidence]
 
@@ -811,6 +817,7 @@ This cycle produces the structured handoff that `evaluate` must use when perform
 | F06 | Is the Evaluation Handoff section drafted with all required subsections (Contract Summary, Execution Summary, Deviation Register, Contract Amendments, Flags for Evaluate, Handoff Discipline)? | never |
 | F07 | Does the assembly avoid result-quality judgments or claim-scope assertions? | never |
 | F08 | Is there an explicit handoff statement that the next stage is evaluate? | never |
+| F09 | Are all protocol-committed analyses accounted for? Read `02_protocol.md` `## Protocol Contract` and extract every item marked as required, committed, or mandatory (including sensitivity analyses, calibration methods, stratification requirements, probe-year analyses, etc.). Each must be either (a) completed with documented results in Cycle C or D outputs, or (b) explicitly logged in the `## Deviation Register` with justification for why it was not executed. Uncommitted protocol items that were silently dropped are a blocking defect. | never |
 
 Claude writes notebook cells using this default sequence:
 
