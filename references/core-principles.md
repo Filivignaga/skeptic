@@ -67,8 +67,7 @@ Treat this skill as repo-portable.
 
 - Do not depend on absolute paths, usernames, machine-specific folders, or personal workspace conventions.
 - Prefer a repo-local `skeptic.yaml` file in the skill or project root.
-- If `skeptic.yaml` is absent but `skeptic.yaml.example` exists, copy it to `skeptic.yaml` and use it. This gives the user a local config they can edit without affecting the tracked example file.
-- If neither `skeptic.yaml` nor `skeptic.yaml.example` exists, use these defaults:
+- If `skeptic.yaml` is absent, use these defaults:
   - `projects_root`: `~/skeptic-projects`
   - `data_dir_name`: `data`
   - `docs_dir_name`: `skeptic_documentation`
