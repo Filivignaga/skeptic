@@ -1,6 +1,6 @@
 ---
 name: protocol-exploratory
-description: Stage-specific route file for the DSLC protocol stage for exploratory questions. Narrows the universal protocol stage-core.
+description: Stage-specific route file for the Skeptic protocol stage for exploratory questions. Narrows the universal protocol stage-core.
 ---
 
 # Protocol Route File: Exploratory

@@ -3,13 +3,13 @@ name: communicate
 description: Use after formulate, protocol, clean, examine, analyze, and evaluate to package only claims that survived evaluation for the intended audience, without upgrading claims, widening the claim boundary, or introducing new analysis.
 ---
 
-# /dslc:communicate - Communication of Evaluated Results
+# /skeptic:communicate - Communication of Evaluated Results
 
-**IMPORTANT:** Before executing, read `references/core-principles.md` from the parent `dslc` skill for shared conventions.
+**IMPORTANT:** Before executing, read `references/core-principles.md` from the parent `skeptic` skill for shared conventions.
 
 `core-principles.md` is the architecture contract. If this file conflicts with it, `core-principles.md` wins.
 
-`communicate` is the terminal stage of the DSLC. There is no downstream stage to catch errors introduced here. Every fidelity violation -- claim inflation, caveat suppression, boundary widening, misleading visualization, narrative overreach -- goes directly to the audience and into production.
+`communicate` is the terminal stage of the Skeptic. There is no downstream stage to catch errors introduced here. Every fidelity violation -- claim inflation, caveat suppression, boundary widening, misleading visualization, narrative overreach -- goes directly to the audience and into production.
 
 `communicate` does not re-analyze data. It does not re-evaluate claims. It does not generate new claims. It receives the structured handoff from `evaluate` and packages only the claims that survived, with their mandatory caveats and limitations, for the intended audience and use context.
 
@@ -27,13 +27,13 @@ description: Use after formulate, protocol, clean, examine, analyze, and evaluat
 
 The stage reads:
 
-- `dslc_documentation/01_formulation.md` - approved question, question type, target quantity or estimand, claim boundary, unit of analysis, assumptions
-- `dslc_documentation/02_protocol.md` - active route, data usage mode, validation logic
-- `dslc_documentation/03_cleaning.md` - final variable list, population-shift summary
-- `dslc_documentation/04_examination.md` - support registry summary
-- `dslc_documentation/05_analysis.md` - analysis contract, deviation register, claim boundary as-narrowed
-- `dslc_documentation/06_evaluation.md` - claim survival registry, final claim boundary, per-dimension summaries (stability, predictability, validity), mandatory limitations, unresolved risks, communicate handoff, handoff discipline
-- `dslc_documentation/metrics.md` - formulation, protocol, cleaning, examination, analysis, and evaluation scorecards, claim boundary registry
+- `skeptic_documentation/01_formulation.md` - approved question, question type, target quantity or estimand, claim boundary, unit of analysis, assumptions
+- `skeptic_documentation/02_protocol.md` - active route, data usage mode, validation logic
+- `skeptic_documentation/03_cleaning.md` - final variable list, population-shift summary
+- `skeptic_documentation/04_examination.md` - support registry summary
+- `skeptic_documentation/05_analysis.md` - analysis contract, deviation register, claim boundary as-narrowed
+- `skeptic_documentation/06_evaluation.md` - claim survival registry, final claim boundary, per-dimension summaries (stability, predictability, validity), mandatory limitations, unresolved risks, communicate handoff, handoff discipline
+- `skeptic_documentation/metrics.md` - formulation, protocol, cleaning, examination, analysis, and evaluation scorecards, claim boundary registry
 - `notebooks/06_evaluation.ipynb` - evidence for claim survival verdicts
 - `README.md` - confirms prior stage completion
 
@@ -47,13 +47,13 @@ Run this gate before anything else.
 
 Verify all of the following:
 
-- `dslc_documentation/01_formulation.md` exists
-- `dslc_documentation/02_protocol.md` exists
-- `dslc_documentation/03_cleaning.md` exists
-- `dslc_documentation/04_examination.md` exists
-- `dslc_documentation/05_analysis.md` exists
-- `dslc_documentation/06_evaluation.md` exists
-- `dslc_documentation/metrics.md` exists
+- `skeptic_documentation/01_formulation.md` exists
+- `skeptic_documentation/02_protocol.md` exists
+- `skeptic_documentation/03_cleaning.md` exists
+- `skeptic_documentation/04_examination.md` exists
+- `skeptic_documentation/05_analysis.md` exists
+- `skeptic_documentation/06_evaluation.md` exists
+- `skeptic_documentation/metrics.md` exists
 - `notebooks/06_evaluation.ipynb` exists
 - `README.md` exists
 
@@ -167,7 +167,7 @@ Before Cycle A, create:
    - upstream dependency note: `01_formulation.md`, `02_protocol.md`, `03_cleaning.md`, `04_examination.md`, `05_analysis.md`, `06_evaluation.md`
    - note: "This notebook is the working surface for communication. The deliverable is rendered from this notebook into the audience-appropriate format in deliverables/. This stage does not re-analyze data, re-evaluate claims, widen the claim boundary, or compute new statistics."
 
-2. `dslc_documentation/07_communication.md` with this initial structure:
+2. `skeptic_documentation/07_communication.md` with this initial structure:
 
 ```markdown
 # Communicate: Communication of Evaluated Results
@@ -349,10 +349,11 @@ Claude reads the notebook outputs, then dispatches two subagents in parallel.
 
 ```text
 Agent(
+  model="{subagent_model}",
   description="Research for Communicate Cycle {X}: {focus}",
   run_in_background=true,
   prompt="""
-  You are a communication conventions research assistant for a DSLC communicate stage.
+  You are a communication conventions research assistant for a Skeptic communicate stage.
 
   Context:
   - Approved question: "{approved question}"
@@ -384,10 +385,11 @@ Agent(
 
 ```text
 Agent(
+  model="{subagent_model}",
   description="Evaluation for Communicate Cycle {X}: {focus}",
   run_in_background=true,
   prompt="""
-  You are an objective evaluator for a DSLC communicate-stage cycle.
+  You are an objective evaluator for a Skeptic communicate-stage cycle.
 
   Read these files:
   1. {projects_root}/{project-name}/{docs_dir_name}/07_communication.md
@@ -512,7 +514,7 @@ Auto mode: apply the autonomous decision protocol from `references/auto-mode.md`
 
 ### Step 5: Log
 
-Immediately after each cycle decision, append to `dslc_documentation/07_communication.md`:
+Immediately after each cycle decision, append to `skeptic_documentation/07_communication.md`:
 
 ```markdown
 ### Cycle {X}: {Focus}
@@ -527,7 +529,7 @@ Immediately after each cycle decision, append to `dslc_documentation/07_communic
 - **Decision:** {pass / iterate / acknowledge gap / backtrack to {stage}}
 ```
 
-Also append structured cycle metrics to `dslc_documentation/metrics.md`. Create the section `## Communication` if it does not yet exist.
+Also append structured cycle metrics to `skeptic_documentation/metrics.md`. Create the section `## Communication` if it does not yet exist.
 
 ```markdown
 **Cycle metrics:**
@@ -708,7 +710,7 @@ Claude writes notebook cells using this default sequence:
 **Research questions:**
 
 - What audience-appropriate language conventions exist for this domain and question type?
-- What plain-language equivalents exist for the technical terms the DSLC produces (perturbation axes, stability verdicts, predictability checks, claim boundaries)?
+- What plain-language equivalents exist for the technical terms the Skeptic produces (perturbation axes, stability verdicts, predictability checks, claim boundaries)?
 - What recommendation framing conventions exist for this claim type and audience?
 - What are common claim-inflation patterns in similar reports?
 
@@ -893,7 +895,7 @@ Claude writes notebook cells using this default sequence:
    - Question type and route
    - Data provenance and the key processing steps that produced the analyzed artifact
    - Data description (without disclosing sensitive details)
-   - Link to the full DSLC documentation for traceability
+   - Link to the full Skeptic documentation for traceability
    - Statement of reproducibility: the analysis can be rerun from raw data plus protocol-defined artifacts
 
 2. Verify writing discipline before render:
@@ -1001,9 +1003,10 @@ Dispatch the terminal fidelity subagent:
 
 ```text
 Agent(
+  model="{subagent_model}",
   description="Terminal fidelity check for communicate",
   prompt="""
-  You are a terminal fidelity auditor for a DSLC communicate stage.
+  You are a terminal fidelity auditor for a Skeptic communicate stage.
 
   Read these files:
   1. {projects_root}/{project-name}/{docs_dir_name}/06_evaluation.md
@@ -1107,7 +1110,7 @@ After the subagent returns:
 
 After the terminal fidelity check passes:
 
-1. **Communication Scorecard (mandatory first item).** Append to `dslc_documentation/metrics.md` under `## Communication`.
+1. **Communication Scorecard (mandatory first item).** Append to `skeptic_documentation/metrics.md` under `## Communication`.
 
 ```markdown
 ### Communication Scorecard
@@ -1165,7 +1168,7 @@ Limitations disclosed: {n}
 Deliverable: deliverables/{filename}
 ```
 
-6. Tell the user the DSLC is complete. State the deliverable location.
+6. Tell the user the Skeptic is complete. State the deliverable location.
 
 ## Dependency Notes
 

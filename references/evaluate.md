@@ -3,9 +3,9 @@ name: evaluate
 description: Use after formulate, protocol, clean, examine, and analyze to adjudicate whether outputs and claims survive route-appropriate PCS checks, rendering per-claim survival verdicts that gate what communicate may package.
 ---
 
-# /dslc:evaluate - Route-Appropriate PCS Evaluation
+# /skeptic:evaluate - Route-Appropriate PCS Evaluation
 
-**IMPORTANT:** Before executing, read `references/core-principles.md` from the parent `dslc` skill for shared conventions.
+**IMPORTANT:** Before executing, read `references/core-principles.md` from the parent `skeptic` skill for shared conventions.
 
 `core-principles.md` is the architecture contract. If this file conflicts with it, `core-principles.md` wins.
 
@@ -25,12 +25,12 @@ This file is the universal stage-core for `evaluate`. It defines the adjudicatio
 
 The stage reads:
 
-- `dslc_documentation/01_formulation.md` - approved question, question type, target quantity or estimand, claim boundary, route candidates, unit of analysis, assumptions
-- `dslc_documentation/02_protocol.md` - active route, data usage mode, visibility rules, frozen artifacts, leakage and forbidden-variable rules, validation logic, analyze contract-lock obligations, analyze claim limits, backtracking triggers
-- `dslc_documentation/03_cleaning.md` - final visible artifact list, final variable list, population-shift summary, dataset fitness review, open questions, PCS assessment
-- `dslc_documentation/04_examination.md` - support registry, analysis handoff, analysis constraints, fragility verdicts, active-route pressure, PCS assessment
-- `dslc_documentation/05_analysis.md` - analysis contract, deviation register, evaluation handoff (contract summary, execution summary, sensitivity outputs, challenger outputs, flags for evaluate), claim boundary as-narrowed, PCS assessment
-- `dslc_documentation/metrics.md` - formulation, protocol, cleaning, examination, and analysis scorecards, plus the Claim Boundary Registry
+- `skeptic_documentation/01_formulation.md` - approved question, question type, target quantity or estimand, claim boundary, route candidates, unit of analysis, assumptions
+- `skeptic_documentation/02_protocol.md` - active route, data usage mode, visibility rules, frozen artifacts, leakage and forbidden-variable rules, validation logic, analyze contract-lock obligations, analyze claim limits, backtracking triggers
+- `skeptic_documentation/03_cleaning.md` - final visible artifact list, final variable list, population-shift summary, dataset fitness review, open questions, PCS assessment
+- `skeptic_documentation/04_examination.md` - support registry, analysis handoff, analysis constraints, fragility verdicts, active-route pressure, PCS assessment
+- `skeptic_documentation/05_analysis.md` - analysis contract, deviation register, evaluation handoff (contract summary, execution summary, sensitivity outputs, challenger outputs, flags for evaluate), claim boundary as-narrowed, PCS assessment
+- `skeptic_documentation/metrics.md` - formulation, protocol, cleaning, examination, and analysis scorecards, plus the Claim Boundary Registry
 - `notebooks/01_formulation.ipynb` - rationale trace for the approved question
 - `notebooks/02_protocol.ipynb` - rationale trace for visibility, restriction, and validation rules
 - `notebooks/03_cleaning.ipynb` - evidence for cleaned artifacts and cleaning judgments
@@ -72,12 +72,12 @@ Run this gate before anything else.
 
 Verify all of the following:
 
-- `dslc_documentation/01_formulation.md` exists
-- `dslc_documentation/02_protocol.md` exists
-- `dslc_documentation/03_cleaning.md` exists
-- `dslc_documentation/04_examination.md` exists
-- `dslc_documentation/05_analysis.md` exists
-- `dslc_documentation/metrics.md` exists
+- `skeptic_documentation/01_formulation.md` exists
+- `skeptic_documentation/02_protocol.md` exists
+- `skeptic_documentation/03_cleaning.md` exists
+- `skeptic_documentation/04_examination.md` exists
+- `skeptic_documentation/05_analysis.md` exists
+- `skeptic_documentation/metrics.md` exists
 - `notebooks/01_formulation.ipynb` exists
 - `notebooks/02_protocol.ipynb` exists
 - `notebooks/03_cleaning.ipynb` exists
@@ -225,7 +225,7 @@ Before Cycle A, create:
    - upstream dependency note: `01_formulation.md`, `02_protocol.md`, `03_cleaning.md`, `04_examination.md`, `05_analysis.md`
    - note: "This notebook is stage-core only. The loaded route file may narrow or prohibit actions. This stage does not re-execute analysis, widen the claim boundary, or generate new claims."
 
-2. `dslc_documentation/06_evaluation.md` with this initial structure:
+2. `skeptic_documentation/06_evaluation.md` with this initial structure:
 
 ```markdown
 # Evaluate: Route-Appropriate PCS Evaluation
@@ -409,10 +409,11 @@ Claude reads the notebook outputs, then dispatches two subagents in parallel.
 
 ```text
 Agent(
+  model="{subagent_model}",
   description="Research for Evaluate Cycle {X}: {focus}",
   run_in_background=true,
   prompt="""
-  You are a methodological research assistant for a DSLC evaluate stage.
+  You are a methodological research assistant for a Skeptic evaluate stage.
 
   Context:
   - Approved question: "{approved question}"
@@ -444,10 +445,11 @@ Agent(
 
 ```text
 Agent(
+  model="{subagent_model}",
   description="Evaluation for Evaluate Cycle {X}: {focus}",
   run_in_background=true,
   prompt="""
-  You are an objective evaluator for a DSLC evaluate-stage cycle.
+  You are an objective evaluator for a Skeptic evaluate-stage cycle.
 
   Read these files:
   1. {projects_root}/{project-name}/{docs_dir_name}/06_evaluation.md
@@ -549,7 +551,7 @@ Auto mode: apply the autonomous decision protocol from `references/auto-mode.md`
 
 ### Step 5: Log
 
-Immediately after each cycle decision, append to `dslc_documentation/06_evaluation.md`:
+Immediately after each cycle decision, append to `skeptic_documentation/06_evaluation.md`:
 
 ```markdown
 ### Cycle {X}: {Focus}
@@ -568,7 +570,7 @@ Immediately after each cycle decision, append to `dslc_documentation/06_evaluati
 - **Decision:** {pass / iterate / acknowledge gap / backtrack to {stage}}
 ```
 
-Also append structured cycle metrics to `dslc_documentation/metrics.md`. Create the section `## Evaluation` if it does not yet exist.
+Also append structured cycle metrics to `skeptic_documentation/metrics.md`. Create the section `## Evaluation` if it does not yet exist.
 
 ```markdown
 **Cycle metrics:**
@@ -805,7 +807,7 @@ Each F+ cycle must define its own checklist items scoped to the specific follow-
 
 **Focus:** Synthesize verdicts from Cycles B, C, and D into final per-claim survival verdicts.
 
-This is the core adjudication decision of the DSLC. The user must explicitly approve the claim survival registry before the stage can proceed to Cycle G.
+This is the core adjudication decision of the Skeptic. The user must explicitly approve the claim survival registry before the stage can proceed to Cycle G.
 
 ### Checklist
 
@@ -988,9 +990,10 @@ Dispatch an integrity check subagent:
 
 ```text
 Agent(
+  model="{subagent_model}",
   description="Evaluation integrity check",
   prompt="""
-  You are an integrity auditor for a DSLC evaluate stage.
+  You are an integrity auditor for a Skeptic evaluate stage.
 
   Read these files:
   1. {projects_root}/{project-name}/{docs_dir_name}/06_evaluation.md
@@ -1077,7 +1080,7 @@ The integrity check catches bookkeeping errors and confirmation-bias leakage. It
 
 After the integrity check passes:
 
-1. **Evaluation Scorecard (mandatory first item).** Append to `dslc_documentation/metrics.md` under `## Evaluation`.
+1. **Evaluation Scorecard (mandatory first item).** Append to `skeptic_documentation/metrics.md` under `## Evaluation`.
 
 ```markdown
 ### Evaluation Scorecard

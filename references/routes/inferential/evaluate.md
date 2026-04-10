@@ -1,6 +1,6 @@
 ---
 name: evaluate-inferential
-description: Stage-specific route file for the DSLC evaluate stage for inferential questions. Narrows the universal evaluate stage-core.
+description: Stage-specific route file for the Skeptic evaluate stage for inferential questions. Narrows the universal evaluate stage-core.
 ---
 
 # Evaluate Route File: Inferential

@@ -1,8 +1,8 @@
-# DSLC Core Principles
+# Skeptic Core Principles
 
 Use a question-first lifecycle. Do not start from a favorite method. Do not treat predictive workflows as the default template for every project.
 
-This file is the architecture contract for the DSLC. If any downstream stage file conflicts with this file, this file wins.
+This file is the architecture contract for the Skeptic. If any downstream stage file conflicts with this file, this file wins.
 
 ## PCS Framework
 
@@ -42,14 +42,14 @@ Stage purposes:
 
 ## Execution Modes
 
-DSLC supports two execution modes:
+Skeptic supports two execution modes:
 
 - `interactive`: the original runtime where the user reviews outputs and decides cycle by cycle
-- `auto`: the `/dslc:auto` runtime defined in `references/auto-mode.md`
+- `auto`: the `/skeptic:auto` runtime defined in `references/auto-mode.md`
 
 Mode-selection rules:
 
-- if `/dslc:auto` is active, load and follow `references/auto-mode.md`
+- if `/skeptic:auto` is active, load and follow `references/auto-mode.md`
 - if a stage file conflicts with `references/auto-mode.md` about runtime control flow, `references/auto-mode.md` wins
 - stage files still define what each stage must check, log, and protect
 
@@ -66,14 +66,16 @@ Auto mode keeps the same rigor:
 Treat this skill as repo-portable.
 
 - Do not depend on absolute paths, usernames, machine-specific folders, or personal workspace conventions.
-- Prefer a repo-local `dslc.yaml` file in the skill or project root.
-- If `dslc.yaml` is absent, use these defaults:
-  - `projects_root`: `./projects`
+- Prefer a repo-local `skeptic.yaml` file in the skill or project root.
+- If `skeptic.yaml` is absent but `skeptic.yaml.example` exists, copy it to `skeptic.yaml` and use it. This gives the user a local config they can edit without affecting the tracked example file.
+- If neither `skeptic.yaml` nor `skeptic.yaml.example` exists, use these defaults:
+  - `projects_root`: `~/skeptic-projects`
   - `data_dir_name`: `data`
-  - `docs_dir_name`: `dslc_documentation`
+  - `docs_dir_name`: `skeptic_documentation`
   - `notebooks_dir_name`: `notebooks`
   - `readme_name`: `README.md`
   - `notebook_runner`: `jupyter nbconvert --execute --inplace --to notebook --ExecutePreprocessor.timeout=300 --ExecutePreprocessor.allow_errors=true`
+  - `subagent_model`: `sonnet`
 - Interpret any legacy project-root example as illustrative, not as a hard requirement.
 - When the project uses local files, copy portable raw inputs into the configured data directory.
 - When the project uses a database, query engine, or remote source, record only portable source metadata and non-secret access instructions in project artifacts. Never store secrets in tracked files.
@@ -317,10 +319,11 @@ After each completed stage, update `README.md` with:
 - Print or display critical outputs explicitly.
 - Make notebooks runnable from raw data plus protocol-defined artifacts, not hidden session state.
 - Put reusable functions, constraints, and configuration in companion `.py` or `.json` files when they must survive across stages.
+- Use only ASCII characters in notebook cell content. Use `--` instead of em dashes, straight quotes instead of curly quotes, and plain hyphens instead of en dashes. Non-ASCII punctuation causes mojibake on Windows (e.g., `—` renders as `â€"`).
 
 ## Notebook Execution
 
-After writing cells with `NotebookEdit`, Claude executes the notebook automatically. Use the `notebook_runner` value from `dslc.yaml` when present. Otherwise use:
+After writing cells with `NotebookEdit`, Claude executes the notebook automatically. Use the `notebook_runner` value from `skeptic.yaml` when present. Otherwise use:
 
 ```text
 Bash(jupyter nbconvert --execute --inplace --to notebook --ExecutePreprocessor.timeout=300 --ExecutePreprocessor.allow_errors=true <notebook_path>)

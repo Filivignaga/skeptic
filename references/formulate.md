@@ -1,11 +1,11 @@
 ---
 name: formulate
-description: Use when starting a new data analysis project - refine a vague domain question into a precise, data-answerable question through iterative question-first cycles with format-aware dataset inspection. First stage of the DSLC.
+description: Use when starting a new data analysis project - refine a vague domain question into a precise, data-answerable question through iterative question-first cycles with format-aware dataset inspection. First stage of the Skeptic.
 ---
 
-# /dslc:formulate - Problem Formulation and Data Context
+# /skeptic:formulate - Problem Formulation and Data Context
 
-**IMPORTANT:** Before executing, read `references/core-principles.md` from the parent `dslc` skill for shared conventions.
+**IMPORTANT:** Before executing, read `references/core-principles.md` from the parent `skeptic` skill for shared conventions.
 
 `core-principles.md` is the architecture contract. If this file conflicts with it, `core-principles.md` wins.
 
@@ -18,6 +18,8 @@ description: Use when starting a new data analysis project - refine a vague doma
 | Rough domain question | What the user wants to answer with this data |
 
 If any input is missing, use `AskUserQuestion` to collect it before proceeding.
+
+After collecting the project name, resolve the full project path as `{projects_root}/{project-name}` and present it to the user for confirmation. The user may accept or provide an alternative path. If the user provides an alternative, use that path for this project without modifying `skeptic.yaml`. Data files will always be copied into the project's data directory, never moved from their original location.
 
 Also ask: "Do you have any documentation for this data (codebook, README, data dictionary, collection notes)?" If yes, copy it into the configured data directory and read it before generating the initial notebook. This materially changes how variables, units, collection logic, and biases are interpreted.
 
@@ -103,6 +105,7 @@ Then dispatches two subagents in parallel.
 **Research subagent:**
 ```text
 Agent(
+  model="{subagent_model}",
   description="Domain research for Cycle {X}: {focus}",
   run_in_background=true,
   prompt="""
@@ -125,6 +128,7 @@ Agent(
 **Evaluation subagent:**
 ```text
 Agent(
+  model="{subagent_model}",
   description="Evaluation for Cycle {X}: {focus}",
   run_in_background=true,
   prompt="""
@@ -216,7 +220,7 @@ Do not fabricate findings. Do not force optimistic assessments to keep the proce
 
 ### Step 5: Log
 
-Immediately after each cycle decision, append to `dslc_documentation/01_formulation.md`:
+Immediately after each cycle decision, append to `skeptic_documentation/01_formulation.md`:
 
 ```markdown
 ### Cycle {X}: {Focus}
@@ -229,7 +233,7 @@ Immediately after each cycle decision, append to `dslc_documentation/01_formulat
 - **Decision:** [pass / iterate / acknowledge gap / data insufficient - with reasoning]
 ```
 
-Also append structured cycle metrics to `dslc_documentation/metrics.md`. Create the file if it does not exist, starting with `# DSLC Metrics` and `## Formulation`.
+Also append structured cycle metrics to `skeptic_documentation/metrics.md`. Create the file if it does not exist, starting with `# Skeptic Metrics` and `## Formulation`.
 
 Every cycle logs the same base fields.
 
@@ -529,6 +533,7 @@ After the stage is ready to close under the active execution mode, dispatch a PC
 
 ```text
 Agent(
+  model="{subagent_model}",
   description="PCS review of formulate stage",
   prompt="""
   You are a PCS reviewer for a data science project.
@@ -595,9 +600,9 @@ After the PCS review clears, or the user overrides it:
 | Claim boundary stated | {yes/no} | Cycle D output |
 | Protocol handoff drafted | {yes/no} | Cycle E output |
 
-Append this scorecard to `dslc_documentation/metrics.md` under `## Formulation`.
+Append this scorecard to `skeptic_documentation/metrics.md` under `## Formulation`.
 
-**Claim Boundary Registry (mandatory - second item in finalization).** Append to `dslc_documentation/metrics.md` under `## Claim Boundary Registry`. This is the structured, machine-checkable reference that all downstream evaluation subagents will use to verify claim-boundary compliance.
+**Claim Boundary Registry (mandatory - second item in finalization).** Append to `skeptic_documentation/metrics.md` under `## Claim Boundary Registry`. This is the structured, machine-checkable reference that all downstream evaluation subagents will use to verify claim-boundary compliance.
 
 Generate the registry from the approved question, question type, and the question type constraints in `core-principles.md`. The `verbs_allowed` and `verbs_forbidden` lists are derived from the question type's interpretation boundary and admissible evidence pattern. The `scope` and `generalization_limit` come from Cycle D and Cycle E outputs.
 

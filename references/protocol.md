@@ -1,11 +1,11 @@
 ---
 name: protocol
-description: Use after formulate to lock the project rules of the game before clean starts. Second stage of the DSLC.
+description: Use after formulate to lock the project rules of the game before clean starts. Second stage of the Skeptic.
 ---
 
-# /dslc:protocol - Project Rules of the Game
+# /skeptic:protocol - Project Rules of the Game
 
-**IMPORTANT:** Before executing, read `references/core-principles.md` from the parent `dslc` skill for shared conventions.
+**IMPORTANT:** Before executing, read `references/core-principles.md` from the parent `skeptic` skill for shared conventions.
 
 `core-principles.md` is the architecture contract. If this file conflicts with it, `core-principles.md` wins.
 
@@ -18,8 +18,8 @@ description: Use after formulate to lock the project rules of the game before cl
 ## What Prior Outputs This Stage Reads
 
 The stage reads:
-- `dslc_documentation/01_formulation.md` - approved question, question type, target quantity, claim boundary, route candidates, assumptions, protocol handoff
-- `dslc_documentation/metrics.md` - formulation scorecard
+- `skeptic_documentation/01_formulation.md` - approved question, question type, target quantity, claim boundary, route candidates, assumptions, protocol handoff
+- `skeptic_documentation/metrics.md` - formulation scorecard
 - `notebooks/01_formulation.ipynb` - cycle evidence and rationale trace
 - `README.md` - confirms formulate completion
 
@@ -45,7 +45,7 @@ Before Cycle A, do this in order:
 
 4. Keep that route context in memory for the rest of `protocol` and reuse it across cycles in the same chat.
 5. If route context becomes ambiguous mid-stage, reread the upstream outputs and the same route file before proceeding.
-6. If the active route cannot be resolved or the expected route file is missing, stop and route back to `/dslc:formulate`.
+6. If the active route cannot be resolved or the expected route file is missing, stop and route back to `/skeptic:formulate`.
 
 ## What This Stage Does
 
@@ -60,7 +60,7 @@ This stage must:
 - decide whether confounding, identification, time order, grouping, hierarchy, or interference materially constrain the project
 - define the validation logic and uncertainty expectations later stages must honor
 - define stage prohibitions and backtracking triggers
-- produce `dslc_documentation/02_protocol.md` and `notebooks/02_protocol.ipynb`
+- produce `skeptic_documentation/02_protocol.md` and `notebooks/02_protocol.ipynb`
 
 This stage must not:
 - choose the exact estimator, model, or algorithm
@@ -71,8 +71,8 @@ This stage must not:
 ## Precondition Gate
 
 Verify these files exist before doing anything else:
-- `dslc_documentation/01_formulation.md`
-- `dslc_documentation/metrics.md`
+- `skeptic_documentation/01_formulation.md`
+- `skeptic_documentation/metrics.md`
 - `notebooks/01_formulation.ipynb`
 - `README.md`
 
@@ -110,7 +110,7 @@ Verify the matching file `references/routes/{route}/protocol.md` exists.
 If any check fails:
 - stop
 - tell the user which required fields are missing or contradictory
-- route back to `/dslc:formulate`
+- route back to `/skeptic:formulate`
 
 Do not proceed with partial context. `protocol` is not allowed to guess around a missing formulation.
 
@@ -127,7 +127,7 @@ Before Cycle A, create:
    - upstream dependency note: `01_formulation.md`
    - note: "This notebook defines the project rules of the game before clean and examine."
 
-2. `dslc_documentation/02_protocol.md` with this initial structure:
+2. `skeptic_documentation/02_protocol.md` with this initial structure:
 
 ```markdown
 # Protocol: Project Rules of the Game
@@ -265,10 +265,11 @@ Then dispatches two subagents in parallel.
 **Research subagent:**
 ```text
 Agent(
+  model="{subagent_model}",
   description="Domain and methods research for Cycle {X}: {focus}",
   run_in_background=true,
   prompt="""
-  You are a domain and methods research assistant for a DSLC protocol stage.
+  You are a domain and methods research assistant for a Skeptic protocol stage.
 
   Context:
   - Approved question: "{approved question}"
@@ -299,10 +300,11 @@ Agent(
 **Evaluation subagent:**
 ```text
 Agent(
+  model="{subagent_model}",
   description="Evaluation for Cycle {X}: {focus}",
   run_in_background=true,
   prompt="""
-  You are an objective evaluator for a DSLC protocol cycle.
+  You are an objective evaluator for a Skeptic protocol cycle.
 
   Read these files:
   1. {projects_root}/{project-name}/{docs_dir_name}/02_protocol.md
@@ -406,7 +408,7 @@ Auto mode: apply the autonomous decision protocol from `references/auto-mode.md`
 
 ### Step 5: Log
 
-Immediately after each cycle decision, append to `dslc_documentation/02_protocol.md`:
+Immediately after each cycle decision, append to `skeptic_documentation/02_protocol.md`:
 
 ```markdown
 ### Cycle {X}: {Focus}
@@ -421,7 +423,7 @@ Immediately after each cycle decision, append to `dslc_documentation/02_protocol
 - **Decision:** [pass / iterate / acknowledge gap / premature - with reasoning]
 ```
 
-Also append structured cycle metrics to `dslc_documentation/metrics.md`. Create the file if it does not exist, starting with `# DSLC Metrics`, then `## Protocol`.
+Also append structured cycle metrics to `skeptic_documentation/metrics.md`. Create the file if it does not exist, starting with `# Skeptic Metrics`, then `## Protocol`.
 
 Every cycle logs the same base fields.
 
@@ -636,9 +638,10 @@ After the stage is ready to close under the active execution mode, dispatch a PC
 
 ```text
 Agent(
+  model="{subagent_model}",
   description="PCS review of protocol stage",
   prompt="""
-  You are a PCS reviewer for a DSLC protocol stage.
+  You are a PCS reviewer for a Skeptic protocol stage.
 
   Read these files:
   1. {projects_root}/{project-name}/{docs_dir_name}/01_formulation.md
@@ -689,7 +692,7 @@ After the PCS review clears, or the user overrides it:
 
 0. If frozen artifacts were required but were not created during Cycle B, stop. The stage is incomplete.
 
-1. **Protocol Scorecard (mandatory - first item in finalization).** Append to `dslc_documentation/metrics.md` under `## Protocol`.
+1. **Protocol Scorecard (mandatory - first item in finalization).** Append to `skeptic_documentation/metrics.md` under `## Protocol`.
 
 ```markdown
 ### Protocol Scorecard

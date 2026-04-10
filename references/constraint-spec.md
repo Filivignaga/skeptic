@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document is the technical contract for constraint generation and verification in `/dslc:clean` post-cycle Phase 1 (Reproducibility).
+This document is the technical contract for constraint generation and verification in `/skeptic:clean` post-cycle Phase 1 (Reproducibility).
 
 - **Who reads it:** Claude when generating constraint files and verification cells
 - **When to read it:** only during post-cycle Phase 1, after `clean_data()` and `preprocess_data()` have been extracted and snapshot validation is running

@@ -1,6 +1,6 @@
 ---
 name: evaluate-mechanistic
-description: Stage-specific route file for the DSLC evaluate stage for mechanistic questions. Narrows the universal evaluate stage-core.
+description: Stage-specific route file for the Skeptic evaluate stage for mechanistic questions. Narrows the universal evaluate stage-core.
 ---
 
 # Evaluate Route File: Mechanistic

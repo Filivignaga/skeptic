@@ -1,6 +1,6 @@
 ---
 name: protocol-mechanistic
-description: Stage-specific route file for the DSLC protocol stage for mechanistic questions. Narrows the universal protocol stage-core.
+description: Stage-specific route file for the Skeptic protocol stage for mechanistic questions. Narrows the universal protocol stage-core.
 ---
 
 # Protocol Route File: Mechanistic

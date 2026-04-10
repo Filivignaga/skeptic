@@ -1,6 +1,6 @@
 ---
 name: analyze-exploratory
-description: Stage-specific route file for the DSLC analyze stage for exploratory questions. Narrows the universal analyze stage-core.
+description: Stage-specific route file for the Skeptic analyze stage for exploratory questions. Narrows the universal analyze stage-core.
 ---
 
 # Analyze Route File: Exploratory

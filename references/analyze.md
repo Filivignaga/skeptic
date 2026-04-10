@@ -3,9 +3,9 @@ name: analyze
 description: Use after formulate, protocol, clean, and examine to lock one executable analysis contract within upstream constraints and execute it, producing auditable outputs for route-appropriate PCS evaluation without widening the claim boundary or self-revising based on result quality.
 ---
 
-# /dslc:analyze - Analysis Contract Lock and Execution
+# /skeptic:analyze - Analysis Contract Lock and Execution
 
-**IMPORTANT:** Before executing, read `references/core-principles.md` from the parent `dslc` skill for shared conventions.
+**IMPORTANT:** Before executing, read `references/core-principles.md` from the parent `skeptic` skill for shared conventions.
 
 `core-principles.md` is the architecture contract. If this file conflicts with it, `core-principles.md` wins.
 
@@ -25,11 +25,11 @@ This file is the universal stage-core for `analyze`. It defines the contract-loc
 
 The stage reads:
 
-- `dslc_documentation/01_formulation.md` - approved question, question type, target quantity or estimand, claim boundary, route candidates, unit of analysis, assumptions
-- `dslc_documentation/02_protocol.md` - active route, data usage mode, visibility rules, frozen artifacts, leakage and forbidden-variable rules, validation logic, analyze contract-lock obligations, analyze claim limits, backtracking triggers
-- `dslc_documentation/03_cleaning.md` - final visible artifact list, final variable list, population-shift summary, dataset fitness review, open questions, PCS assessment
-- `dslc_documentation/04_examination.md` - support registry, analysis handoff, analysis constraints, fragility verdicts, active-route pressure, PCS assessment
-- `dslc_documentation/metrics.md` - formulation, protocol, cleaning, and examination scorecards
+- `skeptic_documentation/01_formulation.md` - approved question, question type, target quantity or estimand, claim boundary, route candidates, unit of analysis, assumptions
+- `skeptic_documentation/02_protocol.md` - active route, data usage mode, visibility rules, frozen artifacts, leakage and forbidden-variable rules, validation logic, analyze contract-lock obligations, analyze claim limits, backtracking triggers
+- `skeptic_documentation/03_cleaning.md` - final visible artifact list, final variable list, population-shift summary, dataset fitness review, open questions, PCS assessment
+- `skeptic_documentation/04_examination.md` - support registry, analysis handoff, analysis constraints, fragility verdicts, active-route pressure, PCS assessment
+- `skeptic_documentation/metrics.md` - formulation, protocol, cleaning, and examination scorecards
 - `notebooks/01_formulation.ipynb` - rationale trace for the approved question
 - `notebooks/02_protocol.ipynb` - rationale trace for visibility, restriction, and validation rules
 - `notebooks/03_cleaning.ipynb` - evidence for cleaned artifacts and cleaning judgments
@@ -70,11 +70,11 @@ Run this gate before anything else.
 
 Verify all of the following:
 
-- `dslc_documentation/01_formulation.md` exists
-- `dslc_documentation/02_protocol.md` exists
-- `dslc_documentation/03_cleaning.md` exists
-- `dslc_documentation/04_examination.md` exists
-- `dslc_documentation/metrics.md` exists
+- `skeptic_documentation/01_formulation.md` exists
+- `skeptic_documentation/02_protocol.md` exists
+- `skeptic_documentation/03_cleaning.md` exists
+- `skeptic_documentation/04_examination.md` exists
+- `skeptic_documentation/metrics.md` exists
 - `notebooks/01_formulation.ipynb` exists
 - `notebooks/02_protocol.ipynb` exists
 - `notebooks/03_cleaning.ipynb` exists
@@ -201,7 +201,7 @@ Before Cycle A, create:
    - upstream dependency note: `01_formulation.md`, `02_protocol.md`, `03_cleaning.md`, `04_examination.md`
    - note: "This notebook is stage-core only. The loaded route file may narrow or prohibit actions. This stage does not widen the claim boundary or self-revise based on result quality."
 
-2. `dslc_documentation/05_analysis.md` with this initial structure:
+2. `skeptic_documentation/05_analysis.md` with this initial structure:
 
 ```markdown
 # Analyze: Analysis Contract and Execution
@@ -396,10 +396,11 @@ Claude reads the notebook outputs, then dispatches two subagents in parallel.
 
 ```text
 Agent(
+  model="{subagent_model}",
   description="Research for Analyze Cycle {X}: {focus}",
   run_in_background=true,
   prompt="""
-  You are a methodological research assistant for a DSLC analyze stage.
+  You are a methodological research assistant for a Skeptic analyze stage.
 
   Context:
   - Approved question: "{approved question}"
@@ -432,10 +433,11 @@ Agent(
 
 ```text
 Agent(
+  model="{subagent_model}",
   description="Evaluation for Analyze Cycle {X}: {focus}",
   run_in_background=true,
   prompt="""
-  You are an objective evaluator for a DSLC analyze-stage cycle.
+  You are an objective evaluator for a Skeptic analyze-stage cycle.
 
   Read these files:
   1. {projects_root}/{project-name}/{docs_dir_name}/05_analysis.md
@@ -551,7 +553,7 @@ Auto mode: apply the autonomous decision protocol from `references/auto-mode.md`
 
 ### Step 5: Log
 
-Immediately after each cycle decision, append to `dslc_documentation/05_analysis.md`:
+Immediately after each cycle decision, append to `skeptic_documentation/05_analysis.md`:
 
 ```markdown
 ### Cycle {X}: {Focus}
@@ -571,7 +573,7 @@ Immediately after each cycle decision, append to `dslc_documentation/05_analysis
 - **Decision:** {pass / iterate / acknowledge gap / backtrack to {stage}}
 ```
 
-Also append structured cycle metrics to `dslc_documentation/metrics.md`. Create the section `## Analysis` if it does not yet exist.
+Also append structured cycle metrics to `skeptic_documentation/metrics.md`. Create the section `## Analysis` if it does not yet exist.
 
 ```markdown
 **Cycle metrics:**
@@ -946,9 +948,10 @@ After the reproducibility results are complete under the active execution mode, 
 
 ```text
 Agent(
+  model="{subagent_model}",
   description="PCS review of analyze stage",
   prompt="""
-  You are a PCS reviewer for a DSLC analyze stage.
+  You are a PCS reviewer for a Skeptic analyze stage.
 
   Read these files:
   1. {projects_root}/{project-name}/{docs_dir_name}/01_formulation.md
@@ -1024,7 +1027,7 @@ The subagent advises. It does not silently widen scope or bypass a blocking conc
 
 After the PCS review clears, or the user overrides it:
 
-1. Append an Analysis Scorecard to `dslc_documentation/metrics.md` under `## Analysis`.
+1. Append an Analysis Scorecard to `skeptic_documentation/metrics.md` under `## Analysis`.
 
 ```markdown
 ### Analysis Scorecard

@@ -1,6 +1,7 @@
-projects_root: ./projects
+projects_root: ~/skeptic-projects
 data_dir_name: data
-docs_dir_name: dslc_documentation
+docs_dir_name: skeptic_documentation
 notebooks_dir_name: notebooks
 readme_name: README.md
 notebook_runner: jupyter nbconvert --execute --inplace --to notebook --ExecutePreprocessor.timeout=300 --ExecutePreprocessor.allow_errors=true
+subagent_model: sonnet

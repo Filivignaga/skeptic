@@ -1,6 +1,6 @@
-# DSLC Auto Mode
+# Skeptic Auto Mode
 
-This file defines the autonomous runtime for `/dslc:auto`.
+This file defines the autonomous runtime for `/skeptic:auto`.
 
 `core-principles.md` remains the architecture contract. This file only changes control flow. It does not weaken checklist coverage, gate evaluation, route discipline, PCS review, scorecards, backtracking, or logging.
 
@@ -8,7 +8,7 @@ This file defines the autonomous runtime for `/dslc:auto`.
 
 Auto mode is active when either of these is true:
 
-- the user invoked `/dslc:auto`
+- the user invoked `/skeptic:auto`
 - the current command explicitly loaded this file and said to follow it
 
 Precedence rules:
@@ -25,7 +25,7 @@ If a stage file says "the user decides" or "the user reviews" during a cycle:
 
 ## Goal
 
-Auto mode runs the full seven-stage DSLC pipeline end to end without per-cycle user approval.
+Auto mode runs the full seven-stage Skeptic pipeline end to end without per-cycle user approval.
 
 The user is still required at:
 
@@ -52,9 +52,9 @@ Required checks:
    - `references/analyze.md`
    - `references/evaluate.md`
    - `references/communicate.md`
-5. notebook runner available from `dslc.yaml` or fallback runner
+5. notebook runner available from `skeptic.yaml` or fallback runner
 6. Jupyter execution environment available, or the user explicitly accepts manual notebook execution
-7. project directories resolvable from `dslc.yaml` or defaults
+7. project directories resolvable from `skeptic.yaml` or defaults
 
 If any preflight check fails:
 
@@ -74,7 +74,7 @@ Minimum startup intake:
 
 Optional startup intake if needed:
 
-- preferred project root if not discoverable from `dslc.yaml`
+- preferred project root if not discoverable from `skeptic.yaml`
 - notebook execution constraints
 - audience information early if the user already knows the final audience
 
