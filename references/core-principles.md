@@ -258,6 +258,9 @@ projects_root/
       splits/                    # Optional. Create only if protocol requires frozen partitions.
       silver/                    # Optional. Cleaned stage outputs when distinct from raw files.
     deliverables/                # Audience-facing outputs rendered by communicate.
+                                 # Must contain exactly one primary deliverable (the 5-section document)
+                                 # and zero or more companion data files. See communicate.md
+                                 # Deliverable Composition Rules for naming and structure requirements.
     docs_dir_name/
       01_formulation.md
       02_protocol.md
@@ -334,7 +337,7 @@ Rules:
 
 - Use ASCII by default for generated `.md`, `.json`, `.yaml`, `.yml`, and `.py` files.
 - If non-ASCII text must be preserved because it comes from source data, domain terminology, or quoted user-provided content, keep it deliberate and localized. Do not introduce typographic punctuation such as em dashes, curly quotes, or en dashes in generated artifacts.
-- Before stage finalization, scan generated `.md`, `.json`, `.yaml`, `.yml`, and `.py` files touched in the stage for mojibake markers and unintended non-ASCII punctuation.
+- Before stage finalization, scan generated `.md`, `.json`, `.yaml`, `.yml`, and `.py` files touched in the stage for mojibake markers and unintended non-ASCII punctuation. This includes files in `deliverables/` -- audience-facing artifacts are the highest-risk location for encoding corruption because they reach external users.
 - Treat mojibake in tracked project artifacts as a blocking defect for stage closure until the affected files are rewritten cleanly.
 
 ## Notebook Execution

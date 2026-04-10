@@ -208,6 +208,23 @@ Before Cycle A, create:
 
 3. Create `deliverables/` directory under the project root if it does not exist.
 
+## Deliverable Composition Rules
+
+Every `communicate` run produces exactly one primary deliverable.
+
+- **Primary deliverable**: the audience-facing document containing all five mandatory sections (Question, Findings, Confidence, Limitations, Methods Summary). Must exist -- a run that produces only data files is incomplete.
+- **Companion data files**: optional structured data files (CSV, JSON, Excel, etc.) that supplement the primary deliverable. The Deliverable Register in `07_communication.md` must list the primary deliverable and every companion file separately with their roles.
+
+## Deliverable Naming Convention
+
+The primary deliverable filename must follow this pattern:
+
+`{project_name}_{audience_type}_{date}.{format_extension}`
+
+Companion data files must use a descriptive name that indicates their content and relationship to the primary deliverable:
+
+`{project_name}_{content_description}_{date}.{ext}`
+
 The notebook header must state the approved question, question type, target quantity, final claim boundary, and claim survival summary explicitly. `communicate` starts only after those fields are written.
 
 ## Stage Map
@@ -294,6 +311,7 @@ Every evaluation gate has a stable ID used in cycle metrics. The evaluation suba
 | `E-uncertainty-visible` | E03 | Uncertainty is visually present for every quantitative claim |
 | `E-format-honest` | E02, E05 | The chosen display format for each claim is the one that honestly represents the finding, not the one that makes it look strongest |
 | `E-proportional` | E06 | Visualization effort is proportional to the project complexity |
+| `E-data-uncertainty` | E07 | Companion data files with point estimates include at least one uncertainty measure per row |
 
 ### Cycle F: Communication Assembly and Terminal Fidelity Audit
 
@@ -311,6 +329,9 @@ Every evaluation gate has a stable ID used in cycle metrics. The evaluation suba
 | `F-question-led` | F06 | The deliverable opens with the audience-relevant question and context, not a method-first description |
 | `F-methods-grounded` | F07 | The Methods Summary states provenance, processing, route, and what was actually done in plain language without assuming shared context |
 | `F-problems-disclosed` | F08 | Material problems, caveats, and limitations are surfaced clearly rather than hidden or downplayed |
+| `F-encoding-clean` | F10 | All files in `deliverables/` pass the ASCII encoding scan with zero non-ASCII typographic punctuation |
+| `F-data-dictionary` | F11 | Every companion data file has a data dictionary defining all columns or fields |
+| `F-degeneracy-disclosed` | F12 | If companion data files show value degeneracy (>30% identical values in a key output column), it is disclosed as a limitation |
 
 ## Cycle Protocol
 
@@ -797,6 +818,7 @@ The evaluation subagent checks: 1. For each checklist item: was it answered with
 | E04 | Do any visualizations use non-zero baselines, inconsistent scaling, cherry-picked ranges, misleading color scales, suppressed baselines, or obscured axis labels? | zero surviving claims with quantitative content |
 | E05 | Are all figures self-contained with titles, axis labels, legends, and annotations readable without additional explanation? | zero surviving claims with quantitative content |
 | E06 | Is the visualization effort proportional to the project complexity? | never |
+| E07 | If the deliverable includes companion data files with point estimates (scores, probabilities, predictions), does each row include at least one uncertainty measure (confidence interval, prediction interval, stability flag, or perturbation range)? | no companion data files with point estimates |
 
 Claude writes notebook cells using this default sequence:
 
@@ -823,6 +845,7 @@ Claude writes notebook cells using this default sequence:
    - dual axes or unlabeled transforms that hide the actual scale
 5. Verify all figures are self-contained: titles, axis labels, legends, and annotations must be readable without additional explanation.
 6. Proportionality: the visualization effort should match the project complexity. A simple descriptive report with two claims needs less visualization work than a complex predictive model output with twelve claims.
+7. If companion data files will include point estimates, verify per-row uncertainty measures exist (checklist E07). If the upstream pipeline did not produce them, disclose the absence as a limitation and add a qualitative indicator derived from existing stability evidence.
 
 **Research questions:**
 
@@ -858,6 +881,9 @@ The evaluation subagent checks: 1. For each checklist item: was it answered with
 | F06 | Does the deliverable lead with the audience-relevant question and why it matters, rather than opening with method or workflow details? | never |
 | F07 | Does the Methods Summary state data provenance, key processing steps, question type and route, and what was actually done in plain language? | never |
 | F08 | Are material problems, caveats, and limitations surfaced clearly in the deliverable rather than buried, and are exploratory dead ends excluded unless needed to explain a limitation? | never |
+| F10 | Do all files in `deliverables/` pass the ASCII encoding scan (no em dashes, curly quotes, en dashes, or other non-ASCII typographic punctuation)? | never |
+| F11 | If companion data files exist, does each have a data dictionary (header comment, companion README, or dedicated column-definition section in the primary deliverable) defining every column or field? | no companion data files |
+| F12 | If companion data files contain quantitative scores, does the value distribution show entity-level variation rather than extensive degeneracy (more than 30% of rows sharing an identical value for a key output column)? If degeneracy is present, is it disclosed as a limitation? | no companion data files with quantitative scores |
 
 Claude writes notebook cells using this default sequence:
 
@@ -904,9 +930,11 @@ Claude writes notebook cells using this default sequence:
    - material problems and limitations are surfaced clearly rather than buried
    - exploratory dead ends are excluded unless needed to explain a limitation or caveat
 
-3. Render the deliverable to `deliverables/` in the chosen format. Name it descriptively (e.g., `report_{audience}_{date}.md`).
+3. Render the deliverable to `deliverables/` following the naming convention from the Deliverable Naming Convention section. The primary deliverable must follow the `{project_name}_{audience_type}_{date}.{format_extension}` pattern. Companion data files must follow `{project_name}_{content_description}_{date}.{ext}`.
 
-4. Run the terminal fidelity check within this cycle:
+4. **Machine-checkable validation (mandatory before step 5).** Run checklist items F01 and F10-F12 as a direct scan of the rendered files. Fix any blocking defects before proceeding.
+
+5. Run the terminal fidelity check within this cycle:
    - verify every surviving claim from the evaluate handoff is present in the deliverable
    - verify every mandatory caveat is present and visible
    - verify no claim was upgraded from its evaluate verdict
@@ -1062,6 +1090,14 @@ Agent(
   9. MANDATORY SECTIONS: Are all five mandatory sections present
      (Question, Findings, Confidence, Limitations, Methods Summary)?
 
+  10. ENCODING INTEGRITY: Do all deliverable files use ASCII-only
+      punctuation per core-principles.md? List violations.
+
+  11. COMPANION DATA QUALITY: If companion data files exist, are
+      they referenced, documented with a data dictionary, and
+      free of undisclosed value degeneracy (>30% identical in a
+      key output column)?
+
   Output format:
 
   CLAIM COMPLETENESS: PASS / FAIL
@@ -1090,6 +1126,12 @@ Agent(
 
   MANDATORY SECTIONS: PASS / FAIL
   - [missing sections, if any]
+
+  ENCODING INTEGRITY: PASS / FAIL
+  - [violations found, if any]
+
+  COMPANION DATA QUALITY: PASS / FAIL / N/A
+  - [issues found, if any]
 
   OVERALL: PASS / FAIL
   - [summary]
