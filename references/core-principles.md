@@ -245,6 +245,7 @@ Rules:
 - Format: `| metric | value | source |`
 - Common metrics across all stages: checklist items answered, mandatory cycles completed, blocking failures total, blocking failures resolved by iteration, blocking failures resolved by override
 - Stage-specific metrics are added per stage file
+- Sections in `metrics.md` must appear in stage order: Formulation, then Claim Boundary Registry, then Protocol, Clean, Examination, Analysis, Evaluation. Within each stage section, cycle metrics appear in chronological order (A, B, C, ...)
 
 ## Project Folder Structure
 
@@ -255,6 +256,7 @@ projects_root/
   project-name/
     data_dir_name/               # Raw inputs and codebooks. Never modify.
       splits/                    # Optional. Create only if protocol requires frozen partitions.
+      silver/                    # Optional. Cleaned stage outputs when distinct from raw files.
     deliverables/                # Audience-facing outputs rendered by communicate.
     docs_dir_name/
       01_formulation.md
@@ -284,6 +286,7 @@ Rules:
 - Treat the raw source format as the canonical source throughout the full lifecycle.
 - Treat split artifacts as conditional, not universal. Do not assume train, validation, and test files exist for every project.
 - If `protocol` chooses full-data analysis, rolling windows, external validation, cross-validation folds, or another pattern, create only the artifacts that plan requires and document them in `02_protocol.md`.
+- If the `clean` stage produces cleaned outputs as distinct files (not modifying raw data), store them in `data_dir_name/silver/` with a `README.md` documenting each artifact, its schema, and known limitations.
 - Rebuild derived data from raw inputs plus protocol-defined frozen artifacts. Do not rely on hand-edited intermediate CSVs.
 
 ## Universal Rules
@@ -297,6 +300,8 @@ Rules:
 - Re-run from raw data plus protocol-defined frozen artifacts, not from ad hoc saved intermediates.
 - Record random seeds when stochastic procedures matter.
 - Preserve an audit trail when backtracking. Mark superseded work; do not erase it.
+- Generated project documents and helper artifacts must reference real project files. Do not leave stale references to deleted artifacts, placeholder scripts, or personal workspace paths in tracked stage documents, README files, or scorecards.
+- README summaries must be derived from the actual project filesystem state and verified against artifacts on disk, not written from memory.
 
 ## README Update Rules
 
@@ -318,7 +323,19 @@ After each completed stage, update `README.md` with:
 - Print or display critical outputs explicitly.
 - Make notebooks runnable from raw data plus protocol-defined artifacts, not hidden session state.
 - Put reusable functions, constraints, and configuration in companion `.py` or `.json` files when they must survive across stages.
+- Do not create one-shot cell-injection scripts in the notebooks directory. Use `NotebookEdit` to add cells. If programmatic notebook construction is unavoidable (e.g., kernel not available), delete the build scripts during stage finalization.
 - Use only ASCII characters in notebook cell content. Use `--` instead of em dashes, straight quotes instead of curly quotes, and plain hyphens instead of en dashes. Non-ASCII punctuation causes mojibake on Windows (e.g., `—` renders as `â€"`).
+
+## Generated Artifact Encoding
+
+The Windows mojibake risk applies to generated project artifacts, not just notebook cells.
+
+Rules:
+
+- Use ASCII by default for generated `.md`, `.json`, `.yaml`, `.yml`, and `.py` files.
+- If non-ASCII text must be preserved because it comes from source data, domain terminology, or quoted user-provided content, keep it deliberate and localized. Do not introduce typographic punctuation such as em dashes, curly quotes, or en dashes in generated artifacts.
+- Before stage finalization, scan generated `.md`, `.json`, `.yaml`, `.yml`, and `.py` files touched in the stage for mojibake markers and unintended non-ASCII punctuation.
+- Treat mojibake in tracked project artifacts as a blocking defect for stage closure until the affected files are rewritten cleanly.
 
 ## Notebook Execution
 

@@ -645,8 +645,7 @@ Adapt these defaults to the specific project. Add project-specific forbidden ver
    - route candidates
    - unit of analysis
    - target population or deployment context, if applicable
-   - operationalization table
-   - data dictionary learned during formulation
+   - operationalization table (reference Cycle D, do not duplicate the full table if already present in the Decision Log)
    - key assumptions
    - assumptions still weakly supported or contested
    - success criteria, baseline, and error-cost asymmetry
@@ -654,6 +653,8 @@ Adapt these defaults to the specific project. Add project-specific forbidden ver
    - what business or scientific decision the question is meant to support
    - what success looks like in substantive terms
    - if inferential or causal: hypothesis structure, or an explicit note that it is not needed
+
+   The Summary is a synthesis for quick reference, not a copy of the Decision Log. Do not repeat cycle content verbatim. Where a cycle already documents something in full detail (e.g., operationalization, research findings), the Summary should reference the cycle entry rather than duplicating it.
 
 2. Add `## Protocol Handoff` to `01_formulation.md` with:
    - recommended data-usage considerations

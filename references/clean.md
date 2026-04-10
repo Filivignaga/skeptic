@@ -789,7 +789,7 @@ Each G+ cycle must define its own checklist items (G01, G02...) scoped to the sp
 The cycle loop ends when:
 
 - mandatory cycles `A`, `B`, `C`, and `E` are complete
-- conditional Cycle `F` is completed or explicitly skipped
+- conditional Cycle `F` is completed or explicitly skipped with a logged reason in `03_cleaning.md` (e.g., "Cycle F skipped: no derived variables justified by the approved question and protocol")
 - all approved `D+` and `G+` follow-ups are closed
 - interactive mode: the user indicates the stage is ready for post-cycle validation
 - auto mode: the mandatory cycles and approved follow-ups are complete, so the stage advances to stage-close review under `references/auto-mode.md`

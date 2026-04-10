@@ -54,7 +54,7 @@ Required checks:
    - `references/communicate.md`
 5. notebook runner available from `skeptic.yaml` or fallback runner
 6. Jupyter execution environment available, or the user explicitly accepts manual notebook execution
-7. project directories resolvable from `skeptic.yaml` or defaults
+7. project directories resolvable from `skeptic.yaml` or defaults. Read `skeptic.yaml` first and use its values for `projects_root`, `data_dir_name`, `docs_dir_name`, `notebooks_dir_name`, and `readme_name`. If `skeptic.yaml` is absent, use the defaults from `core-principles.md`. Use the resolved directory names for all subsequent directory creation and file path resolution throughout the run.
 
 If any preflight check fails:
 
@@ -102,13 +102,40 @@ Minimum fields:
 - `current_stage`
 - `current_cycle`
 - `route`
-- `cycle_iterations`
+- `cycle_iterations` — object keyed by stage name, each value an object keyed by cycle letter with iteration count. Example: `{"formulate": {"A": 2, "B": 1}, "protocol": {"A": 2}}`
 - `followup_counts`
 - `backtrack_count`
-- `stage_attempts`
+- `stage_attempts` — object keyed by stage name with attempt count. Must be updated at the start of every stage, not only the first.
 - `pending_escalation`
 - `last_decision`
 - `last_updated`
+
+State update rules:
+
+- Always write the full JSON object atomically. Read the existing state, modify the relevant fields in memory, then write the complete object. Never append fields to an existing JSON string or do partial text replacement.
+- When the route is resolved during `formulate` (typically Cycle C) or confirmed during `protocol`, update `route` immediately.
+- When entering a new stage, reset `current_cycle` and add the stage to `stage_attempts` (incrementing if already present). Initialize `cycle_iterations` for the new stage as an empty object.
+- When a cycle completes, update `cycle_iterations` for the current stage and cycle letter.
+
+State schema validation and read-back verification:
+
+- Treat `auto_mode_state.json` as schema-validated state, not a freeform log blob.
+- Required types:
+  - `mode`, `project_name`, `current_stage`, `last_decision`, `last_updated`: string
+  - `current_cycle`: string or `null`
+  - `route`: string or `null`
+  - `cycle_iterations`: object keyed by stage name, each value an object keyed by cycle letter with integer counts
+  - `followup_counts`: object
+  - `backtrack_count`: integer
+  - `stage_attempts`: object keyed by stage name with integer counts
+  - `pending_escalation`: `null` or object
+- After every write, immediately reread the file and verify all of the following before continuing:
+  - the file parses as one JSON object
+  - every required field exists with the expected type
+  - required fields match the in-memory state that was intended to be written
+  - stage-scoped structures are internally consistent (`current_stage` exists in `stage_attempts`, the current stage has an entry in `cycle_iterations`, and `route` is persisted as soon as it is known)
+- Duplicate-key shadowing is forbidden. Do not patch JSON text in place. Write a normalized object to a temporary file, atomically replace the target, reread it, and validate the reread object against the intended state.
+- If schema validation or read-back verification fails, stop and repair the state file before continuing. Do not proceed with a partially trusted run state.
 
 If the run is interrupted, resume from this state rather than guessing.
 
@@ -229,6 +256,21 @@ Auto mode may recommend backtracking. It may not hide it.
 
 Every stage ends with an explicit stage-boundary approval.
 
+Before presenting stage approval options, run a stage-boundary validator. Approval is blocked until the validator passes.
+
+Stage-boundary validator requirements:
+
+- Confirm the current stage's mandatory cycles, approved follow-up cycles, post-cycle phases, and stage-close review all ran to completion.
+- Parse the current stage file and treat concrete artifacts named in post-cycle sections, finalization sections, `Required outputs`, and `Gate to proceed` or `Gate to finish` blocks as binding requirements.
+- Verify every required artifact exists, is readable, and is consistent with the stage summary, stage document, README, and `metrics.md`.
+- Run a generated-artifact consistency pass over the project artifacts produced or updated in the stage:
+  - every referenced file path in stage documents, summaries, scorecards, and README entries must exist unless it is explicitly marked as external or future work
+  - stale references to removed or nonexistent artifacts are blocking defects
+  - personal workspace paths, usernames, or machine-specific absolute paths in tracked project docs are blocking defects unless they are the explicit project root for this run or a deliberate portable source locator note
+  - project README summaries must be regenerated from the actual filesystem contents and verified against the artifacts on disk, not written from memory or stale earlier plans
+- Run the final mojibake and encoding scan required by `core-principles.md` for generated `.md`, `.json`, `.yaml`, `.yml`, and `.py` files touched in the stage.
+- If any validator check fails, record the failure as a blocking concern, reopen the relevant stage-close work, and do not ask the user for approval yet.
+
 The summary must include:
 
 - cycles completed
@@ -299,9 +341,11 @@ For each stage:
 3. run the stage precondition checks
 4. execute mandatory cycles using the autonomous cycle protocol
 5. execute approved follow-up cycles
-6. run the stage-close review
-7. present the stage summary
-8. require stage approval before continuing
+6. execute post-cycle phases as defined in the stage file — these are mandatory, not optional. A stage is not complete until all post-cycle phases have run. If the stage file defines reproducibility, robustness, PCS review, or finalization phases, all of them must execute before stage-boundary approval.
+7. run the stage-close review
+8. run the stage-boundary validator, including required-artifact checks, generated-artifact consistency checks, and the final encoding scan
+9. present the stage summary
+10. require stage approval before continuing
 
 At the end of the full run:
 
