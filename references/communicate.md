@@ -3,13 +3,13 @@ name: communicate
 description: Use after formulate, protocol, clean, examine, analyze, and evaluate to package only claims that survived evaluation for the intended audience, without upgrading claims, widening the claim boundary, or introducing new analysis.
 ---
 
-# /dslc:communicate - Communication of Evaluated Results
+# /skeptic:communicate - Communication of Evaluated Results
 
-**IMPORTANT:** Before executing, read `references/core-principles.md` from the parent `dslc` skill for shared conventions.
+**IMPORTANT:** Before executing, read `references/core-principles.md` from the parent `skeptic` skill for shared conventions.
 
 `core-principles.md` is the architecture contract. If this file conflicts with it, `core-principles.md` wins.
 
-`communicate` is the terminal stage of the DSLC. There is no downstream stage to catch errors introduced here. Every fidelity violation -- claim inflation, caveat suppression, boundary widening, misleading visualization, narrative overreach -- goes directly to the audience and into production.
+`communicate` is the terminal stage of the Skeptic. There is no downstream stage to catch errors introduced here. Every fidelity violation -- claim inflation, caveat suppression, boundary widening, misleading visualization, narrative overreach -- goes directly to the audience and into production.
 
 `communicate` does not re-analyze data. It does not re-evaluate claims. It does not generate new claims. It receives the structured handoff from `evaluate` and packages only the claims that survived, with their mandatory caveats and limitations, for the intended audience and use context.
 
@@ -27,13 +27,13 @@ description: Use after formulate, protocol, clean, examine, analyze, and evaluat
 
 The stage reads:
 
-- `dslc_documentation/01_formulation.md` - approved question, question type, target quantity or estimand, claim boundary, unit of analysis, assumptions
-- `dslc_documentation/02_protocol.md` - active route, data usage mode, validation logic
-- `dslc_documentation/03_cleaning.md` - final variable list, population-shift summary
-- `dslc_documentation/04_examination.md` - support registry summary
-- `dslc_documentation/05_analysis.md` - analysis contract, deviation register, claim boundary as-narrowed
-- `dslc_documentation/06_evaluation.md` - claim survival registry, final claim boundary, per-dimension summaries (stability, predictability, validity), mandatory limitations, unresolved risks, communicate handoff, handoff discipline
-- `dslc_documentation/metrics.md` - formulation, protocol, cleaning, examination, analysis, and evaluation scorecards, claim boundary registry
+- `skeptic_documentation/01_formulation.md` - approved question, question type, target quantity or estimand, claim boundary, unit of analysis, assumptions
+- `skeptic_documentation/02_protocol.md` - active route, data usage mode, validation logic
+- `skeptic_documentation/03_cleaning.md` - final variable list, population-shift summary
+- `skeptic_documentation/04_examination.md` - support registry summary
+- `skeptic_documentation/05_analysis.md` - analysis contract, deviation register, claim boundary as-narrowed
+- `skeptic_documentation/06_evaluation.md` - claim survival registry, final claim boundary, per-dimension summaries (stability, predictability, validity), mandatory limitations, unresolved risks, communicate handoff, handoff discipline
+- `skeptic_documentation/metrics.md` - formulation, protocol, cleaning, examination, analysis, and evaluation scorecards, claim boundary registry
 - `notebooks/06_evaluation.ipynb` - evidence for claim survival verdicts
 - `README.md` - confirms prior stage completion
 
@@ -47,13 +47,13 @@ Run this gate before anything else.
 
 Verify all of the following:
 
-- `dslc_documentation/01_formulation.md` exists
-- `dslc_documentation/02_protocol.md` exists
-- `dslc_documentation/03_cleaning.md` exists
-- `dslc_documentation/04_examination.md` exists
-- `dslc_documentation/05_analysis.md` exists
-- `dslc_documentation/06_evaluation.md` exists
-- `dslc_documentation/metrics.md` exists
+- `skeptic_documentation/01_formulation.md` exists
+- `skeptic_documentation/02_protocol.md` exists
+- `skeptic_documentation/03_cleaning.md` exists
+- `skeptic_documentation/04_examination.md` exists
+- `skeptic_documentation/05_analysis.md` exists
+- `skeptic_documentation/06_evaluation.md` exists
+- `skeptic_documentation/metrics.md` exists
 - `notebooks/06_evaluation.ipynb` exists
 - `README.md` exists
 
@@ -167,7 +167,7 @@ Before Cycle A, create:
    - upstream dependency note: `01_formulation.md`, `02_protocol.md`, `03_cleaning.md`, `04_examination.md`, `05_analysis.md`, `06_evaluation.md`
    - note: "This notebook is the working surface for communication. The deliverable is rendered from this notebook into the audience-appropriate format in deliverables/. This stage does not re-analyze data, re-evaluate claims, widen the claim boundary, or compute new statistics."
 
-2. `dslc_documentation/07_communication.md` with this initial structure:
+2. `skeptic_documentation/07_communication.md` with this initial structure:
 
 ```markdown
 # Communicate: Communication of Evaluated Results
@@ -207,6 +207,23 @@ Before Cycle A, create:
 ```
 
 3. Create `deliverables/` directory under the project root if it does not exist.
+
+## Deliverable Composition Rules
+
+Every `communicate` run produces exactly one primary deliverable.
+
+- **Primary deliverable**: the audience-facing document containing all five mandatory sections (Question, Findings, Confidence, Limitations, Methods Summary). Must exist -- a run that produces only data files is incomplete.
+- **Companion data files**: optional structured data files (CSV, JSON, Excel, etc.) that supplement the primary deliverable. The Deliverable Register in `07_communication.md` must list the primary deliverable and every companion file separately with their roles.
+
+## Deliverable Naming Convention
+
+The primary deliverable filename must follow this pattern:
+
+`{project_name}_{audience_type}_{date}.{format_extension}`
+
+Companion data files must use a descriptive name that indicates their content and relationship to the primary deliverable:
+
+`{project_name}_{content_description}_{date}.{ext}`
 
 The notebook header must state the approved question, question type, target quantity, final claim boundary, and claim survival summary explicitly. `communicate` starts only after those fields are written.
 
@@ -294,6 +311,7 @@ Every evaluation gate has a stable ID used in cycle metrics. The evaluation suba
 | `E-uncertainty-visible` | E03 | Uncertainty is visually present for every quantitative claim |
 | `E-format-honest` | E02, E05 | The chosen display format for each claim is the one that honestly represents the finding, not the one that makes it look strongest |
 | `E-proportional` | E06 | Visualization effort is proportional to the project complexity |
+| `E-data-uncertainty` | E07 | Companion data files with point estimates include at least one uncertainty measure per row |
 
 ### Cycle F: Communication Assembly and Terminal Fidelity Audit
 
@@ -311,6 +329,9 @@ Every evaluation gate has a stable ID used in cycle metrics. The evaluation suba
 | `F-question-led` | F06 | The deliverable opens with the audience-relevant question and context, not a method-first description |
 | `F-methods-grounded` | F07 | The Methods Summary states provenance, processing, route, and what was actually done in plain language without assuming shared context |
 | `F-problems-disclosed` | F08 | Material problems, caveats, and limitations are surfaced clearly rather than hidden or downplayed |
+| `F-encoding-clean` | F10 | All files in `deliverables/` pass the ASCII encoding scan with zero non-ASCII typographic punctuation |
+| `F-data-dictionary` | F11 | Every companion data file has a data dictionary defining all columns or fields. Any column name that uses a relative temporal reference (e.g., `last_year_presence`, `rolling3_years_positive`, `lag1_*`) must include the explicit year range or reference year in either (a) the column name itself (e.g., `presence_2024`) or (b) the data dictionary entry with exact year ranges. Ambiguous temporal column names without year disambiguation are a blocking defect. |
+| `F-degeneracy-disclosed` | F12 | If companion data files show value degeneracy (>30% identical values in a key output column), it is disclosed as a limitation |
 
 ## Cycle Protocol
 
@@ -349,10 +370,11 @@ Claude reads the notebook outputs, then dispatches two subagents in parallel.
 
 ```text
 Agent(
+  model="{subagent_model}",
   description="Research for Communicate Cycle {X}: {focus}",
   run_in_background=true,
   prompt="""
-  You are a communication conventions research assistant for a DSLC communicate stage.
+  You are a communication conventions research assistant for a Skeptic communicate stage.
 
   Context:
   - Approved question: "{approved question}"
@@ -384,10 +406,11 @@ Agent(
 
 ```text
 Agent(
+  model="{subagent_model}",
   description="Evaluation for Communicate Cycle {X}: {focus}",
   run_in_background=true,
   prompt="""
-  You are an objective evaluator for a DSLC communicate-stage cycle.
+  You are an objective evaluator for a Skeptic communicate-stage cycle.
 
   Read these files:
   1. {projects_root}/{project-name}/{docs_dir_name}/07_communication.md
@@ -430,14 +453,17 @@ Agent(
 
   EVALUATION: Cycle {X} - {focus}
 
-  DEFECT SCAN:
-  List every defect, gap, or weakness in this cycle's work. Minimum: 1
-  defect, or "No defects found" with a 2-sentence justification of why
-  the work has no weaknesses (this justification is itself auditable).
+  DEFECT SCAN (adversarial mode):
+  Assume the work contains errors. Your job is to actively falsify each gate
+  and checklist answer rather than confirm them. For each gate you mark PASS,
+  you must state the specific failure mode you tested and ruled out.
   Categories to scan: claim inflation, caveat suppression, boundary
   widening, computation boundary violations, recommendation overreach,
   selective reporting, visualization misleading, audience mismatch,
   narrative overreach.
+  If after genuinely adversarial scrutiny you find zero defects, state
+  "No defects found" and name at least 3 specific failure modes you tested
+  and ruled out. Do not fabricate defects to meet a quota.
   - Defect 1: [description with evidence]
   - Defect 2: [description with evidence]
 
@@ -512,7 +538,7 @@ Auto mode: apply the autonomous decision protocol from `references/auto-mode.md`
 
 ### Step 5: Log
 
-Immediately after each cycle decision, append to `dslc_documentation/07_communication.md`:
+Immediately after each cycle decision, append to `skeptic_documentation/07_communication.md`:
 
 ```markdown
 ### Cycle {X}: {Focus}
@@ -527,7 +553,7 @@ Immediately after each cycle decision, append to `dslc_documentation/07_communic
 - **Decision:** {pass / iterate / acknowledge gap / backtrack to {stage}}
 ```
 
-Also append structured cycle metrics to `dslc_documentation/metrics.md`. Create the section `## Communication` if it does not yet exist.
+Also append structured cycle metrics to `skeptic_documentation/metrics.md`. Create the section `## Communication` if it does not yet exist.
 
 ```markdown
 **Cycle metrics:**
@@ -708,7 +734,7 @@ Claude writes notebook cells using this default sequence:
 **Research questions:**
 
 - What audience-appropriate language conventions exist for this domain and question type?
-- What plain-language equivalents exist for the technical terms the DSLC produces (perturbation axes, stability verdicts, predictability checks, claim boundaries)?
+- What plain-language equivalents exist for the technical terms the Skeptic produces (perturbation axes, stability verdicts, predictability checks, claim boundaries)?
 - What recommendation framing conventions exist for this claim type and audience?
 - What are common claim-inflation patterns in similar reports?
 
@@ -795,6 +821,7 @@ The evaluation subagent checks: 1. For each checklist item: was it answered with
 | E04 | Do any visualizations use non-zero baselines, inconsistent scaling, cherry-picked ranges, misleading color scales, suppressed baselines, or obscured axis labels? | zero surviving claims with quantitative content |
 | E05 | Are all figures self-contained with titles, axis labels, legends, and annotations readable without additional explanation? | zero surviving claims with quantitative content |
 | E06 | Is the visualization effort proportional to the project complexity? | never |
+| E07 | If the deliverable includes companion data files with point estimates (scores, probabilities, predictions), does each row include at least one uncertainty measure (confidence interval, prediction interval, stability flag, or perturbation range)? | no companion data files with point estimates |
 
 Claude writes notebook cells using this default sequence:
 
@@ -821,6 +848,7 @@ Claude writes notebook cells using this default sequence:
    - dual axes or unlabeled transforms that hide the actual scale
 5. Verify all figures are self-contained: titles, axis labels, legends, and annotations must be readable without additional explanation.
 6. Proportionality: the visualization effort should match the project complexity. A simple descriptive report with two claims needs less visualization work than a complex predictive model output with twelve claims.
+7. If companion data files will include point estimates, verify per-row uncertainty measures exist (checklist E07). If the upstream pipeline did not produce them, disclose the absence as a limitation and add a qualitative indicator derived from existing stability evidence.
 
 **Research questions:**
 
@@ -856,6 +884,9 @@ The evaluation subagent checks: 1. For each checklist item: was it answered with
 | F06 | Does the deliverable lead with the audience-relevant question and why it matters, rather than opening with method or workflow details? | never |
 | F07 | Does the Methods Summary state data provenance, key processing steps, question type and route, and what was actually done in plain language? | never |
 | F08 | Are material problems, caveats, and limitations surfaced clearly in the deliverable rather than buried, and are exploratory dead ends excluded unless needed to explain a limitation? | never |
+| F10 | Do all files in `deliverables/` pass the ASCII encoding scan (no em dashes, curly quotes, en dashes, or other non-ASCII typographic punctuation)? | never |
+| F11 | If companion data files exist, does each have a data dictionary (header comment, companion README, or dedicated column-definition section in the primary deliverable) defining every column or field? | no companion data files |
+| F12 | If companion data files contain quantitative scores, does the value distribution show entity-level variation rather than extensive degeneracy (more than 30% of rows sharing an identical value for a key output column)? If degeneracy is present, is it disclosed as a limitation? | no companion data files with quantitative scores |
 
 Claude writes notebook cells using this default sequence:
 
@@ -893,7 +924,7 @@ Claude writes notebook cells using this default sequence:
    - Question type and route
    - Data provenance and the key processing steps that produced the analyzed artifact
    - Data description (without disclosing sensitive details)
-   - Link to the full DSLC documentation for traceability
+   - Link to the full Skeptic documentation for traceability
    - Statement of reproducibility: the analysis can be rerun from raw data plus protocol-defined artifacts
 
 2. Verify writing discipline before render:
@@ -902,9 +933,11 @@ Claude writes notebook cells using this default sequence:
    - material problems and limitations are surfaced clearly rather than buried
    - exploratory dead ends are excluded unless needed to explain a limitation or caveat
 
-3. Render the deliverable to `deliverables/` in the chosen format. Name it descriptively (e.g., `report_{audience}_{date}.md`).
+3. Render the deliverable to `deliverables/` following the naming convention from the Deliverable Naming Convention section. The primary deliverable must follow the `{project_name}_{audience_type}_{date}.{format_extension}` pattern. Companion data files must follow `{project_name}_{content_description}_{date}.{ext}`.
 
-4. Run the terminal fidelity check within this cycle:
+4. **Machine-checkable validation (mandatory before step 5).** Run checklist items F01 and F10-F12 as a direct scan of the rendered files. Fix any blocking defects before proceeding.
+
+5. Run the terminal fidelity check within this cycle:
    - verify every surviving claim from the evaluate handoff is present in the deliverable
    - verify every mandatory caveat is present and visible
    - verify no claim was upgraded from its evaluate verdict
@@ -1001,9 +1034,10 @@ Dispatch the terminal fidelity subagent:
 
 ```text
 Agent(
+  model="{subagent_model}",
   description="Terminal fidelity check for communicate",
   prompt="""
-  You are a terminal fidelity auditor for a DSLC communicate stage.
+  You are a terminal fidelity auditor for a Skeptic communicate stage.
 
   Read these files:
   1. {projects_root}/{project-name}/{docs_dir_name}/06_evaluation.md
@@ -1059,6 +1093,14 @@ Agent(
   9. MANDATORY SECTIONS: Are all five mandatory sections present
      (Question, Findings, Confidence, Limitations, Methods Summary)?
 
+  10. ENCODING INTEGRITY: Do all deliverable files use ASCII-only
+      punctuation per core-principles.md? List violations.
+
+  11. COMPANION DATA QUALITY: If companion data files exist, are
+      they referenced, documented with a data dictionary, and
+      free of undisclosed value degeneracy (>30% identical in a
+      key output column)?
+
   Output format:
 
   CLAIM COMPLETENESS: PASS / FAIL
@@ -1088,6 +1130,12 @@ Agent(
   MANDATORY SECTIONS: PASS / FAIL
   - [missing sections, if any]
 
+  ENCODING INTEGRITY: PASS / FAIL
+  - [violations found, if any]
+
+  COMPANION DATA QUALITY: PASS / FAIL / N/A
+  - [issues found, if any]
+
   OVERALL: PASS / FAIL
   - [summary]
   """
@@ -1107,7 +1155,7 @@ After the subagent returns:
 
 After the terminal fidelity check passes:
 
-1. **Communication Scorecard (mandatory first item).** Append to `dslc_documentation/metrics.md` under `## Communication`.
+1. **Communication Scorecard (mandatory first item).** Append to `skeptic_documentation/metrics.md` under `## Communication`.
 
 ```markdown
 ### Communication Scorecard
@@ -1165,7 +1213,7 @@ Limitations disclosed: {n}
 Deliverable: deliverables/{filename}
 ```
 
-6. Tell the user the DSLC is complete. State the deliverable location.
+6. Tell the user the Skeptic is complete. State the deliverable location.
 
 ## Dependency Notes
 

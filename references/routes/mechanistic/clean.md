@@ -1,6 +1,6 @@
 ---
 name: clean-mechanistic
-description: Stage-specific route file for the DSLC clean stage for mechanistic questions. Narrows the universal clean stage-core.
+description: Stage-specific route file for the Skeptic clean stage for mechanistic questions. Narrows the universal clean stage-core.
 ---
 
 # Clean Route File: Mechanistic

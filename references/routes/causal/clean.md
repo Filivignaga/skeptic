@@ -1,6 +1,6 @@
 ---
 name: clean-causal
-description: Stage-specific route file for the DSLC clean stage for causal questions. Narrows the universal clean stage-core.
+description: Stage-specific route file for the Skeptic clean stage for causal questions. Narrows the universal clean stage-core.
 ---
 
 # Clean Route File: Causal

@@ -1,6 +1,6 @@
 ---
 name: examine-descriptive
-description: Stage-specific route file for the DSLC examine stage for descriptive questions. Narrows the universal examine stage-core.
+description: Stage-specific route file for the Skeptic examine stage for descriptive questions. Narrows the universal examine stage-core.
 ---
 
 # Examine Route File: Descriptive

@@ -1,6 +1,6 @@
 ---
 name: clean-exploratory
-description: Stage-specific route file for the DSLC clean stage for exploratory questions. Narrows the universal clean stage-core.
+description: Stage-specific route file for the Skeptic clean stage for exploratory questions. Narrows the universal clean stage-core.
 ---
 
 # Clean Route File: Exploratory

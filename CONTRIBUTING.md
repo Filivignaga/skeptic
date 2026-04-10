@@ -4,7 +4,7 @@ PRs reviewed within 72 hours.
 
 ## Before You Start
 
-Read `SPEC.md` for architecture decisions and `references/core-principles.md` for the design contract. Changes that violate either will be rejected.
+Read `references/core-principles.md` for architecture decisions and the design contract. Changes that violate it will be rejected.
 
 ## What We Accept
 
@@ -31,7 +31,7 @@ Read `SPEC.md` for architecture decisions and `references/core-principles.md` fo
 ## Pull Request Process
 
 1. Fork the repository
-2. Create a branch from `main`
+2. Create a branch from `master`
 3. Make your changes
 4. Verify every referenced file exists and is internally consistent
 5. Test the skill in Claude Code with a real dataset

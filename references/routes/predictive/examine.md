@@ -1,6 +1,6 @@
 ---
 name: examine-predictive
-description: Stage-specific route file for the DSLC examine stage for predictive questions. Narrows the universal examine stage-core.
+description: Stage-specific route file for the Skeptic examine stage for predictive questions. Narrows the universal examine stage-core.
 ---
 
 # Examine Route File: Predictive

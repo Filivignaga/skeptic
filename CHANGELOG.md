@@ -5,6 +5,20 @@ All notable changes to Skeptic will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-04-10
+
+### Added
+- Format-agnostic data ingest: new `references/data-formats.md` defines rules for CSV, Parquet, JSON, Excel, and other formats so the pipeline handles them consistently
+- 10 concrete enforcement checks in auto-mode stage-boundary validator (sequence, gate, artifact, and state checks)
+- Deliverable composition, encoding, and data quality gates in the communicate stage
+- Adversarial evaluation pass and cross-stage audit trail validation
+
+### Changed
+- `skeptic.yaml` is now tracked directly instead of shipping a `.example` file; simplifies setup and avoids config drift
+- Hardened auto-mode state management: stage attempts update at every stage entry, cycle iterations track per-stage/per-cycle counts
+- Post-cycle phases are now enforced (no skipping evaluation-to-communicate boundary)
+- All internal references updated from DSLC to Skeptic
+
 ## [1.0.0] - 2026-04-09
 
 ### Added

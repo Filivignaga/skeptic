@@ -1,8 +1,8 @@
-# DSLC Core Principles
+# Skeptic Core Principles
 
 Use a question-first lifecycle. Do not start from a favorite method. Do not treat predictive workflows as the default template for every project.
 
-This file is the architecture contract for the DSLC. If any downstream stage file conflicts with this file, this file wins.
+This file is the architecture contract for the Skeptic. If any downstream stage file conflicts with this file, this file wins.
 
 ## PCS Framework
 
@@ -42,14 +42,14 @@ Stage purposes:
 
 ## Execution Modes
 
-DSLC supports two execution modes:
+Skeptic supports two execution modes:
 
 - `interactive`: the original runtime where the user reviews outputs and decides cycle by cycle
-- `auto`: the `/dslc:auto` runtime defined in `references/auto-mode.md`
+- `auto`: the `/skeptic:auto` runtime defined in `references/auto-mode.md`
 
 Mode-selection rules:
 
-- if `/dslc:auto` is active, load and follow `references/auto-mode.md`
+- if `/skeptic:auto` is active, load and follow `references/auto-mode.md`
 - if a stage file conflicts with `references/auto-mode.md` about runtime control flow, `references/auto-mode.md` wins
 - stage files still define what each stage must check, log, and protect
 
@@ -66,14 +66,15 @@ Auto mode keeps the same rigor:
 Treat this skill as repo-portable.
 
 - Do not depend on absolute paths, usernames, machine-specific folders, or personal workspace conventions.
-- Prefer a repo-local `dslc.yaml` file in the skill or project root.
-- If `dslc.yaml` is absent, use these defaults:
-  - `projects_root`: `./projects`
+- Prefer a repo-local `skeptic.yaml` file in the skill or project root.
+- If `skeptic.yaml` is absent, use these defaults:
+  - `projects_root`: `~/skeptic-projects`
   - `data_dir_name`: `data`
-  - `docs_dir_name`: `dslc_documentation`
+  - `docs_dir_name`: `skeptic_documentation`
   - `notebooks_dir_name`: `notebooks`
   - `readme_name`: `README.md`
   - `notebook_runner`: `jupyter nbconvert --execute --inplace --to notebook --ExecutePreprocessor.timeout=300 --ExecutePreprocessor.allow_errors=true`
+  - `subagent_model`: `sonnet`
 - Interpret any legacy project-root example as illustrative, not as a hard requirement.
 - When the project uses local files, copy portable raw inputs into the configured data directory.
 - When the project uses a database, query engine, or remote source, record only portable source metadata and non-secret access instructions in project artifacts. Never store secrets in tracked files.
@@ -244,6 +245,7 @@ Rules:
 - Format: `| metric | value | source |`
 - Common metrics across all stages: checklist items answered, mandatory cycles completed, blocking failures total, blocking failures resolved by iteration, blocking failures resolved by override
 - Stage-specific metrics are added per stage file
+- Sections in `metrics.md` must appear in stage order: Formulation, then Claim Boundary Registry, then Protocol, Clean, Examination, Analysis, Evaluation. Within each stage section, cycle metrics appear in chronological order (A, B, C, ...)
 
 ## Project Folder Structure
 
@@ -254,7 +256,11 @@ projects_root/
   project-name/
     data_dir_name/               # Raw inputs and codebooks. Never modify.
       splits/                    # Optional. Create only if protocol requires frozen partitions.
+      silver/                    # Optional. Cleaned stage outputs when distinct from raw files.
     deliverables/                # Audience-facing outputs rendered by communicate.
+                                 # Must contain exactly one primary deliverable (the 5-section document)
+                                 # and zero or more companion data files. See communicate.md
+                                 # Deliverable Composition Rules for naming and structure requirements.
     docs_dir_name/
       01_formulation.md
       02_protocol.md
@@ -283,6 +289,7 @@ Rules:
 - Treat the raw source format as the canonical source throughout the full lifecycle.
 - Treat split artifacts as conditional, not universal. Do not assume train, validation, and test files exist for every project.
 - If `protocol` chooses full-data analysis, rolling windows, external validation, cross-validation folds, or another pattern, create only the artifacts that plan requires and document them in `02_protocol.md`.
+- If the `clean` stage produces cleaned outputs as distinct files (not modifying raw data), store them in `data_dir_name/silver/` with a `README.md` documenting each artifact, its schema, and known limitations.
 - Rebuild derived data from raw inputs plus protocol-defined frozen artifacts. Do not rely on hand-edited intermediate CSVs.
 
 ## Universal Rules
@@ -296,6 +303,8 @@ Rules:
 - Re-run from raw data plus protocol-defined frozen artifacts, not from ad hoc saved intermediates.
 - Record random seeds when stochastic procedures matter.
 - Preserve an audit trail when backtracking. Mark superseded work; do not erase it.
+- Generated project documents and helper artifacts must reference real project files. Do not leave stale references to deleted artifacts, placeholder scripts, or personal workspace paths in tracked stage documents, README files, or scorecards.
+- README summaries must be derived from the actual project filesystem state and verified against artifacts on disk, not written from memory.
 
 ## README Update Rules
 
@@ -317,16 +326,43 @@ After each completed stage, update `README.md` with:
 - Print or display critical outputs explicitly.
 - Make notebooks runnable from raw data plus protocol-defined artifacts, not hidden session state.
 - Put reusable functions, constraints, and configuration in companion `.py` or `.json` files when they must survive across stages.
+- Do not create one-shot cell-injection scripts in the notebooks directory. Use `NotebookEdit` to add cells. If programmatic notebook construction is unavoidable (e.g., kernel not available), delete the build scripts during stage finalization.
+- Use only ASCII characters in notebook cell content. Use `--` instead of em dashes, straight quotes instead of curly quotes, and plain hyphens instead of en dashes. Non-ASCII punctuation causes mojibake on Windows (e.g., `—` renders as `â€"`).
+
+## Source Data Encoding
+
+Before loading any source data file for the first time (typically in Formulate Cycle A), detect its encoding:
+
+- Try reading with UTF-8 strict mode first. If it succeeds without errors, the file is UTF-8.
+- If UTF-8 fails, check for a BOM (byte order mark) that indicates UTF-16 or UTF-8-BOM.
+- If no BOM and UTF-8 fails, attempt Latin-1/Windows-1252 as a fallback. Log the detected encoding.
+- Record the detected encoding for each source file in the notebook and the stage documentation. All downstream reads of that file must use the detected encoding explicitly (e.g., `pd.read_csv(path, encoding='...')`). Do not rely on default encoding inference.
+- If the source contains non-ASCII text (accented characters, special symbols), verify that the loaded values display correctly in the notebook before proceeding.
+
+Encoding detection is mandatory for CSV, TSV, and other text-based data files. Binary formats (Parquet, HDF5, SQLite) handle encoding internally and do not need this check.
+
+## Generated Artifact Encoding
+
+The Windows mojibake risk applies to generated project artifacts, not just notebook cells.
+
+Rules:
+
+- Use ASCII by default for generated `.md`, `.json`, `.yaml`, `.yml`, and `.py` files.
+- If non-ASCII text must be preserved because it comes from source data, domain terminology, or quoted user-provided content, keep it deliberate and localized. Do not introduce typographic punctuation such as em dashes, curly quotes, or en dashes in generated artifacts.
+- Before stage finalization, scan generated `.md`, `.json`, `.yaml`, `.yml`, and `.py` files touched in the stage for mojibake markers and unintended non-ASCII punctuation. This includes files in `deliverables/` -- audience-facing artifacts are the highest-risk location for encoding corruption because they reach external users.
+- Treat mojibake in tracked project artifacts as a blocking defect for stage closure until the affected files are rewritten cleanly.
 
 ## Notebook Execution
 
-After writing cells with `NotebookEdit`, Claude executes the notebook automatically. Use the `notebook_runner` value from `dslc.yaml` when present. Otherwise use:
+After writing cells with `NotebookEdit`, Claude executes the notebook automatically. Use the `notebook_runner` value from `skeptic.yaml` when present. Otherwise use:
 
 ```text
 Bash(jupyter nbconvert --execute --inplace --to notebook --ExecutePreprocessor.timeout=300 --ExecutePreprocessor.allow_errors=true <notebook_path>)
 ```
 
 Then Claude reads the notebook to extract outputs and presents key results inline.
+
+After execution, scan all executed cell outputs for Python exception tracebacks (`Traceback (most recent call last)`, `Error`, `Exception`). Any unhandled exception in a cell output is a blocking defect that must be fixed before proceeding to subagent review, unless the cell is explicitly marked as an expected-failure demonstration (e.g., a cell that intentionally tests error handling). The `--ExecutePreprocessor.allow_errors=true` flag prevents execution from halting, but it does not mean errors are acceptable.
 
 - interactive mode: the user reviews outputs and provides feedback before subagents are dispatched
 - auto mode: follow the self-review loop in `references/auto-mode.md` and pause only on required escalation triggers or required human-input checkpoints

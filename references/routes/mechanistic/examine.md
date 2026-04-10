@@ -1,6 +1,6 @@
 ---
 name: examine-mechanistic
-description: Stage-specific route file for the DSLC examine stage for mechanistic questions. Narrows the universal examine stage-core.
+description: Stage-specific route file for the Skeptic examine stage for mechanistic questions. Narrows the universal examine stage-core.
 ---
 
 # Examine Route File: Mechanistic

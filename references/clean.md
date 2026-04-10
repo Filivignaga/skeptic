@@ -3,9 +3,9 @@ name: clean
 description: Use after formulate and protocol to build an auditable cleaning pipeline under protocol-defined data visibility, without widening the claim boundary or assuming predictive workflow defaults.
 ---
 
-# /dslc:clean - Data Cleaning and Preprocessing
+# /skeptic:clean - Data Cleaning and Preprocessing
 
-**IMPORTANT:** Before executing, read `references/core-principles.md` from the parent `dslc` skill for shared conventions.
+**IMPORTANT:** Before executing, read `references/core-principles.md` from the parent `skeptic` skill for shared conventions.
 
 `core-principles.md` is the architecture contract. If this file conflicts with it, `core-principles.md` wins.
 
@@ -65,9 +65,9 @@ If a proposed preprocessing step is really compensating for unresolved data qual
 
 The stage reads:
 
-- `dslc_documentation/01_formulation.md` - approved question, question type, target quantity or estimand, claim boundary, operationalization table, unit of analysis, assumptions, protocol handoff
-- `dslc_documentation/02_protocol.md` - active route, data usage mode, visibility rules, frozen artifacts, leakage and forbidden-variable rules, clean prohibitions, validation logic, backtracking triggers
-- `dslc_documentation/metrics.md` - formulation and protocol scorecards
+- `skeptic_documentation/01_formulation.md` - approved question, question type, target quantity or estimand, claim boundary, operationalization table, unit of analysis, assumptions, protocol handoff
+- `skeptic_documentation/02_protocol.md` - active route, data usage mode, visibility rules, frozen artifacts, leakage and forbidden-variable rules, clean prohibitions, validation logic, backtracking triggers
+- `skeptic_documentation/metrics.md` - formulation and protocol scorecards
 - `notebooks/01_formulation.ipynb` - formulation evidence and rationale trace
 - `notebooks/02_protocol.ipynb` - protocol evidence, artifact creation logic, and restriction rationale
 - protocol-defined artifacts under `data/` or `data/splits/` or another path named in `02_protocol.md`
@@ -102,11 +102,12 @@ Run this gate before anything else.
 
 Verify all of the following:
 
-- `dslc_documentation/01_formulation.md` exists
-- `dslc_documentation/02_protocol.md` exists
-- `dslc_documentation/metrics.md` exists
+- `skeptic_documentation/01_formulation.md` exists
+- `skeptic_documentation/02_protocol.md` exists
+- `skeptic_documentation/metrics.md` exists
 - `README.md` exists
 - at least one raw data file exists in `data/`
+- raw file SHA-256 hashes from `01_formulation.md` `## Raw File Hashes` section match current hashes of the corresponding files on disk. Recompute the hash of each raw file and compare. Any mismatch is a blocking defect indicating the raw data was modified after formulation.
 
 Verify `01_formulation.md` contains:
 
@@ -210,7 +211,7 @@ Before Cycle A, create:
    - visible artifacts list
    - note: "This notebook is stage-core only. The loaded route file may narrow or prohibit actions. This stage does not widen protocol or claim boundaries."
 
-2. `dslc_documentation/03_cleaning.md` with this initial structure:
+2. `skeptic_documentation/03_cleaning.md` with this initial structure:
 
 ```markdown
 # Clean: Data Cleaning and Preprocessing
@@ -311,6 +312,7 @@ Every evaluation gate has a stable ID used in cycle metrics. The evaluation suba
 | `C-policies-defined` | C | C01, C02 | Material cleaning policies are explicitly chosen and logged |
 | `C-transforms-auditable` | C | C03 | Every material transformation is expressed in code and traceable to a rationale |
 | `C-population-shift-stated` | C | C04 | Material row, value, or coverage changes include an explicit population-shift statement |
+| `C-row-count-reconciled` | C | C04 | A row-count reconciliation table exists showing: raw_rows - exclusion_1 - exclusion_2 - ... = cleaned_rows. The arithmetic sum must match the actual cleaned artifact row count. Any discrepancy > 0 is a blocking defect. |
 | `C-claim-impact-stated` | C | C05 | Claim consequences of cleaning decisions are stated explicitly |
 | `C-fitness-checkpoint-run` | C | C06 | Dataset fitness checkpoint is completed after material cleaning resolution |
 | `C-suspicious-cleanliness-reviewed` | C | C07 | Suspiciously neat outputs are challenged when trigger conditions appear |
@@ -367,10 +369,11 @@ Claude reads the notebook outputs, then dispatches two subagents in parallel.
 
 ```text
 Agent(
+  model="{subagent_model}",
   description="Research for Clean Cycle {X}: {focus}",
   run_in_background=true,
   prompt="""
-  You are a research assistant for a DSLC clean stage.
+  You are a research assistant for a Skeptic clean stage.
 
   Context:
   - Approved question: "{approved question}"
@@ -404,10 +407,11 @@ Agent(
 
 ```text
 Agent(
+  model="{subagent_model}",
   description="Evaluation for Clean Cycle {X}: {focus}",
   run_in_background=true,
   prompt="""
-  You are an objective evaluator for a DSLC clean-stage cycle.
+  You are an objective evaluator for a Skeptic clean-stage cycle.
 
   Before evaluating gates, verify that all checklist items for this cycle were answered with evidence in the notebook. If any checklist item was not answered, the gates that depend on it auto-fail.
 
@@ -447,13 +451,16 @@ Agent(
 
   EVALUATION: Cycle {X} - {focus}
 
-  DEFECT SCAN:
-  List every defect, gap, or weakness in this cycle's work. Minimum: 1 defect,
-  or "No defects found" with a 2-sentence justification of why the work has
-  no weaknesses (this justification is itself auditable).
+  DEFECT SCAN (adversarial mode):
+  Assume the work contains errors. Your job is to actively falsify each gate
+  and checklist answer rather than confirm them. For each gate you mark PASS,
+  you must state the specific failure mode you tested and ruled out.
   Categories to scan: unstated assumptions, outcome-dependent decisions,
   protocol violations, claim-widening moves, cleaning choices that change
   the analyzable population without documentation, leakage risks.
+  If after genuinely adversarial scrutiny you find zero defects, state
+  "No defects found" and name at least 3 specific failure modes you tested
+  and ruled out. Do not fabricate defects to meet a quota.
   - Defect 1: [description with evidence]
   - Defect 2: [description with evidence]
 
@@ -532,7 +539,7 @@ Auto mode: apply the autonomous decision protocol from `references/auto-mode.md`
 
 ### Step 5: Log
 
-Immediately after each cycle decision, append to `dslc_documentation/03_cleaning.md`:
+Immediately after each cycle decision, append to `skeptic_documentation/03_cleaning.md`:
 
 ```markdown
 ### Cycle {X}: {Focus}
@@ -559,7 +566,7 @@ Immediately after each cycle decision, append to `dslc_documentation/03_cleaning
 - **Decision:** {pass / iterate / acknowledge gap / protocol mismatch / formulation mismatch / data insufficient}
 ```
 
-Also append structured cycle metrics to `dslc_documentation/metrics.md`. Create the section `## Cleaning` if it does not yet exist.
+Also append structured cycle metrics to `skeptic_documentation/metrics.md`. Create the section `## Cleaning` if it does not yet exist.
 
 ```markdown
 **Cycle metrics:**
@@ -787,7 +794,7 @@ Each G+ cycle must define its own checklist items (G01, G02...) scoped to the sp
 The cycle loop ends when:
 
 - mandatory cycles `A`, `B`, `C`, and `E` are complete
-- conditional Cycle `F` is completed or explicitly skipped
+- conditional Cycle `F` is completed or explicitly skipped with a logged reason in `03_cleaning.md` (e.g., "Cycle F skipped: no derived variables justified by the approved question and protocol")
 - all approved `D+` and `G+` follow-ups are closed
 - interactive mode: the user indicates the stage is ready for post-cycle validation
 - auto mode: the mandatory cycles and approved follow-ups are complete, so the stage advances to stage-close review under `references/auto-mode.md`
@@ -917,9 +924,10 @@ After the robustness outputs are complete under the active execution mode, dispa
 
 ```text
 Agent(
+  model="{subagent_model}",
   description="PCS review of clean stage",
   prompt="""
-  You are a PCS reviewer for a DSLC clean stage.
+  You are a PCS reviewer for a Skeptic clean stage.
 
   Read these files:
   1. {projects_root}/{project-name}/{docs_dir_name}/01_formulation.md
@@ -981,7 +989,7 @@ The subagent advises. In auto mode, Claude records the result, applies non-block
 
 0. Delete the temporary snapshot artifacts under `notebooks/.snapshots/`.
 
-1. Append a Cleaning Scorecard to `dslc_documentation/metrics.md` under `## Cleaning`.
+1. Append a Cleaning Scorecard to `skeptic_documentation/metrics.md` under `## Cleaning`.
 
 ```markdown
 ### Cleaning Scorecard

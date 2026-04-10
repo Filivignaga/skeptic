@@ -3,9 +3,9 @@ name: analyze
 description: Use after formulate, protocol, clean, and examine to lock one executable analysis contract within upstream constraints and execute it, producing auditable outputs for route-appropriate PCS evaluation without widening the claim boundary or self-revising based on result quality.
 ---
 
-# /dslc:analyze - Analysis Contract Lock and Execution
+# /skeptic:analyze - Analysis Contract Lock and Execution
 
-**IMPORTANT:** Before executing, read `references/core-principles.md` from the parent `dslc` skill for shared conventions.
+**IMPORTANT:** Before executing, read `references/core-principles.md` from the parent `skeptic` skill for shared conventions.
 
 `core-principles.md` is the architecture contract. If this file conflicts with it, `core-principles.md` wins.
 
@@ -25,11 +25,11 @@ This file is the universal stage-core for `analyze`. It defines the contract-loc
 
 The stage reads:
 
-- `dslc_documentation/01_formulation.md` - approved question, question type, target quantity or estimand, claim boundary, route candidates, unit of analysis, assumptions
-- `dslc_documentation/02_protocol.md` - active route, data usage mode, visibility rules, frozen artifacts, leakage and forbidden-variable rules, validation logic, analyze contract-lock obligations, analyze claim limits, backtracking triggers
-- `dslc_documentation/03_cleaning.md` - final visible artifact list, final variable list, population-shift summary, dataset fitness review, open questions, PCS assessment
-- `dslc_documentation/04_examination.md` - support registry, analysis handoff, analysis constraints, fragility verdicts, active-route pressure, PCS assessment
-- `dslc_documentation/metrics.md` - formulation, protocol, cleaning, and examination scorecards
+- `skeptic_documentation/01_formulation.md` - approved question, question type, target quantity or estimand, claim boundary, route candidates, unit of analysis, assumptions
+- `skeptic_documentation/02_protocol.md` - active route, data usage mode, visibility rules, frozen artifacts, leakage and forbidden-variable rules, validation logic, analyze contract-lock obligations, analyze claim limits, backtracking triggers
+- `skeptic_documentation/03_cleaning.md` - final visible artifact list, final variable list, population-shift summary, dataset fitness review, open questions, PCS assessment
+- `skeptic_documentation/04_examination.md` - support registry, analysis handoff, analysis constraints, fragility verdicts, active-route pressure, PCS assessment
+- `skeptic_documentation/metrics.md` - formulation, protocol, cleaning, and examination scorecards
 - `notebooks/01_formulation.ipynb` - rationale trace for the approved question
 - `notebooks/02_protocol.ipynb` - rationale trace for visibility, restriction, and validation rules
 - `notebooks/03_cleaning.ipynb` - evidence for cleaned artifacts and cleaning judgments
@@ -40,6 +40,8 @@ The stage reads:
 - `README.md` - confirms prior stage completion
 
 Read all upstream outputs. Keep the approved question, protocol contract, cleaning summary, examination support registry, and analysis handoff in active context throughout the stage. These are not checkboxes. They are the constraints the contract must satisfy.
+
+**Cross-stage metric consistency rule:** When recomputing any metric that was also computed in `examine` (e.g., baseline performance, prevalence rates, fold-level statistics), document the exact data subset and fold range used. If the recomputed value differs from the value reported in `04_examination.md`, document the reason explicitly (e.g., different fold subset, different exclusion criteria). Unexplained metric discrepancies between stages are a blocking defect in the deviation register.
 
 No additional user input is required if upstream stages are complete. If upstream outputs are incomplete, contradictory, or missing required restrictions, stop and repair the upstream stage. Do not invent analysis permissions around gaps.
 
@@ -70,11 +72,11 @@ Run this gate before anything else.
 
 Verify all of the following:
 
-- `dslc_documentation/01_formulation.md` exists
-- `dslc_documentation/02_protocol.md` exists
-- `dslc_documentation/03_cleaning.md` exists
-- `dslc_documentation/04_examination.md` exists
-- `dslc_documentation/metrics.md` exists
+- `skeptic_documentation/01_formulation.md` exists
+- `skeptic_documentation/02_protocol.md` exists
+- `skeptic_documentation/03_cleaning.md` exists
+- `skeptic_documentation/04_examination.md` exists
+- `skeptic_documentation/metrics.md` exists
 - `notebooks/01_formulation.ipynb` exists
 - `notebooks/02_protocol.ipynb` exists
 - `notebooks/03_cleaning.ipynb` exists
@@ -201,7 +203,7 @@ Before Cycle A, create:
    - upstream dependency note: `01_formulation.md`, `02_protocol.md`, `03_cleaning.md`, `04_examination.md`
    - note: "This notebook is stage-core only. The loaded route file may narrow or prohibit actions. This stage does not widen the claim boundary or self-revise based on result quality."
 
-2. `dslc_documentation/05_analysis.md` with this initial structure:
+2. `skeptic_documentation/05_analysis.md` with this initial structure:
 
 ```markdown
 # Analyze: Analysis Contract and Execution
@@ -352,6 +354,7 @@ Every evaluation gate has a stable ID used in cycle metrics. The evaluation suba
 |---------|------------|-----------|
 | `F-deviation-register-complete` | F01 | Every deviation between contract and actual execution is documented with cause and impact |
 | `F-outputs-packaged` | F02 | Primary, sensitivity, and challenger outputs are assembled in one evaluation-ready bundle |
+| `F-protocol-commitments-met` | F09 | Every protocol-committed analysis is completed or logged in the deviation register with justification |
 | `F-no-interpretation` | F02 | Assembly does not contain result-quality judgments or claim-scope assertions |
 | `F-claim-boundary-stated` | F03 | Final claim boundary as-narrowed through the stage is explicitly stated |
 | `F-evaluate-ready` | F04, F05, F06 | The package contains everything `evaluate` needs without re-running the analysis |
@@ -396,10 +399,11 @@ Claude reads the notebook outputs, then dispatches two subagents in parallel.
 
 ```text
 Agent(
+  model="{subagent_model}",
   description="Research for Analyze Cycle {X}: {focus}",
   run_in_background=true,
   prompt="""
-  You are a methodological research assistant for a DSLC analyze stage.
+  You are a methodological research assistant for a Skeptic analyze stage.
 
   Context:
   - Approved question: "{approved question}"
@@ -432,10 +436,11 @@ Agent(
 
 ```text
 Agent(
+  model="{subagent_model}",
   description="Evaluation for Analyze Cycle {X}: {focus}",
   run_in_background=true,
   prompt="""
-  You are an objective evaluator for a DSLC analyze-stage cycle.
+  You are an objective evaluator for a Skeptic analyze-stage cycle.
 
   Read these files:
   1. {projects_root}/{project-name}/{docs_dir_name}/05_analysis.md
@@ -477,13 +482,16 @@ Agent(
   - {item_id}: ANSWERED / NOT ANSWERED - [evidence location or gap]
   Auto-failed gates due to unanswered checklist items: [{gate_ids}] or "none"
 
-  DEFECT SCAN:
-  List every defect, gap, or weakness in this cycle's work. Minimum: 1 defect,
-  or "No defects found" with a 2-sentence justification of why the work has
-  no weaknesses (this justification is itself auditable).
+  DEFECT SCAN (adversarial mode):
+  Assume the work contains errors. Your job is to actively falsify each gate
+  and checklist answer rather than confirm them. For each gate you mark PASS,
+  you must state the specific failure mode you tested and ruled out.
   Categories to scan: contract drift, post-hoc analysis additions, claim-boundary
   widening, protocol violations, forbidden variable usage, unauthorized data
   access, unregistered specification changes.
+  If after genuinely adversarial scrutiny you find zero defects, state
+  "No defects found" and name at least 3 specific failure modes you tested
+  and ruled out. Do not fabricate defects to meet a quota.
   - Defect 1: [description with evidence]
   - Defect 2: [description with evidence]
 
@@ -551,7 +559,7 @@ Auto mode: apply the autonomous decision protocol from `references/auto-mode.md`
 
 ### Step 5: Log
 
-Immediately after each cycle decision, append to `dslc_documentation/05_analysis.md`:
+Immediately after each cycle decision, append to `skeptic_documentation/05_analysis.md`:
 
 ```markdown
 ### Cycle {X}: {Focus}
@@ -571,7 +579,7 @@ Immediately after each cycle decision, append to `dslc_documentation/05_analysis
 - **Decision:** {pass / iterate / acknowledge gap / backtrack to {stage}}
 ```
 
-Also append structured cycle metrics to `dslc_documentation/metrics.md`. Create the section `## Analysis` if it does not yet exist.
+Also append structured cycle metrics to `skeptic_documentation/metrics.md`. Create the section `## Analysis` if it does not yet exist.
 
 ```markdown
 **Cycle metrics:**
@@ -809,6 +817,7 @@ This cycle produces the structured handoff that `evaluate` must use when perform
 | F06 | Is the Evaluation Handoff section drafted with all required subsections (Contract Summary, Execution Summary, Deviation Register, Contract Amendments, Flags for Evaluate, Handoff Discipline)? | never |
 | F07 | Does the assembly avoid result-quality judgments or claim-scope assertions? | never |
 | F08 | Is there an explicit handoff statement that the next stage is evaluate? | never |
+| F09 | Are all protocol-committed analyses accounted for? Read `02_protocol.md` `## Protocol Contract` and extract every item marked as required, committed, or mandatory (including sensitivity analyses, calibration methods, stratification requirements, probe-year analyses, etc.). Each must be either (a) completed with documented results in Cycle C or D outputs, or (b) explicitly logged in the `## Deviation Register` with justification for why it was not executed. Uncommitted protocol items that were silently dropped are a blocking defect. | never |
 
 Claude writes notebook cells using this default sequence:
 
@@ -946,9 +955,10 @@ After the reproducibility results are complete under the active execution mode, 
 
 ```text
 Agent(
+  model="{subagent_model}",
   description="PCS review of analyze stage",
   prompt="""
-  You are a PCS reviewer for a DSLC analyze stage.
+  You are a PCS reviewer for a Skeptic analyze stage.
 
   Read these files:
   1. {projects_root}/{project-name}/{docs_dir_name}/01_formulation.md
@@ -1024,7 +1034,7 @@ The subagent advises. It does not silently widen scope or bypass a blocking conc
 
 After the PCS review clears, or the user overrides it:
 
-1. Append an Analysis Scorecard to `dslc_documentation/metrics.md` under `## Analysis`.
+1. Append an Analysis Scorecard to `skeptic_documentation/metrics.md` under `## Analysis`.
 
 ```markdown
 ### Analysis Scorecard

@@ -1,6 +1,6 @@
 ---
 name: analyze-predictive
-description: Stage-specific route file for the DSLC analyze stage for predictive questions. Narrows the universal analyze stage-core.
+description: Stage-specific route file for the Skeptic analyze stage for predictive questions. Narrows the universal analyze stage-core.
 ---
 
 # Analyze Route File: Predictive

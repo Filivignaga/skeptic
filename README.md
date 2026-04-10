@@ -3,7 +3,7 @@
 **A Claude Code skill that forces AI-assisted data analysis to follow the evidence instead of drifting into unsupported claims.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-1.0.0-green.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.1.0-green.svg)](CHANGELOG.md)
 [![Claude Code](https://img.shields.io/badge/Claude%20Code-skill-purple.svg)]()
 
 ---
@@ -134,12 +134,14 @@ skeptic/
 ├── VERSION
 ├── CHANGELOG.md
 ├── CONTRIBUTING.md
-├── skeptic.yaml.example        # Project layout defaults
+├── skeptic.yaml                # Project configuration
 ├── setup                       # One-line install script
 ├── commands/                   # Slash command definitions (8 files)
 └── references/
     ├── core-principles.md      # Master architecture
     ├── constraint-spec.md      # Constraint file format
+    ├── auto-mode.md            # /skeptic:auto runtime
+    ├── data-formats.md         # Format-agnostic ingest rules
     ├── formulate.md            # Stage 1
     ├── protocol.md             # Stage 2
     ├── clean.md                # Stage 3

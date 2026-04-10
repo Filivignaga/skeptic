@@ -1,6 +1,6 @@
 ---
 name: protocol-predictive
-description: Stage-specific route file for the DSLC protocol stage for predictive questions. Narrows the universal protocol stage-core.
+description: Stage-specific route file for the Skeptic protocol stage for predictive questions. Narrows the universal protocol stage-core.
 ---
 
 # Protocol Route File: Predictive

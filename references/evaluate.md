@@ -3,9 +3,9 @@ name: evaluate
 description: Use after formulate, protocol, clean, examine, and analyze to adjudicate whether outputs and claims survive route-appropriate PCS checks, rendering per-claim survival verdicts that gate what communicate may package.
 ---
 
-# /dslc:evaluate - Route-Appropriate PCS Evaluation
+# /skeptic:evaluate - Route-Appropriate PCS Evaluation
 
-**IMPORTANT:** Before executing, read `references/core-principles.md` from the parent `dslc` skill for shared conventions.
+**IMPORTANT:** Before executing, read `references/core-principles.md` from the parent `skeptic` skill for shared conventions.
 
 `core-principles.md` is the architecture contract. If this file conflicts with it, `core-principles.md` wins.
 
@@ -25,12 +25,12 @@ This file is the universal stage-core for `evaluate`. It defines the adjudicatio
 
 The stage reads:
 
-- `dslc_documentation/01_formulation.md` - approved question, question type, target quantity or estimand, claim boundary, route candidates, unit of analysis, assumptions
-- `dslc_documentation/02_protocol.md` - active route, data usage mode, visibility rules, frozen artifacts, leakage and forbidden-variable rules, validation logic, analyze contract-lock obligations, analyze claim limits, backtracking triggers
-- `dslc_documentation/03_cleaning.md` - final visible artifact list, final variable list, population-shift summary, dataset fitness review, open questions, PCS assessment
-- `dslc_documentation/04_examination.md` - support registry, analysis handoff, analysis constraints, fragility verdicts, active-route pressure, PCS assessment
-- `dslc_documentation/05_analysis.md` - analysis contract, deviation register, evaluation handoff (contract summary, execution summary, sensitivity outputs, challenger outputs, flags for evaluate), claim boundary as-narrowed, PCS assessment
-- `dslc_documentation/metrics.md` - formulation, protocol, cleaning, examination, and analysis scorecards, plus the Claim Boundary Registry
+- `skeptic_documentation/01_formulation.md` - approved question, question type, target quantity or estimand, claim boundary, route candidates, unit of analysis, assumptions
+- `skeptic_documentation/02_protocol.md` - active route, data usage mode, visibility rules, frozen artifacts, leakage and forbidden-variable rules, validation logic, analyze contract-lock obligations, analyze claim limits, backtracking triggers
+- `skeptic_documentation/03_cleaning.md` - final visible artifact list, final variable list, population-shift summary, dataset fitness review, open questions, PCS assessment
+- `skeptic_documentation/04_examination.md` - support registry, analysis handoff, analysis constraints, fragility verdicts, active-route pressure, PCS assessment
+- `skeptic_documentation/05_analysis.md` - analysis contract, deviation register, evaluation handoff (contract summary, execution summary, sensitivity outputs, challenger outputs, flags for evaluate), claim boundary as-narrowed, PCS assessment
+- `skeptic_documentation/metrics.md` - formulation, protocol, cleaning, examination, and analysis scorecards, plus the Claim Boundary Registry
 - `notebooks/01_formulation.ipynb` - rationale trace for the approved question
 - `notebooks/02_protocol.ipynb` - rationale trace for visibility, restriction, and validation rules
 - `notebooks/03_cleaning.ipynb` - evidence for cleaned artifacts and cleaning judgments
@@ -72,12 +72,12 @@ Run this gate before anything else.
 
 Verify all of the following:
 
-- `dslc_documentation/01_formulation.md` exists
-- `dslc_documentation/02_protocol.md` exists
-- `dslc_documentation/03_cleaning.md` exists
-- `dslc_documentation/04_examination.md` exists
-- `dslc_documentation/05_analysis.md` exists
-- `dslc_documentation/metrics.md` exists
+- `skeptic_documentation/01_formulation.md` exists
+- `skeptic_documentation/02_protocol.md` exists
+- `skeptic_documentation/03_cleaning.md` exists
+- `skeptic_documentation/04_examination.md` exists
+- `skeptic_documentation/05_analysis.md` exists
+- `skeptic_documentation/metrics.md` exists
 - `notebooks/01_formulation.ipynb` exists
 - `notebooks/02_protocol.ipynb` exists
 - `notebooks/03_cleaning.ipynb` exists
@@ -225,7 +225,15 @@ Before Cycle A, create:
    - upstream dependency note: `01_formulation.md`, `02_protocol.md`, `03_cleaning.md`, `04_examination.md`, `05_analysis.md`
    - note: "This notebook is stage-core only. The loaded route file may narrow or prohibit actions. This stage does not re-execute analysis, widen the claim boundary, or generate new claims."
 
-2. `dslc_documentation/06_evaluation.md` with this initial structure:
+**The evaluate notebook is not optional.** Unlike a documentation-only stage, evaluate must contain executable verification cells that programmatically confirm reproducibility and claim compliance. At minimum, the notebook must:
+- re-verify SHA-256 hashes of all protocol-frozen artifacts
+- re-load and re-compute at least one key metric from each analysis output to confirm reproducibility
+- programmatically check that the claim boundary was not widened (compare `claim_boundary_registry.yaml` against communicated claims if available)
+- document all PCS checks with executable evidence, not just prose assertions
+
+A `06_evaluation.md` without a corresponding executed `06_evaluation.ipynb` is a blocking defect at the stage boundary. The stage-boundary validator Check 4 enforces this.
+
+2. `skeptic_documentation/06_evaluation.md` with this initial structure:
 
 ```markdown
 # Evaluate: Route-Appropriate PCS Evaluation
@@ -276,11 +284,11 @@ The notebook header must state the approved question, question type, target quan
 | B | Stability adjudication | Yes |
 | C | Predictability adjudication | Yes |
 | D | Threats to validity | Yes |
-| F+ | Follow-up investigation | No |
-| E | Claim survival determination | Yes |
+| E+ | Follow-up investigation | No |
+| F | Claim survival determination | Yes |
 | G | Evaluation assembly and handoff | Yes |
 
-Cycles A, B, C, D, E, and G are mandatory. F+ is a narrow follow-up window for ambiguities from B, C, or D that must be resolved before claim survival in E. It is not a license for re-analysis or open-ended exploration.
+Cycles A, B, C, D, F, and G are mandatory. E+ is a narrow follow-up window for ambiguities from B, C, or D that must be resolved before claim survival in F. It is not a license for re-analysis or open-ended exploration.
 
 ## Execution Gates
 
@@ -292,8 +300,8 @@ Before each cycle, verify the required outputs from prior work exist. If anythin
 | Cycle B | `06_evaluation.md` contains `### Cycle A` log entry with an evaluation plan. `06_evaluation.ipynb` has Cycle A outputs. |
 | Cycle C | `06_evaluation.md` contains `### Cycle B` log entry with stability verdicts. |
 | Cycle D | `06_evaluation.md` contains `### Cycle C` log entry with predictability verdicts. |
-| Cycle E | `06_evaluation.md` contains `### Cycle B`, `### Cycle C`, and `### Cycle D` log entries. Any approved F+ follow-ups are closed. |
-| Cycle G | `06_evaluation.md` contains `### Cycle E` log entry with claim survival verdicts. User approved the claim survival registry. |
+| Cycle F | `06_evaluation.md` contains `### Cycle B`, `### Cycle C`, and `### Cycle D` log entries. Any approved E+ follow-ups are closed. |
+| Cycle G | `06_evaluation.md` contains `### Cycle F` log entry with claim survival verdicts. User approved the claim survival registry. |
 | Post-cycle Phase 1 | Mandatory cycle loop complete. User has indicated the stage is ready for post-cycle review. |
 
 ## Gate Condition Registry
@@ -347,18 +355,18 @@ Every evaluation gate has a stable ID used in cycle metrics. The evaluation suba
 | `D-variance-compared` | D10 | Variation from cleaning or preprocessing judgment calls is compared against sampling or resampling variance |
 | `D-blind-comparison` | D11 | Rival outputs or alternative summaries are compared under masked or blinded labels when feasible |
 
-### Cycle E: Claim Survival Determination
+### Cycle F: Claim Survival Determination
 
 | gate_id | depends_on | condition |
 |---------|------------|-----------|
-| `E-every-claim-verdicted` | E01, E02 | Every claim the analysis contract was designed to support has a verdict |
-| `E-no-survived-contradicts-fail` | E03 | No "survived" verdict contradicts a FAIL from Cycles B, C, or D |
-| `E-caveats-explicit` | E02 | Every "survived with caveats" verdict has explicit caveats stated |
-| `E-boundary-respected` | E04, E05 | No claim exceeds the claim boundary as-narrowed from analyze |
-| `E-dead-claims-stated` | E02 | Claims that did not survive are explicitly listed with reasons |
-| `E-narrowing-logged` | E06 | If the final claim boundary is narrower, the narrowing is appended to the Claim Boundary Registry narrowing_log |
-| `E-registry-presented` | E07 | Claim Survival Registry is produced and presented to the user for explicit approval |
-| `E-interpretation-synthesized` | E08 | A concise overall interpretation synthesis ties stability, predictability, validity, and examine-stage support together without audience framing |
+| `F-every-claim-verdicted` | F01, F02 | Every claim the analysis contract was designed to support has a verdict |
+| `F-no-survived-contradicts-fail` | F03 | No "survived" verdict contradicts a FAIL from Cycles B, C, or D |
+| `F-caveats-explicit` | F02 | Every "survived with caveats" verdict has explicit caveats stated |
+| `F-boundary-respected` | F04, F05 | No claim exceeds the claim boundary as-narrowed from analyze |
+| `F-dead-claims-stated` | F02 | Claims that did not survive are explicitly listed with reasons |
+| `F-narrowing-logged` | F06 | If the final claim boundary is narrower, the narrowing is appended to the Claim Boundary Registry narrowing_log |
+| `F-registry-presented` | F07 | Claim Survival Registry is produced and presented to the user for explicit approval |
+| `F-interpretation-synthesized` | F08 | A concise overall interpretation synthesis ties stability, predictability, validity, and examine-stage support together without audience framing |
 
 ### Cycle G: Evaluation Assembly and Handoff
 
@@ -409,10 +417,11 @@ Claude reads the notebook outputs, then dispatches two subagents in parallel.
 
 ```text
 Agent(
+  model="{subagent_model}",
   description="Research for Evaluate Cycle {X}: {focus}",
   run_in_background=true,
   prompt="""
-  You are a methodological research assistant for a DSLC evaluate stage.
+  You are a methodological research assistant for a Skeptic evaluate stage.
 
   Context:
   - Approved question: "{approved question}"
@@ -444,10 +453,11 @@ Agent(
 
 ```text
 Agent(
+  model="{subagent_model}",
   description="Evaluation for Evaluate Cycle {X}: {focus}",
   run_in_background=true,
   prompt="""
-  You are an objective evaluator for a DSLC evaluate-stage cycle.
+  You are an objective evaluator for a Skeptic evaluate-stage cycle.
 
   Read these files:
   1. {projects_root}/{project-name}/{docs_dir_name}/06_evaluation.md
@@ -515,7 +525,12 @@ Agent(
   Recommended next step: pass / iterate / acknowledge gap / backtrack to {stage}
   Recommended follow-up cycle: [topic and why] / None
 
-  Be objective. Not harsh, not lenient.
+  Adversarial stance: Assume the work contains errors. Actively try to
+  falsify each gate rather than confirm it. For each gate marked PASS,
+  state the specific failure mode you checked and ruled out. If after
+  genuinely adversarial scrutiny you find zero issues, name at least 3
+  specific failure modes you tested and ruled out. Do not fabricate
+  findings to meet a quota. Be objective, not harsh, not lenient.
   """
 )
 ```
@@ -545,11 +560,11 @@ Interactive mode: present the synthesized assessment to the user with the allowe
 
 Auto mode: apply the autonomous decision protocol from `references/auto-mode.md`, log the rationale, and continue without waiting unless an escalation trigger fires.
 
-**Cycle E special rule:** Interactive mode requires explicit user approval of the claim survival registry before Cycle G begins. Auto mode logs the registry, runs any bounded auto-iteration needed, and defers human approval to the stage-boundary summary unless an escalation trigger fires.
+**Cycle F special rule:** Interactive mode requires explicit user approval of the claim survival registry before Cycle G begins. Auto mode logs the registry, runs any bounded auto-iteration needed, and defers human approval to the stage-boundary summary unless an escalation trigger fires.
 
 ### Step 5: Log
 
-Immediately after each cycle decision, append to `dslc_documentation/06_evaluation.md`:
+Immediately after each cycle decision, append to `skeptic_documentation/06_evaluation.md`:
 
 ```markdown
 ### Cycle {X}: {Focus}
@@ -568,7 +583,7 @@ Immediately after each cycle decision, append to `dslc_documentation/06_evaluati
 - **Decision:** {pass / iterate / acknowledge gap / backtrack to {stage}}
 ```
 
-Also append structured cycle metrics to `dslc_documentation/metrics.md`. Create the section `## Evaluation` if it does not yet exist.
+Also append structured cycle metrics to `skeptic_documentation/metrics.md`. Create the section `## Evaluation` if it does not yet exist.
 
 ```markdown
 **Cycle metrics:**
@@ -777,48 +792,48 @@ For each threat assessed, render a validity verdict:
 - What construct validity evidence exists for the operationalized measures?
 - When similar studies have produced incorrect conclusions, what was the root cause?
 
-## Cycles F+: Follow-up Investigation
+## Cycles E+: Follow-up Investigation
 
-Use an F+ follow-up only when a material ambiguity from Cycles B, C, or D must be resolved before rendering claim survival verdicts in Cycle E.
+Use an E+ follow-up only when a material ambiguity from Cycles B, C, or D must be resolved before rendering claim survival verdicts in Cycle F.
 
-An F+ cycle must be narrow and issue-specific. Define only:
+An E+ cycle must be narrow and issue-specific. Define only:
 
 - the unresolved ambiguity from B, C, or D
 - why it materially affects claim survival
 - what evidence is still needed
 - what concrete resolution the follow-up targets
 
-Use F+ for issues such as:
+Use E+ for issues such as:
 
 - clarifying whether a specific stability concern changes the qualitative conclusion or only the magnitude
 - resolving whether a marginal predictability result tips to adequate or inadequate with one additional check
 - requesting domain-expert input on a specific validity threat
 - disentangling an execution artifact from genuine instability
 
-Do not turn F+ into re-analysis, unrestricted exploration, or post-hoc testing. If the issue requires new analysis computation, backtrack to `analyze`. If the issue is a cleaning, protocol, or formulation problem, route back upstream.
+Do not turn E+ into re-analysis, unrestricted exploration, or post-hoc testing. If the issue requires new analysis computation, backtrack to `analyze`. If the issue is a cleaning, protocol, or formulation problem, route back upstream.
 
-F+ cycles follow the same cycle protocol. They must end with an explicit decision and immediate logging.
+E+ cycles follow the same cycle protocol. They must end with an explicit decision and immediate logging.
 
-Each F+ cycle must define its own checklist items scoped to the specific follow-up topic. Use IDs in the format F{n}01, F{n}02, etc. (e.g., F101, F102 for the first follow-up; F201, F202 for the second). Add the corresponding gates and depends_on links to the cycle log.
+Each E+ cycle must define its own checklist items scoped to the specific follow-up topic. Use IDs in the format F{n}01, F{n}02, etc. (e.g., F101, F102 for the first follow-up; F201, F202 for the second). Add the corresponding gates and depends_on links to the cycle log.
 
-## Cycle E: Claim Survival Determination
+## Cycle F: Claim Survival Determination
 
 **Focus:** Synthesize verdicts from Cycles B, C, and D into final per-claim survival verdicts.
 
-This is the core adjudication decision of the DSLC. The user must explicitly approve the claim survival registry before the stage can proceed to Cycle G.
+This is the core adjudication decision of the Skeptic. The user must explicitly approve the claim survival registry before the stage can proceed to Cycle G.
 
 ### Checklist
 
 | id | question | skip_when |
 |----|----------|-----------|
-| E01 | Is a claim adjudication table built with one row per claim (claim description, stability verdict, predictability verdict, validity verdict, deviation impact, overall survival verdict)? | never |
-| E02 | Is the survival logic applied correctly: survived (all dimensions pass), survived with caveats (conditional dimensions with explicit caveats), did not survive (any fatal dimension)? | never |
-| E03 | Is consistency verified: no "survived" verdict contradicts a FAIL gate from Cycles B, C, or D? | never |
-| E04 | Is the claim boundary verified against the analyze handoff and Claim Boundary Registry (no widening, no forbidden verbs, no scope expansion)? | never |
-| E05 | Is the final claim boundary stated as it stands after evaluation (may be narrower, never wider)? | never |
-| E06 | If the final claim boundary is narrower, is the narrowing appended to the Claim Boundary Registry `narrowing_log`? | claim boundary did not narrow |
-| E07 | Is the `## Claim Survival Registry` produced in `06_evaluation.md` and presented to the user for explicit approval? | never |
-| E08 | Is a concise overall interpretation synthesis written that ties stability, predictability, validity, and examine-stage support together without audience framing or recommendations? | never |
+| F01 | Is a claim adjudication table built with one row per claim (claim description, stability verdict, predictability verdict, validity verdict, deviation impact, overall survival verdict)? | never |
+| F02 | Is the survival logic applied correctly: survived (all dimensions pass), survived with caveats (conditional dimensions with explicit caveats), did not survive (any fatal dimension)? | never |
+| F03 | Is consistency verified: no "survived" verdict contradicts a FAIL gate from Cycles B, C, or D? | never |
+| F04 | Is the claim boundary verified against the analyze handoff and Claim Boundary Registry (no widening, no forbidden verbs, no scope expansion)? | never |
+| F05 | Is the final claim boundary stated as it stands after evaluation (may be narrower, never wider)? | never |
+| F06 | If the final claim boundary is narrower, is the narrowing appended to the Claim Boundary Registry `narrowing_log`? | claim boundary did not narrow |
+| F07 | Is the `## Claim Survival Registry` produced in `06_evaluation.md` and presented to the user for explicit approval? | never |
+| F08 | Is a concise overall interpretation synthesis written that ties stability, predictability, validity, and examine-stage support together without audience framing or recommendations? | never |
 
 Claude writes notebook cells using this default sequence:
 
@@ -857,7 +872,7 @@ This cycle produces the structured handoff that `communicate` must use. It packa
 
 | id | question | skip_when |
 |----|----------|-----------|
-| G01 | Is the final claim survival registry from Cycle E assembled? | never |
+| G01 | Is the final claim survival registry from Cycle F assembled? | never |
 | G02 | For each surviving claim (with or without caveats), is a one-paragraph evidence summary produced citing specific notebook outputs and cycle verdicts? | never |
 | G03 | For each claim that did not survive, is a one-line reason produced? | no claims failed to survive |
 | G04 | Are mandatory limitations compiled (caveats, acknowledged gaps, validity threats, data limitations, scope restrictions from narrowing)? | never |
@@ -868,7 +883,7 @@ This cycle produces the structured handoff that `communicate` must use. It packa
 
 Claude writes notebook cells using this default sequence:
 
-1. Assemble the final claim survival registry from Cycle E.
+1. Assemble the final claim survival registry from Cycle F.
 2. For each surviving claim (with or without caveats), produce a one-paragraph evidence summary citing the specific notebook outputs and cycle verdicts that support it.
 3. For each claim that did not survive, produce a one-line reason.
 4. Compile mandatory limitations that `communicate` must disclose. These are not optional for `communicate` to drop. They include:
@@ -950,8 +965,8 @@ These are conditions discovered during `evaluate` that force a return upstream.
 | Predictability check fails materially -- reality check contradicts the primary result | C | `analyze` if execution was sound but result does not match reality, or `protocol` if the reality check itself was mis-specified |
 | Validity threat is fatal -- unmeasured confounder plausibly explains the entire result, or construct validity has drifted beyond repair | D | `formulate` plus `protocol` if the question was unanswerable with this data, or `analyze` if a different specification might survive |
 | Deviation impact invalidates results -- deviations documented in the analyze deviation register materially compromised the analysis | A | `analyze` to re-execute with corrected contract |
-| No claims survive evaluation at all | E | `protocol` to reassess what claims are achievable, or `formulate` if the question itself is unanswerable |
-| Claim boundary must widen to produce any meaningful communication | E | `formulate` plus `protocol` -- widening is never allowed within `evaluate` |
+| No claims survive evaluation at all | F | `protocol` to reassess what claims are achievable, or `formulate` if the question itself is unanswerable |
+| Claim boundary must widen to produce any meaningful communication | F | `formulate` plus `protocol` -- widening is never allowed within `evaluate` |
 
 All challengers producing materially different results from the primary is NOT a backtracking trigger. It is a finding that informs the stability verdict in Cycle B. `evaluate` does not backtrack based on result quality alone.
 
@@ -961,9 +976,9 @@ When backtracking occurs, preserve the earlier record and mark it as superseded.
 
 The cycle loop ends when:
 
-- mandatory cycles A, B, C, D, E, and G are complete
-- all approved F+ follow-ups are closed
-- interactive mode: the user explicitly approved the claim survival registry in Cycle E
+- mandatory cycles A, B, C, D, F, and G are complete
+- all approved E+ follow-ups are closed
+- interactive mode: the user explicitly approved the claim survival registry in Cycle F
 - interactive mode: the user indicates the stage is ready for post-cycle review
 - auto mode: the mandatory cycles and approved follow-ups are complete, so the stage advances to stage-close review under `references/auto-mode.md`
 
@@ -988,9 +1003,10 @@ Dispatch an integrity check subagent:
 
 ```text
 Agent(
+  model="{subagent_model}",
   description="Evaluation integrity check",
   prompt="""
-  You are an integrity auditor for a DSLC evaluate stage.
+  You are an integrity auditor for a Skeptic evaluate stage.
 
   Read these files:
   1. {projects_root}/{project-name}/{docs_dir_name}/06_evaluation.md
@@ -1077,7 +1093,7 @@ The integrity check catches bookkeeping errors and confirmation-bias leakage. It
 
 After the integrity check passes:
 
-1. **Evaluation Scorecard (mandatory first item).** Append to `dslc_documentation/metrics.md` under `## Evaluation`.
+1. **Evaluation Scorecard (mandatory first item).** Append to `skeptic_documentation/metrics.md` under `## Evaluation`.
 
 ```markdown
 ### Evaluation Scorecard
@@ -1085,15 +1101,15 @@ After the integrity check passes:
 |--------|-------|--------|
 | Checklist items answered | {answered}/{total} | cycle logs |
 | Mandatory cycles completed | {n}/6 | cycle logs |
-| Follow-up cycles (F+) | {n} ({list topics}) | cycle logs |
+| Follow-up cycles (E+) | {n} ({list topics}) | cycle logs |
 | Total iterations (all cycles) | {n} ({cycle}: {n}, ...) | cycle logs |
 | Blocking failures total | {n across all cycles} | gate registry |
 | Blocking failures resolved by iteration | {n} | gate registry |
 | Blocking failures resolved by override | {n} ({list override reasons}) | gate registry |
-| Claims evaluated | {n} | Cycle E output |
-| Claims survived | {n} | Cycle E output |
-| Claims survived with caveats | {n} | Cycle E output |
-| Claims did not survive | {n} | Cycle E output |
+| Claims evaluated | {n} | Cycle F output |
+| Claims survived | {n} | Cycle F output |
+| Claims survived with caveats | {n} | Cycle F output |
+| Claims did not survive | {n} | Cycle F output |
 | Stability verdict | {stable / conditionally stable / unstable} | Cycle B output |
 | Predictability verdict | {acceptable / concern} | Cycle C output |
 | Threats to validity identified | {n} | Cycle D output |

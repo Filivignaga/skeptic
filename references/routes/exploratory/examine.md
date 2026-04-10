@@ -1,6 +1,6 @@
 ---
 name: examine-exploratory
-description: Stage-specific route file for the DSLC examine stage for exploratory questions. Narrows the universal examine stage-core.
+description: Stage-specific route file for the Skeptic examine stage for exploratory questions. Narrows the universal examine stage-core.
 ---
 
 # Examine Route File: Exploratory

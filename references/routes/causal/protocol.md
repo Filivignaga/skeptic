@@ -1,6 +1,6 @@
 ---
 name: protocol-causal
-description: Stage-specific route file for the DSLC protocol stage for causal questions. Narrows the universal protocol stage-core.
+description: Stage-specific route file for the Skeptic protocol stage for causal questions. Narrows the universal protocol stage-core.
 ---
 
 # Protocol Route File: Causal
