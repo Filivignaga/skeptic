@@ -9,6 +9,10 @@ description: Use when starting a new data analysis project - refine a vague doma
 
 `core-principles.md` is the architecture contract. If this file conflicts with it, `core-principles.md` wins.
 
+## Guiding Principle
+
+A good analyst updates the question instead of forcing the original wording through unsuitable data. Expect the question to evolve as data constraints become clear. This is not failure—it is the formulation process working correctly.
+
 ## Required Inputs
 
 | Input | Description |
@@ -47,6 +51,7 @@ Every evaluation gate has a stable ID used in cycle metrics. The evaluation suba
 | `A-loadable` | A | A01 | Data loadable and structurally sound |
 | `A-relevant` | A | A01, A02, A03 | Data appears relevant to the stated question |
 | `A-question-fit` | A | A01, A02, A03, A06 | The question is framed as a real stakeholder or scientific problem, not a method request; at least two plausible framings were considered; and the approved framing is useful, specific, not already sufficiently answered, and plausibly answerable with available evidence |
+| `A-audience-defined` | A | A08 | The intended audience is identified and the question is framed to be relevant to them |
 | `A-no-red-flags` | A | A03, A04, A05 | No immediate structural red flags likely to derail formulation |
 | `B-variables-understood` | B | B01, B02 | Relevant variables are understood well enough to reason about the question |
 | `B-units-clear` | B | B03 | Unit of analysis or observational unit is clear |
@@ -66,8 +71,10 @@ Every evaluation gate has a stable ID used in cycle metrics. The evaluation suba
 | `D-context-stated` | D | D06 | Target population or deployment context is stated if relevant |
 | `D-assumptions-stated` | D | D09 | Key assumptions are stated explicitly |
 | `D-related-concepts` | D | D08 | Related concepts, modifiers, or confounders are identified |
-| `D-success-criteria-stated` | D | D10 | Baseline, error-cost asymmetry, and minimum useful uplift or success criterion are stated |
-| `D-prior-art-reviewed` | D | D11 | Prior art or analogous work is reviewed and its consequences for scope, assumptions, or project order are stated |
+| `D-baseline-stated` | D | D10 | Baseline the project must beat is stated |
+| `D-error-costs-stated` | D | D11 | Error types and their costs in the decision context are stated, including which errors are unacceptable |
+| `D-uplift-stated` | D | D12 | Minimum useful uplift over baseline is stated |
+| `D-prior-art-reviewed` | D | D13 | Prior art or analogous work is reviewed and its consequences for scope, assumptions, or project order are stated |
 | `D-unfeasible-flagged` | D | D01, D02 | Un-operationalizable terms are flagged with a recommended action |
 | `D-measurement-mismatch` | D | D03 | Direct measure vs. proxy risk is assessed for each chosen operationalization |
 | `D-confounding` | D | D08 | Confounding or identification relevance is assessed at a high level |
@@ -301,6 +308,7 @@ Before loading data, read `references/data-formats.md` and apply the format-spec
 | A05 | If the question involves time, what is the date coverage and time grain? If grouping matters, what are group counts? If multiple tables, what is join-key overlap? | never |
 | A06 | Is the question framed as a real stakeholder or scientific problem, not a method request; have at least two plausible framings been considered; and is the approved framing useful, specific, not already sufficiently answered, and plausibly answerable with available evidence? | never |
 | A07 | For each raw data file, what is its SHA-256 hash? (Compute and log in the notebook and in `01_formulation.md` under a `## Raw File Hashes` section. These hashes serve as the immutability baseline for all downstream stages.) | never |
+| A08 | Who is the intended audience for this question, and is the question interesting or useful to them? | never |
 
 **Research questions:**
 - What domain context matters for understanding this dataset?
@@ -402,8 +410,10 @@ The evaluation subagent checks: 1. For each checklist item: was it answered with
 | D07 | What are the ordered route candidates for later stages, and why is the top route best? | never |
 | D08 | What related concepts, effect modifiers, confounders, or structural dependencies must later stages respect? | never |
 | D09 | What key assumptions are required for the approved formulation to remain coherent? | never |
-| D10 | What baseline, error-cost asymmetry, and minimum useful uplift define success for this project? | never |
-| D11 | What prior art or analogous work changes the question framing, scope, assumptions, or project order? | never |
+| D10 | What is the baseline the project must beat? | never |
+| D11 | What does each error type (false positive, false negative, over/underestimation, etc.) cost in the decision context? Which errors are unacceptable regardless of overall accuracy? | never |
+| D12 | What minimum uplift over baseline would make this project worthwhile? | never |
+| D13 | What prior art or analogous work changes the question framing, scope, assumptions, or project order? | never |
 
 If no viable operationalization exists for a key term, do not bury it. Flag it and force the user decision in Step 4.
 
@@ -425,7 +435,7 @@ If no viable operationalization exists for a key term, do not bury it. Flag it a
 - unit of analysis
 - target population or deployment context, if relevant
 - key assumptions
-- success criteria, baseline, and error-cost asymmetry
+- baseline, error type costs (including which errors are unacceptable), and minimum useful uplift
 - prior-art implications for scope or project order
 - if inferential or causal: null hypothesis, alternative hypothesis, treatment or exposure, and outcome
 - what business or scientific decision the question is meant to support
@@ -660,7 +670,7 @@ Adapt these defaults to the specific project. Add project-specific forbidden ver
    - operationalization table (reference Cycle D, do not duplicate the full table if already present in the Decision Log)
    - key assumptions
    - assumptions still weakly supported or contested
-   - success criteria, baseline, and error-cost asymmetry
+   - baseline, error type costs (including which errors are unacceptable), and minimum useful uplift
    - prior-art implications for scope or project order
    - what business or scientific decision the question is meant to support
    - what success looks like in substantive terms

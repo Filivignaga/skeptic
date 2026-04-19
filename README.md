@@ -60,17 +60,25 @@ Other skills help you write analysis code faster or cover more libraries. Skepti
 
 ## Quick Start
 
+**macOS, Linux, WSL, Git Bash:**
+
 ```bash
 git clone https://github.com/Filivignaga/skeptic.git ~/.claude/skills/skeptic && ~/.claude/skills/skeptic/setup
 ```
 
-The setup script copies slash commands to `~/.claude/commands/skeptic/`. Safe to rerun.
+**Windows PowerShell:**
 
-Works on macOS, Linux, WSL, and Git Bash on Windows.
+```powershell
+git clone https://github.com/Filivignaga/skeptic.git "$env:USERPROFILE\.claude\skills\skeptic"; & "$env:USERPROFILE\.claude\skills\skeptic\setup.ps1"
+```
+
+The setup script copies slash commands to `~/.claude/commands/skeptic/` (or `%USERPROFILE%\.claude\commands\skeptic\` on Windows). Safe to rerun.
 
 **Verify:** type `/skeptic` in Claude Code. If it triggers the formulation stage, install is correct.
 
-**Uninstall:** `rm -rf ~/.claude/skills/skeptic ~/.claude/commands/skeptic`
+**Uninstall (bash):** `rm -rf ~/.claude/skills/skeptic ~/.claude/commands/skeptic`
+
+**Uninstall (PowerShell):** `Remove-Item -Recurse -Force "$env:USERPROFILE\.claude\skills\skeptic","$env:USERPROFILE\.claude\commands\skeptic"`
 
 Then in Claude Code, point it at your data:
 
