@@ -174,16 +174,6 @@ Skeptic is a structural implementation of ideas from:
 - **Jeff Leek** -- *The Elements of Data Analytic Style* (2015). The six question types (descriptive, exploratory, inferential, predictive, causal, mechanistic) and the principle that the question type determines what the data can legitimately support.
 - **Sam Lau, Joseph Gonzalez & Deborah Nolan** -- *Learning Data Science* (2023). The data science lifecycle structure and the discipline of scoping analysis before execution.
 
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md). PRs reviewed within 72 hours.
-
-If you change the workflow:
-- Payoff before theory
-- Install before deep docs
-- Examples before architecture
-- Product language in the README, formal language in references
-
 ## License
 
 [MIT](LICENSE)
