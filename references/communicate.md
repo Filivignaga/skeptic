@@ -1213,7 +1213,7 @@ Limitations disclosed: {n}
 Deliverable: deliverables/{filename}
 ```
 
-6. Tell the user the Skeptic is complete. State the deliverable location.
+6. Read `README.md` and quote the `## Communicate [COMPLETE]` block verbatim in the stage-close user message. If the block is not present or any field is empty, finalization is incomplete — return to the README-update step. Only then tell the user the Skeptic is complete and state the deliverable location.
 
 ## Dependency Notes
 

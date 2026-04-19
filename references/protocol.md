@@ -745,7 +745,7 @@ After the PCS review clears, or the user overrides it:
    Next: Clean - auditable data pipeline under protocol rules
    ```
 
-4. Tell the user the protocol stage is complete and the next stage is `clean`.
+4. Read `README.md` and quote the `## Protocol [COMPLETE]` block verbatim in the stage-close user message. If the block is not present or any field is empty, finalization is incomplete — return to the README-update step. Only then tell the user the protocol stage is complete and the next stage is `clean`.
 
 ## Dependency Notes
 

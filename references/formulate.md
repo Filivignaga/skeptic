@@ -705,7 +705,7 @@ Adapt these defaults to the specific project. Add project-specific forbidden ver
    Next: Protocol - Project rules of the game
    ```
 
-4. Tell the user the formulate stage is complete.
+4. Read `README.md` and quote the `## Formulate [COMPLETE]` block verbatim in the stage-close user message. If the block is not present or any field is empty, finalization is incomplete — return to the README-update step. Only then tell the user the formulate stage is complete.
 
 ## Dependency Notes
 

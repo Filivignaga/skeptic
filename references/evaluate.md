@@ -1146,7 +1146,7 @@ Main limitations: {one-line summary of mandatory limitations}
 Next: Communicate - package only claims that survived evaluation
 ```
 
-6. Present the final artifacts to the user and state that the next stage is `communicate`.
+6. Read `README.md` and quote the `## Evaluate [COMPLETE]` block verbatim in the stage-close user message. If the block is not present or any field is empty, finalization is incomplete — return to the README-update step. Only then present the final artifacts to the user and state that the next stage is `communicate`.
 
 ## Dependency Notes
 

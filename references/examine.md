@@ -889,4 +889,4 @@ Route pressure: {one-line summary of what inside the active route looks stronger
 Next: Analyze - lock and execute the analysis under protocol constraints
 ```
 
-5. Present the final artifacts to the user and state that the next stage is `analyze`.
+5. Read `README.md` and quote the `## Examine [COMPLETE]` block verbatim in the stage-close user message. If the block is not present or any field is empty, finalization is incomplete — return to the README-update step. Only then present the final artifacts to the user and state that the next stage is `analyze`.

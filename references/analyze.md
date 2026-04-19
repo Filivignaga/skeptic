@@ -1084,7 +1084,7 @@ Reproducibility: pass - {runtime}
 Next: Evaluate - route-appropriate PCS review of outputs and claims
 ```
 
-5. Present the final artifacts to the user and state that the next stage is `evaluate`.
+5. Read `README.md` and quote the `## Analyze [COMPLETE]` block verbatim in the stage-close user message. If the block is not present or any field is empty, finalization is incomplete — return to the README-update step. Only then present the final artifacts to the user and state that the next stage is `evaluate`.
 
 Do not send the user to `evaluate`, `communicate`, or back to `examine` unless the stage actually found a failure that requires backtracking.
 

@@ -1042,7 +1042,7 @@ Functions: notebooks/cleaning_functions.py
 Next: Examine - inspect cleaned data under protocol rules
 ```
 
-4. Present the final artifacts to the user and state that the clean stage is ready to close.
+4. Read `README.md` and quote the `## Clean [COMPLETE]` block verbatim in the stage-close user message. If the block is not present or any field is empty, finalization is incomplete — return to the README-update step. Only then present the final artifacts to the user and state that the clean stage is ready to close.
 
 **Gate to finish:**
 
