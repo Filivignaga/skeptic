@@ -444,7 +444,7 @@ Agent(
   - If a question does not apply, say "not applicable" with a one-line reason.
   - Cite sources for claims that would change an evaluation verdict.
 
-  Return concise findings organized by research question.
+  Return concise findings organized by research question. Include the URL for every resource cited.
   """
 )
 ```
@@ -537,7 +537,7 @@ Agent(
 
 ### Step 4: Decision
 
-When both subagents return, Claude synthesizes them into one cycle assessment. Do not present disconnected subagent reports as if they were the stage decision. Log the raw outputs for traceability.
+When both subagents return, Claude synthesizes them into one cycle assessment. Do not present disconnected subagent reports as if they were the stage decision. Log the raw subagent outputs inside the stage's decision log (the main `0X_{stage}.md` document) under a `### Cycle {X} raw subagent outputs` subsection. The research subagent's output must include the URLs for every resource it cites.
 
 Count the blocking failures from the evaluation subagent output: blocking defects plus gates with verdict FAIL. Then apply the decision matrix.
 
@@ -556,7 +556,7 @@ Count the blocking failures from the evaluation subagent output: blocking defect
 - **Reopen formulate** -> stop and reopen `formulate` plus `protocol`
 - **User override** -> user states the specific reason the FAIL is incorrect, logged as `override: {reason}`, forward actions unlock
 
-Interactive mode: present the synthesized assessment to the user with the allowed actions from the matrix. The user decides. After every cycle, force an explicit decision. Do not silently continue.
+Interactive mode: present the synthesized assessment to the user via the **AskUserQuestion** tool, offering the allowed actions from the matrix as selectable options. Do not invoke any other tool until the user answers. The answer is the only valid trigger for continuing.
 
 Auto mode: apply the autonomous decision protocol from `references/auto-mode.md`, log the rationale, and continue without waiting unless an escalation trigger fires.
 

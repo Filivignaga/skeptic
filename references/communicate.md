@@ -397,7 +397,7 @@ Agent(
   - If a question does not apply, say "not applicable" with a one-line reason.
   - Cite sources for claims that would change a communication decision.
 
-  Return concise findings organized by research question.
+  Return concise findings organized by research question. Include the URL for every resource cited.
   """
 )
 ```
@@ -500,7 +500,7 @@ Agent(
 
 ### Step 4: Decision
 
-When both subagents return, Claude synthesizes them into one cycle assessment. Do not present disconnected subagent reports as if they were the stage decision. Log the raw outputs for traceability.
+When both subagents return, Claude synthesizes them into one cycle assessment. Do not present disconnected subagent reports as if they were the stage decision. Log the raw subagent outputs inside the stage's decision log (the main `0X_{stage}.md` document) under a `### Cycle {X} raw subagent outputs` subsection. The research subagent's output must include the URLs for every resource it cites.
 
 Do not fabricate certainty. If the evidence shows the claims cannot be faithfully communicated:
 
@@ -524,7 +524,7 @@ Count the blocking failures from the evaluation subagent output: blocking defect
 - **Reopen formulate + protocol** -> stop and reopen `formulate` plus `protocol` if surviving claims do not address the original question at a useful level
 - **User override** -> user states the specific reason the FAIL is incorrect, logged as `override: {reason}`, forward actions unlock
 
-Interactive mode: present the synthesized assessment to the user with the allowed actions from the matrix. The user decides:
+Interactive mode: present the synthesized assessment to the user via the **AskUserQuestion** tool, offering these options:
 
 - **Pass** -> log the cycle and move forward
 - **Fail + iterate** -> log the cycle, write more cells targeting the gaps, and rerun from Step 2
@@ -532,7 +532,7 @@ Interactive mode: present the synthesized assessment to the user with the allowe
 - **Evaluate mismatch** -> stop and reopen `evaluate`
 - **Formulation mismatch** -> stop and reopen `formulate` plus `protocol`
 
-After every cycle, force an explicit decision. Do not silently continue.
+Do not invoke any other tool until the user answers. The answer is the only valid trigger for continuing.
 
 Auto mode: apply the autonomous decision protocol from `references/auto-mode.md`, log the rationale, and continue without waiting unless an escalation trigger fires.
 

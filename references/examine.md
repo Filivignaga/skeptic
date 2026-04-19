@@ -335,7 +335,7 @@ Agent(
   - If a question does not apply, say "not applicable" and give a one-line reason.
   - Cite sources only for claims that would change how the examination is interpreted or how later analysis should respond.
 
-  Return concise findings with sources, organized by research question.
+  Return concise findings with sources (include the URL for every citation), organized by research question.
   Focus on information that changes support characterization, fragility assessment, or analysis constraints.
   """
 )
@@ -446,7 +446,7 @@ Agent(
 
 ### Step 4: Decision
 
-When both subagents return, Claude synthesizes them into one cycle assessment. Do not present disconnected subagent reports as if they were the stage decision. Log the raw outputs for traceability.
+When both subagents return, Claude synthesizes them into one cycle assessment. Do not present disconnected subagent reports as if they were the stage decision. Log the raw subagent outputs inside the stage's decision log (the main `0X_{stage}.md` document) under a `### Cycle {X} raw subagent outputs` subsection. The research subagent's output must include the URLs for every resource it cites.
 
 Do not fabricate certainty. If the evidence shows the data cannot support the approved question inside the approved boundary, surface it.
 
@@ -467,7 +467,7 @@ Count the blocking failures from the evaluation subagent output: blocking defect
 - **Data insufficient** -> request more data or archive
 - **User override** -> user states the specific reason the FAIL is incorrect, logged as `override: {reason}`, forward actions unlock
 
-Interactive mode: present the synthesized assessment to the user with the allowed actions from the matrix. The user decides. After every cycle, force an explicit decision. Do not silently continue.
+Interactive mode: present the synthesized assessment to the user via the **AskUserQuestion** tool, offering the allowed actions from the matrix as selectable options. Do not invoke any other tool until the user answers. The answer is the only valid trigger for continuing.
 
 Auto mode: apply the autonomous decision protocol from `references/auto-mode.md`, log the rationale, and continue without waiting unless an escalation trigger fires.
 
@@ -825,12 +825,13 @@ Agent(
 After the subagent returns:
 
 1. Append the PCS assessment to `04_examination.md` under `## PCS Assessment`.
-2. Interactive mode: present the assessment to the user.
-3. Interactive mode: user decides:
+2. Interactive mode: present the assessment to the user via the **AskUserQuestion** tool, offering these options:
    - **Satisfied** -> proceed to Phase 3
    - **Valid concern** -> reopen the relevant cycle or route upstream
    - **Disagree** -> log the override and proceed
-4. Auto mode: record the PCS assessment in the stage summary, apply non-blocking fixes autonomously, and escalate only if the review exposes a blocking concern or the user rejects the stage at the stage boundary.
+
+   Do not invoke any other tool until the user answers.
+3. Auto mode: record the PCS assessment in the stage summary, apply non-blocking fixes autonomously, and escalate only if the review exposes a blocking concern or the user rejects the stage at the stage boundary.
 
 The subagent advises. It does not silently widen scope or bypass a blocking concern.
 

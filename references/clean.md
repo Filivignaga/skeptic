@@ -397,7 +397,7 @@ Agent(
   - If a question does not apply, say "not applicable" and give a one-line reason.
   - Cite sources for any claim that would change a cleaning or preprocessing decision.
 
-  Return concise findings with sources, organized by research question.
+  Return concise findings with sources (include the URL for every citation), organized by research question.
   Focus on actionable information that changes cleaning judgments, semantic interpretation, or protocol compliance.
   """
 )
@@ -502,7 +502,7 @@ Agent(
 
 ### Step 4: Decision
 
-When both subagents return, Claude synthesizes them into one cycle assessment. Do not present disconnected subagent reports as if they were the stage decision. Log the raw outputs for traceability.
+When both subagents return, Claude synthesizes them into one cycle assessment. Do not present disconnected subagent reports as if they were the stage decision. Log the raw subagent outputs inside the stage's decision log (the main `0X_{stage}.md` document) under a `### Cycle {X} raw subagent outputs` subsection. The research subagent's output must include the URLs for every resource it cites.
 
 Do not fabricate certainty. If the evidence shows the cleaning problem cannot be resolved inside the current boundary, surface it.
 
@@ -533,7 +533,7 @@ The checkpoint must answer:
 
 If any answer is `no` or `unclear`, surface it explicitly to the user as a decision point. Do not bury it inside "gaps."
 
-Interactive mode: present the synthesized assessment to the user with the allowed actions from the matrix. The user decides. After every cycle, force an explicit decision. Do not silently continue.
+Interactive mode: present the synthesized assessment to the user via the **AskUserQuestion** tool, offering the allowed actions from the matrix as selectable options. Do not invoke any other tool until the user answers. The answer is the only valid trigger for continuing.
 
 Auto mode: apply the autonomous decision protocol from `references/auto-mode.md`, log the rationale, and continue without waiting unless an escalation trigger fires.
 
