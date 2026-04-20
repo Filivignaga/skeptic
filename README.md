@@ -1,178 +1,145 @@
 # Skeptic: Analysis With Receipts
 
-**A Claude Code skill that forces AI-assisted data analysis to follow the evidence instead of drifting into unsupported claims.**
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-1.1.0-green.svg)](CHANGELOG.md)
-[![Claude Code](https://img.shields.io/badge/Claude%20Code-skill-purple.svg)]()
-
----
-
-Ask any AI to "analyze this CSV" and watch what happens: it skips the question, picks a method, runs it, and hands you results with zero audit trail. The output looks professional. The methodology is indefensible.
-
-Skeptic fixes this. It forces a 7-stage sequence where each stage has explicit gates, and claims that don't survive evaluation never reach the deliverable.
+Skeptic is a Claude Code skill for question-first data analysis. It forces the
+workflow to follow the evidence instead of drifting into unsupported claims.
 
 ## How It Works
 
+```text
+/skeptic:formulate    -> lock the question and claim boundary
+/skeptic:protocol     -> lock data-usage and validation rules
+/skeptic:clean        -> prepare data under those rules
+/skeptic:examine      -> inspect what the data can actually support
+/skeptic:analyze      -> execute one locked analysis contract
+/skeptic:evaluate     -> check whether claims survive PCS
+/skeptic:communicate  -> package only what survived
 ```
-/skeptic:formulate    →  Lock the question type and claim boundaries
-/skeptic:protocol     →  Set data-usage rules before touching data
-/skeptic:clean        →  Prepare data under protocol constraints
-/skeptic:examine      →  Inspect what the cleaned data can support
-/skeptic:analyze      →  Execute one locked analysis contract
-/skeptic:evaluate     →  PCS check: did the claims survive?
-/skeptic:communicate  →  Package only what survived
+
+`/skeptic:auto` runs the full sequence autonomously with stage-boundary
+approvals.
+
+## Core Ideas
+
+- Question before method.
+- Protocol before cleaning and analysis.
+- Claim boundaries are explicit and enforceable.
+- Canonical YAML and machine-readable metrics come first.
+- Project-side Python scripts run one cycle at a time.
+- Markdown reports are derived outputs, not working memory.
+
+## Formulate v2 Shape
+
+`formulate` now follows a lean, script-first structure:
+
+- `references/formulate.md` is a small stage entry file
+- `references/formulate/cycles/*.yaml` hold cycle-specific rules
+- the project writes `01_formulation.yaml` first
+- the project runs `01_formulation.py --cycle {X}` one cycle at a time
+- the project keeps compact JSON metrics and a JSONL decision log
+- the project renders `01_formulation.md` only after canonical artifacts are consistent
+
+## What It Produces
+
+Each project lives under the configured `projects_root` and writes its own
+artifacts inside the project folder.
+
+Current formulate artifacts:
+
+```text
+your-project/
+  data/
+  skeptic_documentation/
+    01_formulation.py
+    01_formulation.yaml
+    formulation_metrics.json
+    formulation_decision_log.jsonl
+    01_formulation.md
+    claim_boundary_registry.yaml
+  README.md
 ```
 
-`/skeptic:auto` runs the full sequence autonomously, pausing only for startup intake, escalation triggers, required human-input checkpoints, and stage-boundary approvals.
+Later stages will follow the same pattern: canonical structured artifacts first,
+human-readable markdown last.
 
-Each stage produces auditable artifacts. Each gate is enforceable. Backtracking is explicit and logged.
+## Repository Layout
 
-## Why This Exists
+```text
+skeptic/
+  SKILL.md
+  README.md
+  CHANGELOG.md
+  LICENSE
+  VERSION
+  CONTRIBUTING.md
+  skeptic.yaml
+  setup
+  setup.ps1
+  commands/
+    formulate.md
+    auto.md
+    protocol.md
+    clean.md
+    examine.md
+    analyze.md
+    evaluate.md
+    communicate.md
+  references/
+    core-principles.md
+    auto-mode.md
+    data-formats.md
+    formulate.md
+    formulate/
+      cycles/
+        A.yaml
+        B.yaml
+        C.yaml
+        D.yaml
+        E.yaml
+    protocol.md
+    clean.md
+    examine.md
+    analyze.md
+    evaluate.md
+    communicate.md
+    routes/
+      descriptive/
+      exploratory/
+      inferential/
+      predictive/
+      causal/
+      mechanistic/
+```
 
-| What goes wrong | How Skeptic prevents it |
-|---|---|
-| Method chosen before the question is clear | **Question Before Query**: question type is classified and locked before any analysis code runs |
-| Exploratory findings reported as conclusions | Examine stage is structurally separated from Analyze; no cross-contamination |
-| Data splits applied mechanically | Protocol stage evaluates 8 data-usage modes and selects the one that matches the question |
-| Claim strength exceeds the evidence | Claim Boundary Registry: a YAML registry of allowed vs. forbidden verbs, enforced downstream |
-| Nobody can reconstruct why a result is trusted | Every stage produces named artifacts; the audit trail is the deliverable |
-| Claims that fail evaluation still get reported | **Claims That Survive**: only PCS-passing claims reach the final output |
+## Install
 
-## Skeptic vs. Other Data Science Skills
-
-| Capability | Skeptic | data-science-plugin | mlstack | DS Skills Marketplace | claude-scientific-skills |
-|---|---|---|---|---|---|
-| Question-first workflow | Yes | Partial | Partial | No | No |
-| Protocol stage (rules before data) | Yes | No | No | No | No |
-| Sequential stage enforcement | Yes | Suggested | Independent | No | No |
-| Claim boundary enforcement | Yes | No | No | No | No |
-| PCS evaluation gate | Yes | No | No | No | No |
-| Route-specific analysis (6 types) | Yes | No | No | No | No |
-| Auditable artifact chain | Yes | Partial | Partial | No | Partial |
-| Dual-subagent review per cycle | Yes | Yes | No | No | No |
-| Prevents unsupported claims | Yes | Partial | Partial | No | No |
-| Knowledge compounding | No | Yes | No | No | No |
-| ML model shipping pipeline | No | Yes | Yes | Yes | Partial |
-| Breadth of libraries/tools | Narrow | Moderate | Moderate | Wide (79) | Wide (134) |
-
-Other skills help you write analysis code faster or cover more libraries. Skeptic is the only one that enforces what you're allowed to claim and in what order you're allowed to work.
-
-## Quick Start
-
-**macOS, Linux, WSL, Git Bash:**
+macOS, Linux, WSL, Git Bash:
 
 ```bash
 git clone https://github.com/Filivignaga/skeptic.git ~/.claude/skills/skeptic && ~/.claude/skills/skeptic/setup
 ```
 
-**Windows PowerShell:**
+Windows PowerShell:
 
 ```powershell
-git clone https://github.com/Filivignaga/skeptic.git "$env:USERPROFILE\.claude\skills\skeptic"; & "$env:USERPROFILE\.claude\skills\skeptic\setup.ps1"
+git clone https://github.com/Filivignaga/skeptic.git "$env:USERPROFILE\.claude\skills\skeptic"
+& "$env:USERPROFILE\.claude\skills\skeptic\setup.ps1"
 ```
 
-The setup script copies slash commands to `~/.claude/commands/skeptic/` (or `%USERPROFILE%\.claude\commands\skeptic\` on Windows). Safe to rerun.
+The setup script copies slash commands to the Claude commands directory. Safe to
+rerun.
 
-**Verify:** type `/skeptic` in Claude Code. If it triggers the formulation stage, install is correct.
+## Requirements
 
-**Uninstall (bash):** `rm -rf ~/.claude/skills/skeptic ~/.claude/commands/skeptic`
-
-**Uninstall (PowerShell):** `Remove-Item -Recurse -Force "$env:USERPROFILE\.claude\skills\skeptic","$env:USERPROFILE\.claude\commands\skeptic"`
-
-Then in Claude Code, point it at your data:
-
-```text
-Use Skeptic to analyze this dataset and determine whether churn is
-a predictive or descriptive question before modeling anything.
-```
-
-**Requirements:** Claude Code with local skills enabled, Python 3.10+, Jupyter + nbconvert
-
-## What It Produces
-
-Every Skeptic run generates a project folder with:
-
-```
-your-project/
-├── docs/
-│   ├── 01_formulation.md      # Question type, claim boundary registry
-│   ├── 02_protocol.md         # Data-usage mode, leakage rules, validation logic
-│   ├── 03_clean_report.md     # Constraint spec, cleaning decisions
-│   ├── 04_examination.md      # Support registry, analysis handoff
-│   ├── 05_analysis.md         # Locked analysis contract + results
-│   ├── 06_evaluation.md       # PCS verdicts, claim survival registry
-│   └── 07_communication.md    # Final deliverable (surviving claims only)
-├── notebooks/                 # Executable analysis notebooks
-├── data/                      # Cleaned data + partition metadata
-└── skeptic.yaml                # Project configuration
-```
-
-## Three Principles
-
-**Question Before Query.** The question type and claim boundaries are defined before a single line of analysis code runs. The question constrains everything downstream -- not the other way around.
-
-**Claims That Survive.** Every claim passes through PCS evaluation (Predictability, Computability, Stability). Claims that don't survive are discarded -- they cannot appear in the deliverable, regardless of how interesting they are.
-
-**No Shortcuts to Claims.** Seven stages, each gated. You cannot skip protocol to start cleaning. You cannot skip evaluation to start communicating. Every conclusion is earned through the full process -- there is no fast path to the deliverable.
-
-## Architecture
-
-Skeptic supports 6 question types, each with route-specific constraints:
-
-| Route | Example | What It Enforces |
-|---|---|---|
-| Descriptive | "What is the distribution of X?" | No causal or predictive verbs allowed |
-| Exploratory | "Are there patterns in X?" | Findings labeled as hypotheses, not conclusions |
-| Inferential | "Is there a difference between A and B?" | Sampling-frame-aware variance estimation required |
-| Predictive | "Can we predict Y from X?" | Frozen holdout logic, no data leakage |
-| Causal | "Does X cause Y?" | Propensity checks, IV diagnostics, falsification suites |
-| Mechanistic | "How does X produce Y?" | Pathway evidence required, no black-box claims |
-
-Each route loads specific instruction files from `references/routes/` that narrow the stage-core behavior.
-
-## Repository Layout
-
-```
-skeptic/
-├── SKILL.md                    # Trigger metadata, subcommand table
-├── SPEC.md                     # Architecture contract
-├── README.md
-├── LICENSE
-├── VERSION
-├── CHANGELOG.md
-├── CONTRIBUTING.md
-├── skeptic.yaml                # Project configuration
-├── setup                       # One-line install script
-├── commands/                   # Slash command definitions (8 files)
-└── references/
-    ├── core-principles.md      # Master architecture
-    ├── constraint-spec.md      # Constraint file format
-    ├── auto-mode.md            # /skeptic:auto runtime
-    ├── data-formats.md         # Format-agnostic ingest rules
-    ├── formulate.md            # Stage 1
-    ├── protocol.md             # Stage 2
-    ├── clean.md                # Stage 3
-    ├── examine.md              # Stage 4
-    ├── analyze.md              # Stage 5
-    ├── evaluate.md             # Stage 6
-    ├── communicate.md          # Stage 7
-    └── routes/                 # 6 question types × 5 stage files
-        ├── descriptive/
-        ├── exploratory/
-        ├── inferential/
-        ├── predictive/
-        ├── causal/
-        └── mechanistic/
-```
+- Claude Code with local skills enabled
+- Python 3.10+
 
 ## Built On
 
-Skeptic is a structural implementation of ideas from:
+Skeptic is structurally informed by:
 
-- **Bin Yu & Rebecca Barter** -- *Veridical Data Science* (2024). The PCS framework (Predictability, Computability, Stability) and the epistemological foundation for trustworthy data analysis.
-- **Jeff Leek** -- *The Elements of Data Analytic Style* (2015). The six question types (descriptive, exploratory, inferential, predictive, causal, mechanistic) and the principle that the question type determines what the data can legitimately support.
-- **Sam Lau, Joseph Gonzalez & Deborah Nolan** -- *Learning Data Science* (2023). The data science lifecycle structure and the discipline of scoping analysis before execution.
+- Bin Yu and Rebecca Barter on Veridical Data Science and PCS
+- Jeff Leek on question types in data analysis
+- Sam Lau, Joseph Gonzalez, and Deborah Nolan on lifecycle discipline
 
 ## License
 

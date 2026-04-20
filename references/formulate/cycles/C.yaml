@@ -1,0 +1,79 @@
+cycle: C
+name: Question Type Classification
+mandatory: true
+depends_on:
+  - A
+  - B
+script_function: run_cycle_c
+inputs:
+  - 01_formulation.yaml
+  - Cycle A outputs
+  - Cycle B outputs
+required_artifacts:
+  read:
+    - 01_formulation.yaml
+  update:
+    - 01_formulation.yaml
+    - formulation_metrics.json
+    - formulation_decision_log.jsonl
+outputs:
+  - locked primary question type
+  - active route
+  - route candidates
+  - downstream protocol constraint summary
+checklist_ids:
+  - C01
+  - C02
+  - C03
+  - C04
+checklists:
+  - id: C01
+    question: Based on the rough question and Cycle A-B findings, which of the six question types best fits?
+    skip_when: never
+  - id: C02
+    question: Does the current data collection, design, and variable coverage support the proposed type, and what is the strongest defensible alternative if not?
+    skip_when: never
+  - id: C03
+    question: What are the downstream consequences for protocol, route overlays, and later analyze?
+    skip_when: never
+  - id: C04
+    question: If the data cannot support the preferred type, what would be required for the original?
+    skip_when: data supports the preferred type
+gate_ids:
+  - C-type-classified
+  - C-type-supported
+  - C-downstream-constraints-stated
+gates:
+  - id: C-type-classified
+    depends_on: [C01]
+    diagnostic: false
+    condition: The question is classified into one of the six Skeptic types.
+  - id: C-type-supported
+    depends_on: [C02]
+    diagnostic: false
+    condition: The data collection and design plausibly support the classified type.
+  - id: C-downstream-constraints-stated
+    depends_on: [C03]
+    diagnostic: false
+    condition: Consequences for protocol, route overlays, and later analyze are stated.
+research_questions:
+  - What question types and study designs have been used for similar questions?
+  - What methodological requirements typically apply to each plausible type in this domain?
+  - Are there published examples where similar data was sufficient or insufficient for this question type?
+stage_yaml_updates:
+  - question_contract.question_type
+  - question_contract.active_route
+  - question_contract.route_candidates
+  - protocol_handoff.validation_rule_candidates
+  - cycle_state.current_cycle
+  - cycle_state.iteration_counts
+  - gates.latest
+guidance:
+  judgment_rules:
+    - Cycle C locks the primary question type and active route.
+    - Keep the boundary clean: formulate chooses the question, protocol chooses how it may be answered.
+    - State what the chosen type forbids downstream, not only what it permits.
+  common_pitfalls:
+    - Treating predictive work as the default.
+    - Confusing inferential and predictive goals.
+    - Locking estimator-level decisions too early.

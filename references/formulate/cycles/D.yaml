@@ -1,0 +1,200 @@
+cycle: D
+name: Operationalization
+mandatory: true
+depends_on:
+  - A
+  - B
+  - C
+script_function: run_cycle_d
+inputs:
+  - 01_formulation.yaml
+  - Cycle A-C outputs
+required_artifacts:
+  read:
+    - 01_formulation.yaml
+  update:
+    - 01_formulation.yaml
+    - formulation_metrics.json
+    - formulation_decision_log.jsonl
+outputs:
+  - approved question wording
+  - operationalization table
+  - target quantity
+  - claim boundary
+  - route ranking
+  - assumptions and decision costs
+checklist_ids:
+  - D01
+  - D02
+  - D03
+  - D04
+  - D05
+  - D06
+  - D07
+  - D08
+  - D09
+  - D10
+  - D11
+  - D12
+  - D13
+gate_ids:
+  - D-terms-identified
+  - D-terms-operationalized
+  - D-competing-defs
+  - D-availability-checked
+  - D-target-quantity-stated
+  - D-claim-boundary-stated
+  - D-route-candidates-ranked
+  - D-unit-of-analysis-stated
+  - D-context-stated
+  - D-assumptions-stated
+  - D-related-concepts
+  - D-baseline-stated
+  - D-error-costs-stated
+  - D-uplift-stated
+  - D-prior-art-reviewed
+  - D-unfeasible-flagged
+  - D-measurement-mismatch
+  - D-confounding
+checklists:
+  - id: D01
+    question: Which terms in the question are vague, contested, or not directly mapped to a column?
+    skip_when: never
+  - id: D02
+    question: For each such term, what are the candidate columns or derived metrics, and what are the tradeoffs between them?
+    skip_when: never
+  - id: D03
+    question: For each candidate operationalization, what is the practical availability, including missingness, support, granularity, and proxy risk?
+    skip_when: never
+  - id: D04
+    question: What is the target quantity or estimand the later analysis must estimate, summarize, predict, or explain?
+    skip_when: never
+  - id: D05
+    question: What claim boundary is implied by the question type and data design?
+    skip_when: never
+  - id: D06
+    question: What is the unit of analysis, and what is the target population or deployment context if it materially matters?
+    skip_when: unit of analysis already fixed in Cycle B for the unit portion only
+  - id: D07
+    question: What are the ordered route candidates for later stages, and why is the top route best?
+    skip_when: never
+  - id: D08
+    question: What related concepts, effect modifiers, confounders, or structural dependencies must later stages respect?
+    skip_when: never
+  - id: D09
+    question: What key assumptions are required for the approved formulation to remain coherent?
+    skip_when: never
+  - id: D10
+    question: What baseline must the project beat?
+    skip_when: never
+  - id: D11
+    question: What do different error types cost in the decision context, and which errors are unacceptable?
+    skip_when: never
+  - id: D12
+    question: What minimum uplift over baseline makes the project worthwhile?
+    skip_when: never
+  - id: D13
+    question: What prior art or analogous work changes the framing, scope, assumptions, or order?
+    skip_when: never
+gates:
+  - id: D-terms-identified
+    depends_on: [D01]
+    diagnostic: false
+    condition: Abstract or ambiguous terms are identified.
+  - id: D-terms-operationalized
+    depends_on: [D02]
+    diagnostic: false
+    condition: Each key term is mapped to a column, metric, or derived metric.
+  - id: D-competing-defs
+    depends_on: [D02]
+    diagnostic: false
+    condition: A competing operationalization is instantiated for each critical term, and divergence is logged as a claim-boundary narrowing when required.
+  - id: D-availability-checked
+    depends_on: [D03]
+    diagnostic: false
+    condition: Practical availability is verified for chosen operationalizations.
+  - id: D-target-quantity-stated
+    depends_on: [D04]
+    diagnostic: false
+    condition: Target quantity or estimand is named.
+  - id: D-claim-boundary-stated
+    depends_on: [D05]
+    diagnostic: false
+    condition: Claim boundary is explicit.
+  - id: D-route-candidates-ranked
+    depends_on: [D07]
+    diagnostic: false
+    condition: Route candidates are ranked and justified.
+  - id: D-unit-of-analysis-stated
+    depends_on: [D06]
+    diagnostic: false
+    condition: Unit of analysis is explicit.
+  - id: D-context-stated
+    depends_on: [D06]
+    diagnostic: false
+    condition: Target population or deployment context is explicit when relevant.
+  - id: D-assumptions-stated
+    depends_on: [D09]
+    diagnostic: false
+    condition: Key assumptions are explicit.
+  - id: D-related-concepts
+    depends_on: [D08]
+    diagnostic: false
+    condition: Related concepts and structural dependencies are identified.
+  - id: D-baseline-stated
+    depends_on: [D10]
+    diagnostic: false
+    condition: Baseline is stated.
+  - id: D-error-costs-stated
+    depends_on: [D11]
+    diagnostic: false
+    condition: Error costs and unacceptable errors are stated.
+  - id: D-uplift-stated
+    depends_on: [D12]
+    diagnostic: false
+    condition: Minimum useful uplift is stated.
+  - id: D-prior-art-reviewed
+    depends_on: [D13]
+    diagnostic: false
+    condition: Prior art implications are reviewed and connected to scope or order.
+  - id: D-unfeasible-flagged
+    depends_on: [D01, D02]
+    diagnostic: false
+    condition: Un-operationalizable terms are flagged with a recommended action.
+  - id: D-measurement-mismatch
+    depends_on: [D03]
+    diagnostic: true
+    condition: Direct-measure versus proxy risk is assessed for each chosen operationalization.
+  - id: D-confounding
+    depends_on: [D08]
+    diagnostic: true
+    condition: Confounding or identification relevance is assessed at a high level.
+research_questions:
+  - What are the standard and competing operationalizations for each abstract term?
+  - What validated measures, indices, or proxies exist?
+  - What confounders, effect modifiers, or structural dependencies matter?
+  - What baseline or success criteria are used in similar work?
+stage_yaml_updates:
+  - question_contract.approved_question
+  - question_contract.target_quantity
+  - question_contract.route_candidates
+  - question_contract.unit_of_analysis
+  - question_contract.target_context
+  - question_contract.baseline
+  - question_contract.minimum_useful_uplift
+  - question_contract.unacceptable_errors
+  - claim_boundary.scope
+  - claim_boundary.evidence_ceiling
+  - claim_boundary.generalization_limit
+  - cycle_state.current_cycle
+  - cycle_state.iteration_counts
+  - gates.latest
+guidance:
+  judgment_rules:
+    - Cycle D locks the approved question wording.
+    - Every major decision belongs in structured YAML fields before any prose summary.
+    - If competing definitions materially change claim type or route, narrow the claim boundary now.
+  common_pitfalls:
+    - Leaving abstract terms unresolved.
+    - Smuggling in a broader claim than the operationalization supports.
+    - Hiding proxy risk or confounding under generic caveats.

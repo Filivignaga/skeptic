@@ -1,17 +1,27 @@
 # Skeptic Core Principles
 
-Use a question-first lifecycle. Do not start from a favorite method. Do not treat predictive workflows as the default template for every project.
+Use a question-first lifecycle. Do not start from a favorite method. Do not
+treat predictive workflows as the default template for every project.
 
-This file is the architecture contract for the Skeptic. If any downstream stage file conflicts with this file, this file wins.
+This file is the architecture contract for Skeptic. If any downstream stage
+file conflicts with this file, this file wins.
 
 ## PCS Framework
 
 PCS applies across all question types.
 
-- Predictability: Require a reality check that matches the question and claim. This is not always held-out prediction. It can be refreshed-data replication, external corroboration, resampling, falsification, simulation, or protocol-approved holdout validation. Choose the check in `protocol`.
-- Computability: Make every material step executable, documented, and reproducible in code. Record parameters, random seeds, artifacts, and stage outputs. If the workflow cannot be rerun and audited, it does not count.
-- Stability: Check whether conclusions survive reasonable perturbations to formulation, protocol, cleaning, examination, analysis-contract choices inside `analyze`, execution choices inside `analyze`, and presentation. If a claim fails under reasonable alternatives, downgrade the claim or return to the stage that created the fragility.
-- Documentation: Record the rationale for each judgment call, the plausible alternatives, and the downstream consequences.
+- Predictability: require a reality check that matches the question and claim.
+  This is not always held-out prediction. It can be refreshed-data replication,
+  external corroboration, resampling, falsification, simulation, or a
+  protocol-approved holdout.
+- Computability: make every material step executable, documented, and
+  reproducible in code. Record parameters, random seeds, artifacts, and stage
+  outputs.
+- Stability: check whether conclusions survive reasonable perturbations to
+  formulation, protocol, cleaning, examination, analysis-contract choices,
+  execution choices, and presentation.
+- Documentation: record the rationale for each judgment call, plausible
+  alternatives, and downstream consequences.
 - PCS is continuous. Do not treat it as an end-stage checklist.
 
 ## Architecture Overview
@@ -28,29 +38,43 @@ Stage order is fixed:
 
 Stage purposes:
 
-- `formulate`: Define the domain question, unit of analysis, target quantity, question type, and initial claim boundary.
-- `protocol`: Define how the question may be answered. Lock the data usage mode, admissible evidence logic, validation requirements, major prohibitions, and backtracking triggers.
-- `clean`: Build an auditable data pipeline consistent with `formulate` and `protocol`. Fix structural and value issues without smuggling in unsupported claims.
-- `examine`: Inspect distributions, relationships, structure, anomalies, and candidate patterns to understand what the data can support. This replaces the old `eda` framing.
-- `analyze`: Start from the approved question, protocol, cleaned data, and examination findings. Lock one executable analysis contract, then execute only that route.
-- `evaluate`: Audit whether outputs and claims survive PCS checks appropriate to the route and protocol.
-- `communicate`: Package only the claims that survived evaluation, for the intended audience and use context.
+- `formulate`: define the domain question, unit of analysis, target quantity,
+  question type, and initial claim boundary.
+- `protocol`: define how the question may be answered. Lock data-usage mode,
+  admissible evidence logic, validation requirements, major prohibitions, and
+  backtracking triggers.
+- `clean`: build an auditable data pipeline consistent with `formulate` and
+  `protocol`. Fix structural and value issues without smuggling in unsupported
+  claims.
+- `examine`: inspect distributions, relationships, structure, anomalies, and
+  candidate patterns to understand what the data can support.
+- `analyze`: start from the approved question, protocol, cleaned data, and
+  examination findings. Lock one executable analysis contract, then execute only
+  that route.
+- `evaluate`: audit whether outputs and claims survive PCS checks appropriate to
+  the route and protocol.
+- `communicate`: package only the claims that survived evaluation, for the
+  intended audience and use context.
 
-`formulate` defines the question. `protocol` defines how that question may be answered. Every later stage must obey both.
+`formulate` defines the question. `protocol` defines how that question may be
+answered. Every later stage must obey both.
 
-`structure` and `predict` are not core stages. Unsupervised methods belong inside `examine` or a route-specific `analyze` overlay. Predictive work is one route, not the architecture template.
+`structure` and `predict` are not core stages. Unsupervised methods belong
+inside `examine` or a route-specific `analyze` overlay. Predictive work is one
+route, not the architecture template.
 
 ## Execution Modes
 
 Skeptic supports two execution modes:
 
-- `interactive`: the original runtime where the user reviews outputs and decides cycle by cycle
+- `interactive`: the user reviews outputs and decides cycle by cycle
 - `auto`: the `/skeptic:auto` runtime defined in `references/auto-mode.md`
 
 Mode-selection rules:
 
 - if `/skeptic:auto` is active, load and follow `references/auto-mode.md`
-- if a stage file conflicts with `references/auto-mode.md` about runtime control flow, `references/auto-mode.md` wins
+- if a stage file conflicts with `references/auto-mode.md` about runtime
+  control flow, `references/auto-mode.md` wins
 - stage files still define what each stage must check, log, and protect
 
 Auto mode keeps the same rigor:
@@ -65,121 +89,129 @@ Auto mode keeps the same rigor:
 
 Treat this skill as repo-portable.
 
-- Do not depend on absolute paths, usernames, machine-specific folders, or personal workspace conventions.
+- Do not depend on absolute paths, usernames, machine-specific folders, or
+  personal workspace conventions.
 - Prefer a repo-local `skeptic.yaml` file in the skill or project root.
 - If `skeptic.yaml` is absent, use these defaults:
   - `projects_root`: `~/skeptic-projects`
   - `data_dir_name`: `data`
   - `docs_dir_name`: `skeptic_documentation`
-  - `notebooks_dir_name`: `notebooks`
   - `readme_name`: `README.md`
-  - `notebook_runner`: `jupyter nbconvert --execute --inplace --to notebook --ExecutePreprocessor.timeout=300 --ExecutePreprocessor.allow_errors=true`
   - `subagent_model`: `sonnet`
-- Interpret any legacy project-root example as illustrative, not as a hard requirement.
-- When the project uses local files, copy portable raw inputs into the configured data directory.
-- When the project uses a database, query engine, or remote source, record only portable source metadata and non-secret access instructions in project artifacts. Never store secrets in tracked files.
+- Interpret any legacy project-root example as illustrative, not as a hard
+  requirement.
+- When the project uses local files, copy portable raw inputs into the
+  configured data directory.
+- When the project uses a database, query engine, or remote source, record only
+  portable source metadata and non-secret access instructions in project
+  artifacts. Never store secrets in tracked files.
 
 ## Role of Protocol
 
 `protocol` decides the project rules of the game before `clean` and `examine`.
 
-- Decide the data usage mode: full data, frozen holdout splits, rolling validation, group-based validation, external validation, resampling only, or another justified pattern.
-- Decide what counts as leakage.
-- Decide whether confounding, identification, sampling design, measurement error, or interference materially constrain the project.
-- Decide what validation is required for the allowed claims.
-- Decide what downstream stages must not do.
-- Freeze the claim boundary: what kinds of claims are allowed, what kinds are forbidden, and what evidence would force backtracking.
+- decide the data-usage mode
+- decide what counts as leakage
+- decide whether confounding, identification, sampling design, measurement
+  error, grouping, time order, or interference materially constrain the project
+- decide what validation is required for the allowed claims
+- decide what downstream stages must not do
+- freeze the claim boundary
 
-Typical `protocol` outputs include:
-
-- the confirmed question type and route family
-- the data usage plan and any required frozen artifacts
-- leakage rules and forbidden variables
-- confounding and identification relevance
-- validation and uncertainty requirements
-- explicit stage prohibitions
-- backtracking triggers
-
-`protocol` sets data-usage, evidence, and claim rules. It does not choose the exact analysis specification. That is locked at the start of `analyze`.
+`protocol` sets data-usage, evidence, and claim rules. It does not choose the
+exact analysis specification. That is locked at the start of `analyze`.
 
 Do not let `clean`, `examine`, or `analyze` silently invent these rules later.
 
 ## Question Type Constraints
 
-Route files must honor these constraints. `analyze` may narrow them when locking the executable contract. It may not widen them.
+Route files must honor these constraints. `analyze` may narrow them when
+locking the executable contract. It may not widen them.
 
 ### Descriptive
 
-- Primary objective: characterize what is present in a defined dataset or monitoring frame.
-- Admissible evidence pattern: counts, rates, distributions, cross-tabs, standardized summaries, descriptive graphics, and audited denominators.
-- Interpretation boundary: describe observed data or an explicitly defined reporting frame. Do not claim explanation, forecast, or causal effect.
-- Typical validation logic: coverage checks, denominator integrity, measurement fidelity, sensitivity to subgroup and aggregation choices, reproducibility on refreshed extracts when available.
-- Core risks: denominator errors, hidden filtering, misleading summaries, and explanation smuggled into description.
+- Objective: characterize what is present in a defined dataset or monitoring frame.
+- Evidence pattern: counts, rates, distributions, cross-tabs, standardized
+  summaries, descriptive graphics, audited denominators.
+- Boundary: describe observed data or a defined reporting frame. Do not claim
+  explanation, forecast, or causal effect.
 
 ### Exploratory
 
-- Primary objective: surface candidate patterns, structures, hypotheses, or anomalies worth later confirmation.
-- Admissible evidence pattern: open-ended visualization, subgroup discovery, clustering, dimensionality reduction, contrastive summaries, anomaly review, and other pattern-search tools.
-- Interpretation boundary: hypothesis-generating only. Do not present exploratory patterns as confirmed conclusions.
-- Typical validation logic: perturbation checks across samples, parameters, algorithms, and visual encodings; triangulation with external context when relevant.
-- Core risks: data snooping, cherry-picking, unstable clusters, overreading artifacts, and converting exploration into evidence.
+- Objective: surface candidate patterns, structures, hypotheses, or anomalies.
+- Evidence pattern: open-ended visualization, subgroup discovery, clustering,
+  dimensionality reduction, contrastive summaries, anomaly review.
+- Boundary: hypothesis-generating only. Do not present exploratory patterns as
+  confirmed conclusions.
 
 ### Inferential
 
-- Primary objective: estimate a population quantity or relationship with uncertainty.
-- Admissible evidence pattern: estimators tied to a sampling or modeling frame, interval estimates, tests, model-based uncertainty, weighting, and design-aware adjustments.
-- Interpretation boundary: generalize only to the defined target population under stated assumptions. Do not use causal language unless the route is causal.
-- Typical validation logic: sampling and design checks, assumption diagnostics, uncertainty calibration, and sensitivity to specification or weighting choices.
-- Core risks: representativeness failure, ignored dependence, model misspecification, selection bias, and overconfident uncertainty.
+- Objective: estimate a population quantity or relationship with uncertainty.
+- Evidence pattern: estimators tied to a sampling or modeling frame, interval
+  estimates, tests, model-based uncertainty, weighting, design-aware
+  adjustments.
+- Boundary: generalize only to the defined target population under stated
+  assumptions. Do not use causal language unless the route is causal.
 
 ### Predictive
 
-- Primary objective: predict unseen outcomes, rankings, probabilities, classifications, or forecasts for a defined deployment setting.
-- Admissible evidence pattern: supervised learning or forecasting methods, predeclared targets and horizons, scoring rules, calibration, and protocol-approved unseen-data validation.
-- Interpretation boundary: claim predictive performance only. Do not infer causes from predictors, coefficients, or feature importance alone.
-- Typical validation logic: holdout, rolling-origin validation, group split, cross-validation, external validation, calibration checks, and drift-aware error analysis as required by `protocol`.
-- Core risks: leakage, optimistic validation, target drift, proxy targets, threshold gaming, and causal language attached to predictive variables.
+- Objective: predict unseen outcomes, rankings, probabilities, classifications,
+  or forecasts for a defined deployment setting.
+- Evidence pattern: supervised learning or forecasting methods, predeclared
+  targets and horizons, scoring rules, calibration, protocol-approved
+  unseen-data validation.
+- Boundary: claim predictive performance only. Do not infer causes from
+  predictors, coefficients, or feature importance alone.
 
 ### Causal
 
-- Primary objective: estimate the effect of an intervention, exposure, or policy on an outcome.
-- Admissible evidence pattern: randomized designs or defensible observational identification strategies, explicit estimands, treatment and outcome timing, confounder strategy, overlap assessment, and sensitivity analysis.
-- Interpretation boundary: make causal claims only within the identification assumptions, estimand, population, and treatment variation actually justified.
-- Typical validation logic: design diagnostics, balance checks where relevant, placebo or falsification tests, overlap checks, and sensitivity to unmeasured confounding or alternative specifications.
-- Core risks: hidden confounding, post-treatment adjustment, positivity violations, interference, bad controls, and unsupported causal language.
+- Objective: estimate the effect of an intervention, exposure, or policy.
+- Evidence pattern: randomized designs or defensible observational
+  identification strategies, explicit estimands, treatment and outcome timing,
+  confounder strategy, overlap assessment, sensitivity analysis.
+- Boundary: make causal claims only within the identification assumptions,
+  estimand, population, and treatment variation actually justified.
 
 ### Mechanistic
 
-- Primary objective: explain or simulate the process that generates observed behavior through a structured model of the system.
-- Admissible evidence pattern: structural or domain models, governing equations, state-space or simulator-based approaches, parameter calibration, and comparison to observed patterns and domain constraints.
-- Interpretation boundary: claim mechanism only to the extent the structural assumptions, calibration targets, and domain knowledge are defended. Good fit alone is not enough.
-- Typical validation logic: identifiability checks, simulation-based validation, boundary-condition checks, sensitivity to structural assumptions, and out-of-regime failure analysis.
-- Core risks: unidentifiable parameters, multiple models fitting equally well, overfitting through flexible structure, narrative plausibility mistaken for evidence, and failure to falsify the mechanism.
+- Objective: explain or simulate the process that generates observed behavior
+  through a structured model of the system.
+- Evidence pattern: structural or domain models, governing equations,
+  state-space or simulator-based approaches, parameter calibration, comparison
+  to observed patterns and domain constraints.
+- Boundary: claim mechanism only to the extent the structural assumptions,
+  calibration targets, and domain knowledge are defended. Good fit alone is not
+  enough.
 
-## Stage-Core Plus Stage-Specific Route File
+## Stage Entry Plus Stage-Specific Route File
 
-Every post-`formulate` stage follows the same runtime pattern:
+Every stage follows this runtime pattern:
 
 1. Read the required upstream stage outputs.
-2. Resolve exactly one active route from those upstream artifacts.
-3. Load exactly one stage-specific route file:
-   - `references/routes/{route}/protocol.md`
-   - `references/routes/{route}/clean.md`
-   - `references/routes/{route}/examine.md`
-   - `references/routes/{route}/analyze.md` when that stage file exists
-4. Keep that route context in memory for the rest of the stage and reuse it across cycles in the same chat.
-5. If route context becomes ambiguous mid-stage, reread the upstream artifacts and the same route file before proceeding.
-6. If the active route cannot be resolved or the expected route file is missing, stop. Do not improvise around missing routing architecture.
+2. Resolve exactly one active route from those upstream artifacts when the stage
+   is route-aware.
+3. Read the lean stage entry file for the active stage.
+4. Load exactly one stage-specific route file when the stage requires one.
+5. Load one cycle YAML file only when that cycle is about to run.
+6. Keep the route context and current-cycle YAML in memory for the rest of the
+   current cycle only.
+7. If route context becomes ambiguous mid-stage, reread the upstream artifacts
+   and the same route file before proceeding.
+8. If the active route cannot be resolved or the expected route file is
+   missing, stop. Do not improvise around missing routing architecture.
 
-Stage-core files contain universal workflow machinery:
+Stage entry files contain universal workflow machinery:
 
 - stage purpose
 - required inputs and outputs
 - artifact names and numbering
+- canonical YAML contract
 - documentation duties
 - reproducibility rules
 - PCS checkpoints
 - generic backtracking rules
+- cycle file locations
+- final artifact list
 
 Stage-specific route files contain stage-specific narrowing:
 
@@ -188,19 +220,18 @@ Stage-specific route files contain stage-specific narrowing:
 - what the stage defers
 - what triggers backtracking in that stage
 
-Route files may narrow the stage-core. They may not override reproducibility rules or widen the claim boundary.
-
-Keep route handling memory-first. Do not add notebook or stage-document scaffolding just to carry route context.
+Route files may narrow the stage entry. They may not override reproducibility
+rules or widen the claim boundary.
 
 ## Determinism Mechanisms
 
-Three patterns every stage file must follow. These are part of the architecture contract.
+Three patterns every stage file must follow.
 
 ### 1. Question Checklists
 
-Every cycle in every stage replaces prose notebook-cell instructions with a Checklist table:
+Every cycle replaces prose execution instructions with a Checklist table:
 
-```
+```text
 | id | question | skip_when |
 |----|----------|-----------|
 | A01 | {question text} | {condition or "never"} |
@@ -208,20 +239,23 @@ Every cycle in every stage replaces prose notebook-cell instructions with a Chec
 
 Rules:
 
-- IDs use format `{CycleLetter}{TwoDigitNumber}` (A01, A02, B01, etc.)
-- Claude writes whatever code fits the dataset, but must answer every checklist item in order
-- Items may not be skipped unless `skip_when` condition is satisfied
-- Every item must produce a visible output in the notebook (table, print statement, or markdown cell)
-- If a question cannot be answered, the notebook cell must state why and what is missing
-- The Gate Condition Registry gains a `depends_on` column linking each gate to checklist item IDs
-- If a depended-on checklist item was not answered, the gate auto-fails without judgment
-- The evaluation subagent must verify all checklist items were answered before evaluating gate conditions
+- IDs use format `{CycleLetter}{TwoDigitNumber}` such as `A01`
+- the stage must answer every checklist item in order
+- items may not be skipped unless `skip_when` is satisfied
+- every item must produce visible, inspectable output in the current cycle
+  execution result
+- if a question cannot be answered, the execution output must state why and
+  what is missing
+- the Gate Condition Registry must link each gate to checklist item IDs
+- if a depended-on checklist item was not answered, the gate auto-fails
+- evaluation must verify checklist coverage before gate judgment
 
 ### 2. Decision Matrix
 
-Every Step 4 (Decision) in every stage uses a two-row matrix based on `blocking_failures` (count of blocking defects + blocking gate failures from the evaluation subagent):
+Every cycle decision uses this two-row matrix based on `blocking_failures`
+(count of blocking defects plus blocking gate failures):
 
-```
+```text
 | blocking_failures | forward actions allowed |
 |-------------------|------------------------|
 | 0                 | pass, iterate          |
@@ -230,22 +264,26 @@ Every Step 4 (Decision) in every stage uses a two-row matrix based on `blocking_
 
 Rules:
 
-- Backward actions are always available regardless of `blocking_failures`: reopen relevant upstream stages (each stage file specifies which), archive
-- User override is always available: user states the specific reason the FAIL is incorrect, logged as `override: {reason}`, forward actions unlock
-- The stage presents only the allowed forward actions plus the universal options
-- Diagnostic gates (explicitly marked as such in the gate registry) do not count toward `blocking_failures`
+- backward actions are always available regardless of `blocking_failures`
+- user override is always available and must be logged as `override: {reason}`
+- the stage presents only the allowed forward actions plus universal options
+- diagnostic gates do not count toward `blocking_failures`
 
-### 3. Computed Scorecards
+### 3. Computed Metrics
 
-Every stage's finalization phase produces a scorecard as a table of numbers computed from stage artifacts. No prose assessments in the scorecard. Interpretation belongs in the PCS Assessment section.
+Every stage finalization phase produces a canonical machine-readable metrics
+artifact. Human-readable summaries are optional derived renders only.
 
 Rules:
 
-- Every scorecard metric must cite its source (which phase, file, or log it was computed from)
-- Format: `| metric | value | source |`
-- Common metrics across all stages: checklist items answered, mandatory cycles completed, blocking failures total, blocking failures resolved by iteration, blocking failures resolved by override
-- Stage-specific metrics are added per stage file
-- Sections in `metrics.md` must appear in stage order: Formulation, then Claim Boundary Registry, then Protocol, Clean, Examination, Analysis, Evaluation. Within each stage section, cycle metrics appear in chronological order (A, B, C, ...)
+- the canonical metrics artifact is JSON or YAML, not markdown
+- every metric must cite its source artifact or log field
+- common metrics across all stages: checklist items answered, mandatory cycles
+  completed, blocking failures total, blocking failures resolved by iteration,
+  blocking failures resolved by override
+- stage-specific metrics are added per stage file
+- if a human-readable metrics summary exists, render it from the canonical
+  metrics artifact. Do not let it become a second source of truth
 
 ## Project Folder Structure
 
@@ -258,53 +296,51 @@ projects_root/
       splits/                    # Optional. Create only if protocol requires frozen partitions.
       silver/                    # Optional. Cleaned stage outputs when distinct from raw files.
     deliverables/                # Audience-facing outputs rendered by communicate.
-                                 # Must contain exactly one primary deliverable (the 5-section document)
-                                 # and zero or more companion data files. See communicate.md
-                                 # Deliverable Composition Rules for naming and structure requirements.
     docs_dir_name/
+      01_formulation.py
+      01_formulation.yaml
       01_formulation.md
+      formulation_metrics.json
+      formulation_decision_log.jsonl
+      claim_boundary_registry.yaml
       02_protocol.md
       03_cleaning.md
       04_examination.md
       05_analysis.md
       06_evaluation.md
       07_communication.md
-      metrics.md
-    notebooks_dir_name/
-      01_formulation.ipynb
-      02_protocol.ipynb
-      03_cleaning.ipynb
-      04_examination.ipynb
-      05_analysis.ipynb
-      06_evaluation.ipynb
-      07_communication.ipynb
-      *.py
-      *.json
     readme_name
 ```
 
 Rules:
 
-- Keep raw files in the configured data directory unchanged.
-- Treat the raw source format as the canonical source throughout the full lifecycle.
-- Treat split artifacts as conditional, not universal. Do not assume train, validation, and test files exist for every project.
-- If `protocol` chooses full-data analysis, rolling windows, external validation, cross-validation folds, or another pattern, create only the artifacts that plan requires and document them in `02_protocol.md`.
-- If the `clean` stage produces cleaned outputs as distinct files (not modifying raw data), store them in `data_dir_name/silver/` with a `README.md` documenting each artifact, its schema, and known limitations.
-- Rebuild derived data from raw inputs plus protocol-defined frozen artifacts. Do not rely on hand-edited intermediate CSVs.
+- keep raw files in the configured data directory unchanged
+- treat the raw source format as the canonical source throughout the full lifecycle
+- treat split artifacts as conditional, not universal
+- if `protocol` chooses full-data analysis, rolling windows, external
+  validation, cross-validation folds, or another pattern, create only the
+  artifacts that plan requires and document them in `02_protocol.md`
+- if `clean` produces cleaned outputs as distinct files, store them in
+  `data_dir_name/silver/` with a `README.md` documenting each artifact
+- rebuild derived data from raw inputs plus protocol-defined frozen artifacts
+- keep stage-local Python scripts inside the project folder
 
 ## Universal Rules
 
-- Never modify raw files in the configured data directory.
-- Express every material transformation in code.
-- Record every judgment call with rationale and plausible alternatives.
-- Respect protocol-defined data visibility. If a partition or holdout is restricted, do not touch it outside the stages and purposes allowed by `protocol`.
-- Do not change question type or claim class midstream without reopening `formulate` and `protocol`.
-- Keep one stage document per completed stage in the configured documentation directory.
-- Re-run from raw data plus protocol-defined frozen artifacts, not from ad hoc saved intermediates.
-- Record random seeds when stochastic procedures matter.
-- Preserve an audit trail when backtracking. Mark superseded work; do not erase it.
-- Generated project documents and helper artifacts must reference real project files. Do not leave stale references to deleted artifacts, placeholder scripts, or personal workspace paths in tracked stage documents, README files, or scorecards.
-- README summaries must be derived from the actual project filesystem state and verified against artifacts on disk, not written from memory.
+- never modify raw files in the configured data directory
+- express every material transformation in code
+- record every judgment call with rationale and plausible alternatives
+- respect protocol-defined data visibility
+- do not change question type or claim class midstream without reopening
+  `formulate` and `protocol`
+- keep one canonical YAML contract per stage when the stage file requires it
+- rerun from raw data plus protocol-defined frozen artifacts, not from ad hoc
+  saved intermediates
+- record random seeds when stochastic procedures matter
+- preserve an audit trail when backtracking. Mark superseded work. Do not erase it
+- generated project documents and helper artifacts must reference real project
+  files
+- README summaries must be derived from the actual project filesystem state
 
 ## README Update Rules
 
@@ -312,89 +348,113 @@ After each completed stage, update `README.md` with:
 
 - stage name and completion status
 - one-line summary of the key decision or outcome
-- current question type and route, if they changed or were fixed at that stage
+- current question type and route if they changed or were fixed at that stage
 - next stage
 
-`protocol` must explicitly record the data usage mode, validation logic, and major prohibitions. If a stage is reopened, mark the earlier summary as superseded instead of silently rewriting history.
+`protocol` must explicitly record the data-usage mode, validation logic, and
+major prohibitions. If a stage is reopened, mark the earlier summary as
+superseded instead of silently rewriting history.
 
-## Notebook Conventions
+## Execution Conventions
 
-- Use one primary notebook per stage, numbered in stage order.
-- First cell: stage title, date, project name, purpose, active question type, and upstream dependencies.
-- Put markdown reasoning before the code it justifies.
-- Keep code cells atomic and rerunnable.
-- Print or display critical outputs explicitly.
-- Make notebooks runnable from raw data plus protocol-defined artifacts, not hidden session state.
-- Put reusable functions, constraints, and configuration in companion `.py` or `.json` files when they must survive across stages.
-- Do not create one-shot cell-injection scripts in the notebooks directory. Use `NotebookEdit` to add cells. If programmatic notebook construction is unavoidable (e.g., kernel not available), delete the build scripts during stage finalization.
-- Use only ASCII characters in notebook cell content. Use `--` instead of em dashes, straight quotes instead of curly quotes, and plain hyphens instead of en dashes. Non-ASCII punctuation causes mojibake on Windows (e.g., `—` renders as `â€"`).
+- use one primary Python script per stage when the stage file requires it
+- put one cycle function in that script for each mandatory cycle
+- run one cycle at a time with an explicit CLI argument such as `--cycle A`
+- make stage scripts rerunnable from raw data plus protocol-defined artifacts,
+  not hidden session state
+- emit structured outputs for each cycle
+- put reusable functions, constraints, and configuration in companion `.py`,
+  `.json`, or `.yaml` files only when they materially reduce duplication
+- use ASCII by default in generated execution artifacts
 
 ## Source Data Encoding
 
-Before loading any source data file for the first time (typically in Formulate Cycle A), detect its encoding:
+Before loading any source data file for the first time, detect its encoding:
 
-- Try reading with UTF-8 strict mode first. If it succeeds without errors, the file is UTF-8.
-- If UTF-8 fails, check for a BOM (byte order mark) that indicates UTF-16 or UTF-8-BOM.
-- If no BOM and UTF-8 fails, attempt Latin-1/Windows-1252 as a fallback. Log the detected encoding.
-- Record the detected encoding for each source file in the notebook and the stage documentation. All downstream reads of that file must use the detected encoding explicitly (e.g., `pd.read_csv(path, encoding='...')`). Do not rely on default encoding inference.
-- If the source contains non-ASCII text (accented characters, special symbols), verify that the loaded values display correctly in the notebook before proceeding.
+- try UTF-8 strict mode first
+- if UTF-8 fails, check for a BOM that indicates UTF-16 or UTF-8-BOM
+- if no BOM and UTF-8 fails, attempt Latin-1 or Windows-1252 as a fallback
+- record the detected encoding for each source file in canonical stage artifacts
+- all downstream reads of that file must use the detected encoding explicitly
+- if the source contains non-ASCII text, verify that the loaded values display
+  correctly in the cycle execution output before proceeding
 
-Encoding detection is mandatory for CSV, TSV, and other text-based data files. Binary formats (Parquet, HDF5, SQLite) handle encoding internally and do not need this check.
+Encoding detection is mandatory for CSV, TSV, and other text-based data files.
+Binary formats such as Parquet, HDF5, and SQLite do not need this check.
 
 ## Generated Artifact Encoding
 
-The Windows mojibake risk applies to generated project artifacts, not just notebook cells.
+The Windows mojibake risk applies to generated project artifacts, not just
+script output.
 
 Rules:
 
-- Use ASCII by default for generated `.md`, `.json`, `.yaml`, `.yml`, and `.py` files.
-- If non-ASCII text must be preserved because it comes from source data, domain terminology, or quoted user-provided content, keep it deliberate and localized. Do not introduce typographic punctuation such as em dashes, curly quotes, or en dashes in generated artifacts.
-- Before stage finalization, scan generated `.md`, `.json`, `.yaml`, `.yml`, and `.py` files touched in the stage for mojibake markers and unintended non-ASCII punctuation. This includes files in `deliverables/` -- audience-facing artifacts are the highest-risk location for encoding corruption because they reach external users.
-- Treat mojibake in tracked project artifacts as a blocking defect for stage closure until the affected files are rewritten cleanly.
+- use ASCII by default for generated `.md`, `.json`, `.yaml`, `.yml`, and `.py` files
+- if non-ASCII text must be preserved, keep it deliberate and localized
+- do not introduce typographic punctuation such as em dashes, curly quotes, or
+  en dashes in generated artifacts
+- before stage finalization, scan generated `.md`, `.json`, `.yaml`, `.yml`,
+  and `.py` files touched in the stage for mojibake markers and unintended
+  non-ASCII punctuation
+- treat mojibake in tracked project artifacts as a blocking defect for stage closure
 
-## Notebook Execution
+## Stage Script Execution
 
-After writing cells with `NotebookEdit`, Claude executes the notebook automatically. Use the `notebook_runner` value from `skeptic.yaml` when present. Otherwise use:
+After writing or updating the stage script, execute only the current cycle.
+Example:
 
 ```text
-Bash(jupyter nbconvert --execute --inplace --to notebook --ExecutePreprocessor.timeout=300 --ExecutePreprocessor.allow_errors=true <notebook_path>)
+python 01_formulation.py --cycle A
 ```
 
-Then Claude reads the notebook to extract outputs and presents key results inline.
+Then read the structured output, validate required keys, and update canonical
+YAML and metrics artifacts.
 
-After execution, scan all executed cell outputs for Python exception tracebacks (`Traceback (most recent call last)`, `Error`, `Exception`). Any unhandled exception in a cell output is a blocking defect that must be fixed before proceeding to subagent review, unless the cell is explicitly marked as an expected-failure demonstration (e.g., a cell that intentionally tests error handling). The `--ExecutePreprocessor.allow_errors=true` flag prevents execution from halting, but it does not mean errors are acceptable.
+After execution, scan the current cycle output for Python exceptions, malformed
+JSON, missing checklist answers, or missing gate evidence. Any unhandled
+exception or malformed structured output is a blocking defect that must be
+fixed before subagent review.
 
-- interactive mode: the user reviews outputs and provides feedback before subagents are dispatched
-- auto mode: follow the self-review loop in `references/auto-mode.md` and pause only on required escalation triggers or required human-input checkpoints
+- interactive mode: the user reviews outputs and provides feedback before
+  subagents are dispatched
+- auto mode: follow the self-review loop in `references/auto-mode.md` and pause
+  only on required escalation triggers or human-input checkpoints
 
-If execution fails entirely (kernel not found, Jupyter not installed), Claude reports the error and falls back to asking the user to run the cells manually.
+If execution fails entirely, report the error and repair the stage script
+before continuing.
 
 ## Backtracking Principle
 
-Later stages may force a return to earlier stages. Backtrack when any of the following is discovered:
+Later stages may force a return to earlier stages. Backtrack when any of the
+following is discovered:
 
-- route mismatch: the planned method or claim exceeds the approved question type or the analysis contract locked inside `analyze`
-- protocol mismatch: later work needs data access, validation logic, or assumptions forbidden by `protocol`
-- cleaning invalidation: a discovered data problem or cleaning choice materially changes the analyzable population, variables, or admissible claims
-- unsupported claims: evaluation shows the claimed interpretation is not licensed by the evidence
-- instability: reasonable perturbations change the conclusion enough to alter the allowed claim
+- route mismatch
+- protocol mismatch
+- cleaning invalidation
+- unsupported claims
+- instability
 
-When backtracking occurs, preserve the earlier record and mark it as superseded. Do not pretend the earlier stage never happened.
+When backtracking occurs, preserve the earlier record and mark it as
+superseded. Do not pretend the earlier stage never happened.
 
 ## Auto Mode Preflight and State
 
 Before Stage 1 in auto mode:
 
 - verify the project inputs exist or collect only the missing ones
-- verify notebook execution is available or explicitly degraded
+- verify Python execution for project-side stage scripts is available
 - verify the stage and route files are readable
-- write a run-state artifact to `{projects_root}/{project-name}/{docs_dir_name}/auto_mode_state.json`
+- write a run-state artifact to
+  `{projects_root}/{project-name}/{docs_dir_name}/auto_mode_state.json`
 
-Update the run-state artifact after every auto-mode cycle decision, escalation, backtrack, and stage approval.
+Update the run-state artifact after every auto-mode cycle decision, escalation,
+backtrack, and stage approval.
 
 ## Dependency Notes
 
-- `protocol` is a mandatory dependency for `clean` and `examine`.
-- `analyze` depends on `formulate`, `protocol`, `clean`, `examine`, and the active route file for `analyze`.
-- `evaluate` audits `analyze` against the commitments made in `protocol` and the analysis contract locked inside `analyze`.
-- `communicate` may only package claims that survived `evaluate`.
+- `protocol` is a mandatory dependency for `clean` and `examine`
+- `analyze` depends on `formulate`, `protocol`, `clean`, `examine`, and the
+  active route file for `analyze`
+- `evaluate` audits `analyze` against the commitments made in `protocol` and
+  the analysis contract locked inside `analyze`
+- `communicate` may only package claims that survived `evaluate`

@@ -1,0 +1,121 @@
+cycle: E
+name: Collection and Biases
+mandatory: true
+depends_on:
+  - A
+  - B
+  - C
+  - D
+script_function: run_cycle_e
+inputs:
+  - 01_formulation.yaml
+  - Cycle A-D outputs
+required_artifacts:
+  read:
+    - 01_formulation.yaml
+  update:
+    - 01_formulation.yaml
+    - formulation_metrics.json
+    - formulation_decision_log.jsonl
+    - claim_boundary_registry.yaml
+    - 01_formulation.md
+outputs:
+  - protocol handoff facts
+  - bias and generalizability assessment
+  - validation-needs framing
+  - claim boundary registry
+  - final rendered markdown report
+checklist_ids:
+  - E01
+  - E02
+  - E03
+  - E04
+  - E05
+  - E06
+  - E07
+  - E08
+checklists:
+  - id: E01
+    question: How was the data collected, generated, sampled, or recorded?
+    skip_when: never
+  - id: E02
+    question: What are the time coverage, refresh cadence, and temporal gaps?
+    skip_when: never
+  - id: E03
+    question: Is there grouping, clustering, panel, hierarchy, or interference structure?
+    skip_when: never
+  - id: E04
+    question: Is the data a one-off extract, a monitoring stream, or a partially refreshed process, and are leakage-relevant fields or structures present?
+    skip_when: never
+  - id: E05
+    question: How representative is the data relative to the target population or deployment context?
+    skip_when: never
+  - id: E06
+    question: Which biases are present, absent, or uncertain, and what are their likely directions, severities, and current mitigations?
+    skip_when: never
+  - id: E07
+    question: What future validation may be needed at a high level for this reporting, deployment, or population claim?
+    skip_when: never
+  - id: E08
+    question: What unresolved questions must be passed to protocol?
+    skip_when: never
+gate_ids:
+  - E-collection-understood
+  - E-biases-assessed
+  - E-generalizability
+  - E-data-usage-facts
+  - E-validation-needs-framed
+  - E-open-protocol-questions
+gates:
+  - id: E-collection-understood
+    depends_on: [E01]
+    diagnostic: false
+    condition: Data collection process is understood well enough to proceed.
+  - id: E-biases-assessed
+    depends_on: [E05, E06]
+    diagnostic: false
+    condition: Collection, selection, recall, measurement, and related biases are assessed.
+  - id: E-generalizability
+    depends_on: [E06]
+    diagnostic: false
+    condition: Generalizability risks relative to the target context are assessed.
+  - id: E-data-usage-facts
+    depends_on: [E01, E02, E03, E04]
+    diagnostic: false
+    condition: Facts needed by protocol to decide data-usage mode are surfaced.
+  - id: E-validation-needs-framed
+    depends_on: [E07]
+    diagnostic: true
+    condition: High-level future validation needs are framed without locking protocol.
+  - id: E-open-protocol-questions
+    depends_on: [E08]
+    diagnostic: false
+    condition: Unresolved questions for protocol are explicitly listed.
+research_questions:
+  - How is this type of data typically collected in practice, and what limitations follow?
+  - What selection, recall, measurement, or surveillance biases are documented for similar sources?
+  - How far do findings from this kind of data usually generalize?
+  - What validation patterns are commonly needed for similar questions?
+stage_yaml_updates:
+  - protocol_handoff.data_usage_mode
+  - protocol_handoff.frozen_artifacts
+  - protocol_handoff.validation_rule_candidates
+  - protocol_handoff.forbidden_variable_classes
+  - protocol_handoff.backtracking_triggers
+  - protocol_handoff.open_questions
+  - claim_boundary.verbs_allowed
+  - claim_boundary.verbs_forbidden
+  - cycle_state.current_cycle
+  - cycle_state.completed_cycles
+  - cycle_state.iteration_counts
+  - gates.latest
+  - status
+guidance:
+  judgment_rules:
+    - Surface protocol-relevant facts without locking protocol decisions that belong downstream.
+    - Finalize the claim boundary registry from canonical YAML, not from prose.
+    - Render the markdown report only after canonical YAML and metrics are consistent.
+  common_pitfalls:
+    - Choosing data-usage mode instead of handing protocol the facts needed to choose it.
+    - Hiding serious bias under vague limitations language.
+    - Writing markdown first and trying to backfill YAML afterward.

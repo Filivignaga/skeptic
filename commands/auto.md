@@ -16,7 +16,10 @@ Run the full pipeline in order:
 6. `evaluate`
 7. `communicate`
 
-For each stage, read the corresponding stage file from `~/.claude/skills/skeptic/references/`.
-After `formulate` resolves the active route, also load the corresponding route file for each later stage.
+For each stage, read the corresponding stage entry file from
+`~/.claude/skills/skeptic/references/`.
+Load one cycle YAML file only when that cycle starts.
+After `formulate` resolves the active route, also load the corresponding route
+file for each later stage.
 
 User input: $ARGUMENTS

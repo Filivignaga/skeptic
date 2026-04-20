@@ -1,0 +1,123 @@
+cycle: A
+name: Setup and Data Overview
+mandatory: true
+depends_on: []
+script_function: run_cycle_a
+inputs:
+  - project_name
+  - project_root
+  - data_sources
+  - rough_domain_question
+  - optional_data_documentation
+required_artifacts:
+  create:
+    - 01_formulation.py
+    - 01_formulation.yaml
+    - formulation_metrics.json
+    - formulation_decision_log.jsonl
+    - README.md
+  update:
+    - 01_formulation.yaml
+    - formulation_metrics.json
+    - formulation_decision_log.jsonl
+outputs:
+  - project structure exists
+  - raw source manifest recorded
+  - source encodings recorded
+  - source hashes recorded
+  - first-pass data relevance assessment
+  - decision anchor candidates
+  - audience candidate
+checklist_ids:
+  - A00
+  - A01
+  - A02
+  - A03
+  - A04
+  - A05
+  - A06
+  - A07
+  - A08
+checklists:
+  - id: A00
+    question: For each source data file, what is the detected character encoding, and do loaded values display correctly when that encoding is used explicitly?
+    skip_when: never
+  - id: A01
+    question: What is the shape, column list, and dtype of each loaded source?
+    skip_when: never
+  - id: A02
+    question: What do sample rows look like?
+    skip_when: never
+  - id: A03
+    question: What are the basic statistics and missing-value counts per column?
+    skip_when: never
+  - id: A04
+    question: For low-cardinality categorical columns, what are the value distributions?
+    skip_when: never
+  - id: A05
+    question: If time, grouping, or joins matter, what are the date coverage, time grain, group counts, and join-key overlaps?
+    skip_when: never
+  - id: A06
+    question: Is the question framed as a real stakeholder or scientific problem, not a method request, and does the approved framing state the decision anchor or academic prior-update logic?
+    skip_when: never
+  - id: A07
+    question: For each raw data file, what is its SHA-256 hash?
+    skip_when: never
+  - id: A08
+    question: Who is the intended audience, and is the question actually useful to them?
+    skip_when: never
+gate_ids:
+  - A-loadable
+  - A-relevant
+  - A-question-fit
+  - A-audience-defined
+  - A-no-red-flags
+gates:
+  - id: A-loadable
+    depends_on: [A01]
+    diagnostic: false
+    condition: Data is loadable and structurally sound enough to continue.
+  - id: A-relevant
+    depends_on: [A01, A02, A03]
+    diagnostic: false
+    condition: Data appears relevant to the stated question.
+  - id: A-question-fit
+    depends_on: [A01, A02, A03, A06]
+    diagnostic: false
+    condition: The question is useful, specific, plausibly answerable, and anchored to a real decision or academic update rule.
+  - id: A-audience-defined
+    depends_on: [A08]
+    diagnostic: false
+    condition: The intended audience is identified and the question matters to that audience.
+  - id: A-no-red-flags
+    depends_on: [A03, A04, A05]
+    diagnostic: false
+    condition: No immediate structural red flags are likely to derail formulation.
+research_questions:
+  - What domain context matters for understanding this dataset?
+  - Are there known source-specific data quality issues or collection artifacts?
+  - What codebooks, metadata standards, or public documentation usually exist for this source type?
+  - What decision or scientific update is the project supposed to support?
+  - What prior art already answers part of the question, and does that change scope or order?
+stage_yaml_updates:
+  - project.name
+  - project.root
+  - project.sources
+  - project.data_documentation
+  - question_contract.rough_question
+  - question_contract.audience
+  - question_contract.decision_anchor
+  - cycle_state.current_cycle
+  - cycle_state.iteration_counts
+  - gates.latest
+guidance:
+  judgment_rules:
+    - Set up the project directory and canonical files before any deeper reasoning.
+    - Record source encodings and hashes in canonical state, not only in narrative text.
+    - Treat the question as provisional at this stage. Do not lock question type or route yet.
+    - If the data is plainly irrelevant or unusable, say so immediately.
+  common_pitfalls:
+    - Treating a method request as the real question.
+    - Skipping the decision anchor.
+    - Trusting inferred encodings without verifying displayed values.
+    - Hiding obvious data irrelevance behind generic next steps.

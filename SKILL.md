@@ -9,6 +9,14 @@ Use a question-first lifecycle. Do not start from a favorite method. Do not assu
 
 PCS applies throughout the lifecycle. `/skeptic:evaluate` is the formal route-appropriate PCS review before `/skeptic:communicate`.
 
+Execution stays context-lean:
+
+- stage entry files stay lean
+- cycle-specific YAML files are loaded on demand
+- canonical YAML and machine-readable metrics are the source of truth
+- project-side Python scripts run one cycle at a time
+- markdown reports are final renders, not working memory
+
 ## Mandatory Read: Core Principles
 
 Before executing any Skeptic subcommand, read `references/core-principles.md`.
@@ -30,7 +38,11 @@ Before executing any Skeptic subcommand, read `references/core-principles.md`.
 
 ## /skeptic:formulate
 
-Define the question first. Fix the unit of analysis, target quantity, question type, and initial claim boundary so later stages know what problem they are allowed to solve.
+Define the question first. Fix the unit of analysis, target quantity, question
+type, and initial claim boundary so later stages know what problem they are
+allowed to solve. `formulate` writes canonical YAML first, uses a project-side
+Python script as the execution layer, updates compact JSON logs and metrics, and
+renders markdown only at the end.
 
 ## /skeptic:protocol
 
