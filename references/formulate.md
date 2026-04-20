@@ -7,10 +7,6 @@ description: Use when starting a new data analysis project. Refine a rough domai
 
 Read `references/core-principles.md` first. It is the architecture contract.
 
-This file is the lean stage entry. It defines the shared formulate loop only.
-Do not load all cycle details at once. Load one cycle YAML file only when that
-cycle starts.
-
 ## Required Inputs
 
 | Input | Description |
@@ -19,7 +15,7 @@ cycle starts.
 | Data source(s) | Path, table, file list, or other portable locator for the raw data source |
 | Rough domain question | What the user wants to answer with this data |
 
-If any required input is missing, collect it before starting.
+If any required input is missing, use `AskUserQuestion` before starting.
 
 After collecting the project name:
 
@@ -27,8 +23,7 @@ After collecting the project name:
 2. Present the resolved path to the user for confirmation.
 3. If the user gives an alternative path, use that path for this project only.
 4. Keep all project-written files inside that project folder.
-5. Never move raw data out of its original location. Copy local source files
-   into the configured data directory.
+5. Copy local source files into the configured data directory.
 
 Also ask whether documentation exists for the data, such as a codebook,
 README, data dictionary, or collection notes. If it exists, copy it into the
@@ -98,8 +93,7 @@ Required script shape:
 3. Only the requested cycle may run.
 4. The script must read the current `01_formulation.yaml`.
 5. The script must emit one structured JSON object for the requested cycle.
-6. The script must not rely on hidden notebook state.
-7. Notebooks are optional derived reports only. They are not required for stage
+6. Notebooks are optional derived reports only. They are not required for stage
    execution and are never canonical.
 
 Required cycle JSON output keys:
