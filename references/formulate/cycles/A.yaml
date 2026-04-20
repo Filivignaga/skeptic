@@ -114,10 +114,10 @@ guidance:
   judgment_rules:
     - Set up the project directory and canonical files before any deeper reasoning.
     - Record source encodings and hashes in canonical state, not only in narrative text.
-    - Treat the question as provisional at this stage. Do not lock question type or route yet.
-    - If the data is plainly irrelevant or unusable, say so immediately.
-  common_pitfalls:
-    - Treating a method request as the real question.
-    - Skipping the decision anchor.
-    - Trusting inferred encodings without verifying displayed values.
-    - Hiding obvious data irrelevance behind generic next steps.
+    - Treat the question as provisional at this stage and leave question type and route open.
+    - State data irrelevance or unusability directly when that is the strongest finding.
+  execution_goals:
+    - Reframe method requests into the real stakeholder or scientific question.
+    - Capture the decision anchor explicitly.
+    - Verify displayed values before trusting an inferred encoding.
+    - Name obvious data irrelevance as a concrete formulation result.

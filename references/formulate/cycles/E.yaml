@@ -112,10 +112,10 @@ stage_yaml_updates:
   - status
 guidance:
   judgment_rules:
-    - Surface protocol-relevant facts without locking protocol decisions that belong downstream.
+    - Surface protocol-relevant facts and leave the final protocol choices for the downstream stage.
     - Finalize the claim boundary registry from canonical YAML, not from prose.
     - Render the markdown report only after canonical YAML and metrics are consistent.
-  common_pitfalls:
-    - Choosing data-usage mode instead of handing protocol the facts needed to choose it.
-    - Hiding serious bias under vague limitations language.
-    - Writing markdown first and trying to backfill YAML afterward.
+  execution_goals:
+    - Hand protocol the facts it needs to choose data-usage mode well.
+    - Describe serious bias in concrete, decision-relevant terms.
+    - Complete YAML and metrics first so markdown can be rendered from settled artifacts.

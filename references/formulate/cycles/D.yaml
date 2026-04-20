@@ -193,8 +193,8 @@ guidance:
   judgment_rules:
     - Cycle D locks the approved question wording.
     - Every major decision belongs in structured YAML fields before any prose summary.
-    - If competing definitions materially change claim type or route, narrow the claim boundary now.
-  common_pitfalls:
-    - Leaving abstract terms unresolved.
-    - Smuggling in a broader claim than the operationalization supports.
-    - Hiding proxy risk or confounding under generic caveats.
+    - Use competing definitions to test whether the claim boundary needs narrowing, and narrow it immediately when they change claim type or route.
+  execution_goals:
+    - Resolve abstract terms into explicit measures or named open issues.
+    - Match the claim boundary tightly to what the operationalization can support.
+    - State proxy risk and confounding relevance as direct structured findings.

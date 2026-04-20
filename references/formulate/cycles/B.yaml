@@ -80,7 +80,7 @@ guidance:
     - Force explicit choices when a variable or row meaning has multiple live interpretations.
     - Distinguish clearly between what is observed, derived, missing, and only wished for.
     - Keep variable understanding in structured fields whenever possible.
-  common_pitfalls:
-    - Letting ambiguity survive because it feels domain-specific.
-    - Confusing row identity with analysis target.
-    - Treating derived columns as raw evidence without saying so.
+  execution_goals:
+    - Resolve meaningful ambiguity instead of carrying it forward implicitly.
+    - Separate row identity from the eventual analysis target clearly.
+    - Label derived columns explicitly so their evidential role stays clear.

@@ -73,7 +73,7 @@ guidance:
     - Cycle C locks the primary question type and active route.
     - Keep the boundary clean: formulate chooses the question, protocol chooses how it may be answered.
     - State what the chosen type forbids downstream, not only what it permits.
-  common_pitfalls:
-    - Treating predictive work as the default.
-    - Confusing inferential and predictive goals.
-    - Locking estimator-level decisions too early.
+  execution_goals:
+    - Evaluate all plausible question types before selecting the best fit.
+    - Distinguish inferential and predictive goals in terms of target, evidence, and validation.
+    - Stop at question-type and route resolution without jumping to estimator-level choices.
