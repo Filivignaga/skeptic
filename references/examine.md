@@ -489,6 +489,14 @@ Immediately after each cycle decision, append to `skeptic_documentation/04_exami
 - **Tensions or contradictions:** {none / explicit list}
 - **Analysis consequences:** {what later analyze-stage contract lock must take seriously}
 - **Decision:** {pass / iterate / acknowledge gap / cleaning mismatch / protocol mismatch / formulation mismatch / data insufficient}
+
+#### Cycle {X} raw subagent outputs
+
+##### Research subagent
+{verbatim output, including every source URL}
+
+##### Evaluation subagent
+{verbatim output, including DEFECT SCAN, SEVERITY CLASSIFICATION, GATE ASSESSMENTS, Alternatives considered, Gaps, Protocol implications, Recommended follow-up, VERDICT}
 ```
 
 Also append structured cycle metrics to `skeptic_documentation/metrics.md`. Create the section `## Examination` if it does not yet exist.
@@ -504,6 +512,10 @@ Also append structured cycle metrics to `skeptic_documentation/metrics.md`. Crea
 - route-candidate-update: stronger/weaker/unchanged/mixed
 - backtracking-triggered: none/clean/protocol/formulation+protocol
 ```
+
+**Raw-subagent-outputs rule.** The `#### Cycle {X} raw subagent outputs` subsection is mandatory. The evaluation subagent auto-fails the cycle if that subsection is missing, empty, or contains paraphrased rather than verbatim output. The research subagent's raw output must include every source URL it cites.
+
+**Cycle-state invariant.** After Step 5, the notebook, the stage document (`0X_{stage}.md`), `metrics.md`, and the README must all agree on the same "active cycle" pointer. Each cycle begins by verifying this invariant and ends by restoring it: the log entry for Cycle {X} and its metrics row are appended, the README stage-status line is updated to reflect Cycle {X}'s outcome, and only then may Cycle {X+1} work begin in the notebook.
 
 ## Cycle A: Support and Distribution Audit
 

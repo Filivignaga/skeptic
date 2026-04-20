@@ -424,6 +424,14 @@ Immediately after each cycle decision, append to `skeptic_documentation/02_proto
 - **Downstream implications:** [what later stages must now obey]
 - **Gaps:** [remaining gaps, if any]
 - **Decision:** [pass / iterate / acknowledge gap / premature - with reasoning]
+
+#### Cycle {X} raw subagent outputs
+
+##### Research subagent
+{verbatim output, including every source URL}
+
+##### Evaluation subagent
+{verbatim output, including DEFECT SCAN, SEVERITY CLASSIFICATION, GATE ASSESSMENTS, Alternatives considered, Gaps, Protocol implications, Recommended follow-up, VERDICT}
 ```
 
 Also append structured cycle metrics to `skeptic_documentation/metrics.md`. Create the file if it does not exist, starting with `# Skeptic Metrics`, then `## Protocol`.
@@ -442,6 +450,10 @@ Every cycle logs the same base fields.
 - unresolved_protocol_risks: {n}
 - blocking_failures: {n} (resolved_by_iteration: {n}, resolved_by_override: {n})
 ```
+
+**Raw-subagent-outputs rule.** The `#### Cycle {X} raw subagent outputs` subsection is mandatory. The evaluation subagent auto-fails the cycle if that subsection is missing, empty, or contains paraphrased rather than verbatim output. The research subagent's raw output must include every source URL it cites.
+
+**Cycle-state invariant.** After Step 5, the notebook, the stage document (`0X_{stage}.md`), `metrics.md`, and the README must all agree on the same "active cycle" pointer. Each cycle begins by verifying this invariant and ends by restoring it: the log entry for Cycle {X} and its metrics row are appended, the README stage-status line is updated to reflect Cycle {X}'s outcome, and only then may Cycle {X+1} work begin in the notebook.
 
 ## Cycle A: Handoff Audit from Formulate
 

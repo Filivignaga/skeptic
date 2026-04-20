@@ -241,6 +241,14 @@ Immediately after each cycle decision, append to `skeptic_documentation/01_formu
 - **Protocol implications:** [facts this cycle surfaced that should constrain `protocol`]
 - **Gaps:** [remaining gaps, if any]
 - **Decision:** [pass / iterate / acknowledge gap / data insufficient - with reasoning]
+
+#### Cycle {X} raw subagent outputs
+
+##### Research subagent
+{verbatim output, including every source URL}
+
+##### Evaluation subagent
+{verbatim output, including DEFECT SCAN, SEVERITY CLASSIFICATION, GATE ASSESSMENTS, Alternatives considered, Gaps, Protocol implications, Recommended follow-up, VERDICT}
 ```
 
 Also append structured cycle metrics to `skeptic_documentation/metrics.md`. Create the file if it does not exist, starting with `# Skeptic Metrics` and `## Formulation`.
@@ -256,6 +264,10 @@ Every cycle logs the same base fields.
 - evaluation_verdict_aligned: yes/no/partial/indeterminate
 - protocol_questions_open: {n}
 ```
+
+**Raw-subagent-outputs rule.** The `#### Cycle {X} raw subagent outputs` subsection is mandatory. The evaluation subagent auto-fails the cycle if that subsection is missing, empty, or contains paraphrased rather than verbatim output. The research subagent's raw output must include every source URL it cites.
+
+**Cycle-state invariant.** After Step 5, the notebook, the stage document (`0X_{stage}.md`), `metrics.md`, and the README must all agree on the same "active cycle" pointer. Each cycle begins by verifying this invariant and ends by restoring it: the log entry for Cycle {X} and its metrics row are appended, the README stage-status line is updated to reflect Cycle {X}'s outcome, and only then may Cycle {X+1} work begin in the notebook.
 
 ## Cycle A: Setup + Data Overview
 
@@ -279,6 +291,7 @@ Before loading data, read `references/data-formats.md` and apply the format-spec
    # Formulate: Problem Formulation
 
    ## Dataset
+   - Project name: {project-name}
    - Sources: {data source names or manifest}
    - Rough question: {rough domain question}
    - Date started: {date}
@@ -364,6 +377,8 @@ The six question types are:
 | **Predictive** | How well can unseen outcomes, probabilities, rankings, or forecasts be predicted in a defined deployment setting? | Predeclared targets plus protocol-approved unseen-data validation logic |
 | **Causal** | Does changing X change Y, on average? | A defensible identification strategy |
 | **Mechanistic** | What process generates the observed behavior? | Structured domain knowledge and a defensible structural model |
+
+**Cycle C scope, by intent.** Cycle C produces exactly two things: a locked primary question type, and a set of "facts and recommended ranges" that `protocol` will use to make its own decisions. This boundary keeps each stage honest: `formulate` chooses the question, `protocol` chooses how that question may be answered.
 
 This classification is not a model-selection shortcut. It constrains:
 
@@ -659,6 +674,8 @@ narrowing_log: []
 Adapt these defaults to the specific project. Add project-specific forbidden verbs based on Cycle D operationalization and Cycle E bias findings. The user approves the registry as part of finalization.
 
 **Narrowing rule:** Any downstream stage may add entries to `verbs_forbidden`, reduce `scope`, or tighten `generalization_limit` by appending to `narrowing_log`. No downstream stage may remove entries from `verbs_forbidden`, expand `scope`, or loosen `generalization_limit` without reopening `formulate` plus `protocol`.
+
+Only this finalization artifact is the Claim Boundary Registry. Earlier working material stays inside the notebook, labelled `draft claim-boundary inventory`, and is advisory only.
 
 1. Add `## Summary` to `01_formulation.md` with:
    - approved question

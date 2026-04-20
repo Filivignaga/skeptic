@@ -581,6 +581,14 @@ Immediately after each cycle decision, append to `skeptic_documentation/06_evalu
 - **Claim boundary:** {unchanged / narrowed to {new boundary} because {reason}}
 - **Gaps:** {remaining gaps, if any}
 - **Decision:** {pass / iterate / acknowledge gap / backtrack to {stage}}
+
+#### Cycle {X} raw subagent outputs
+
+##### Research subagent
+{verbatim output, including every source URL}
+
+##### Evaluation subagent
+{verbatim output, including DEFECT SCAN, SEVERITY CLASSIFICATION, GATE ASSESSMENTS, Alternatives considered, Gaps, Protocol implications, Recommended follow-up, VERDICT}
 ```
 
 Also append structured cycle metrics to `skeptic_documentation/metrics.md`. Create the section `## Evaluation` if it does not yet exist.
@@ -600,6 +608,10 @@ Also append structured cycle metrics to `skeptic_documentation/metrics.md`. Crea
 ```
 
 If the claim boundary narrows in this cycle, append an entry to the Claim Boundary Registry `narrowing_log` in `metrics.md` with: cycle, prior boundary, new boundary, and rationale. `evaluate` may tighten the registry. It may not loosen it.
+
+**Raw-subagent-outputs rule.** The `#### Cycle {X} raw subagent outputs` subsection is mandatory. The evaluation subagent auto-fails the cycle if that subsection is missing, empty, or contains paraphrased rather than verbatim output. The research subagent's raw output must include every source URL it cites.
+
+**Cycle-state invariant.** After Step 5, the notebook, the stage document (`0X_{stage}.md`), `metrics.md`, and the README must all agree on the same "active cycle" pointer. Each cycle begins by verifying this invariant and ends by restoring it: the log entry for Cycle {X} and its metrics row are appended, the README stage-status line is updated to reflect Cycle {X}'s outcome, and only then may Cycle {X+1} work begin in the notebook.
 
 ## Cycle A: Intake Audit and Evaluation Plan
 
