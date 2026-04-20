@@ -18,12 +18,6 @@ outputs:
   - ambiguity registry
   - ideal-versus-available data gap assessment
   - cycle decision recorded in stage YAML history
-checklist_ids:
-  - B01
-  - B02
-  - B03
-  - B04
-  - B05
 checklists:
   - id: B01
     question: What do the relevant variables mean in domain context, including units and expected ranges?
@@ -40,25 +34,20 @@ checklists:
   - id: B05
     question: What would the ideal dataset include for this question, and what is present versus missing?
     skip_when: never
-gate_ids:
-  - B-variables-understood
-  - B-units-clear
-  - B-no-ambiguity
-  - B-gap-assessed
 gates:
-  - id: B-variables-understood
+  - name: variables_understood
     depends_on: [B01, B02]
     diagnostic: false
     condition: Relevant variables are understood well enough to reason about the question.
-  - id: B-units-clear
+  - name: units_clear
     depends_on: [B03]
     diagnostic: false
     condition: Unit of analysis or observational unit is clear.
-  - id: B-no-ambiguity
+  - name: no_ambiguity
     depends_on: [B04]
     diagnostic: false
     condition: Major ambiguities that would distort interpretation are surfaced and resolved or explicitly carried forward.
-  - id: B-gap-assessed
+  - name: gap_assessed
     depends_on: [B05]
     diagnostic: false
     condition: The gap between available data and ideal evidence is explicit.

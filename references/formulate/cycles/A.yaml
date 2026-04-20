@@ -25,16 +25,6 @@ outputs:
   - decision anchor candidates
   - audience candidate
   - initial history and metrics blocks initialized in stage YAML
-checklist_ids:
-  - A00
-  - A01
-  - A02
-  - A03
-  - A04
-  - A05
-  - A06
-  - A07
-  - A08
 checklists:
   - id: A00
     question: For each source data file, what is the detected character encoding, and do loaded values display correctly when that encoding is used explicitly?
@@ -63,30 +53,24 @@ checklists:
   - id: A08
     question: Who is the intended audience, and is the question actually useful to them?
     skip_when: never
-gate_ids:
-  - A-loadable
-  - A-relevant
-  - A-question-fit
-  - A-audience-defined
-  - A-no-red-flags
 gates:
-  - id: A-loadable
+  - name: loadable
     depends_on: [A01]
     diagnostic: false
     condition: Data is loadable and structurally sound enough to continue.
-  - id: A-relevant
+  - name: relevant
     depends_on: [A01, A02, A03]
     diagnostic: false
     condition: Data appears relevant to the stated question.
-  - id: A-question-fit
+  - name: question_fit
     depends_on: [A01, A02, A03, A06]
     diagnostic: false
     condition: The question is useful, specific, plausibly answerable, and anchored to a real decision or academic update rule.
-  - id: A-audience-defined
+  - name: audience_defined
     depends_on: [A08]
     diagnostic: false
     condition: The intended audience is identified and the question matters to that audience.
-  - id: A-no-red-flags
+  - name: no_red_flags
     depends_on: [A03, A04, A05]
     diagnostic: false
     condition: No immediate structural red flags are likely to derail formulation.

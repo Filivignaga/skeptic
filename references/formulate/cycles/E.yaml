@@ -22,15 +22,6 @@ outputs:
   - validation-needs framing
   - claim boundary section finalized in stage YAML
   - final rendered markdown report
-checklist_ids:
-  - E01
-  - E02
-  - E03
-  - E04
-  - E05
-  - E06
-  - E07
-  - E08
 checklists:
   - id: E01
     question: How was the data collected, generated, sampled, or recorded?
@@ -56,35 +47,28 @@ checklists:
   - id: E08
     question: What unresolved questions must be passed to protocol?
     skip_when: never
-gate_ids:
-  - E-collection-understood
-  - E-biases-assessed
-  - E-generalizability
-  - E-data-usage-facts
-  - E-validation-needs-framed
-  - E-open-protocol-questions
 gates:
-  - id: E-collection-understood
+  - name: collection_understood
     depends_on: [E01]
     diagnostic: false
     condition: Data collection process is understood well enough to proceed.
-  - id: E-biases-assessed
+  - name: biases_assessed
     depends_on: [E05, E06]
     diagnostic: false
     condition: Collection, selection, recall, measurement, and related biases are assessed.
-  - id: E-generalizability
+  - name: generalizability
     depends_on: [E06]
     diagnostic: false
     condition: Generalizability risks relative to the target context are assessed.
-  - id: E-data-usage-facts
+  - name: data_usage_facts
     depends_on: [E01, E02, E03, E04]
     diagnostic: false
     condition: Facts needed by protocol to decide data-usage mode are surfaced.
-  - id: E-validation-needs-framed
+  - name: validation_needs_framed
     depends_on: [E07]
     diagnostic: true
     condition: High-level future validation needs are framed without locking protocol.
-  - id: E-open-protocol-questions
+  - name: open_protocol_questions
     depends_on: [E08]
     diagnostic: false
     condition: Unresolved questions for protocol are explicitly listed.

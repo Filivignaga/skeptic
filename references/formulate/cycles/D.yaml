@@ -22,39 +22,6 @@ outputs:
   - route ranking
   - assumptions and decision costs
   - cycle decision recorded in stage YAML history
-checklist_ids:
-  - D01
-  - D02
-  - D03
-  - D04
-  - D05
-  - D06
-  - D07
-  - D08
-  - D09
-  - D10
-  - D11
-  - D12
-  - D13
-gate_ids:
-  - D-terms-identified
-  - D-terms-operationalized
-  - D-competing-defs
-  - D-availability-checked
-  - D-target-quantity-stated
-  - D-claim-boundary-stated
-  - D-route-candidates-ranked
-  - D-unit-of-analysis-stated
-  - D-context-stated
-  - D-assumptions-stated
-  - D-related-concepts
-  - D-baseline-stated
-  - D-error-costs-stated
-  - D-uplift-stated
-  - D-prior-art-reviewed
-  - D-unfeasible-flagged
-  - D-measurement-mismatch
-  - D-confounding
 checklists:
   - id: D01
     question: Which terms in the question are vague, contested, or not directly mapped to a column?
@@ -96,75 +63,75 @@ checklists:
     question: What prior art or analogous work changes the framing, scope, assumptions, or order?
     skip_when: never
 gates:
-  - id: D-terms-identified
+  - name: terms_identified
     depends_on: [D01]
     diagnostic: false
     condition: Abstract or ambiguous terms are identified.
-  - id: D-terms-operationalized
+  - name: terms_operationalized
     depends_on: [D02]
     diagnostic: false
     condition: Each key term is mapped to a column, metric, or derived metric.
-  - id: D-competing-defs
+  - name: competing_definitions
     depends_on: [D02]
     diagnostic: false
     condition: A competing operationalization is instantiated for each critical term, and divergence is logged as a claim-boundary narrowing when required.
-  - id: D-availability-checked
+  - name: availability_checked
     depends_on: [D03]
     diagnostic: false
     condition: Practical availability is verified for chosen operationalizations.
-  - id: D-target-quantity-stated
+  - name: target_quantity_stated
     depends_on: [D04]
     diagnostic: false
     condition: Target quantity or estimand is named.
-  - id: D-claim-boundary-stated
+  - name: claim_boundary_stated
     depends_on: [D05]
     diagnostic: false
     condition: Claim boundary is explicit.
-  - id: D-route-candidates-ranked
+  - name: route_candidates_ranked
     depends_on: [D07]
     diagnostic: false
     condition: Route candidates are ranked and justified.
-  - id: D-unit-of-analysis-stated
+  - name: unit_of_analysis_stated
     depends_on: [D06]
     diagnostic: false
     condition: Unit of analysis is explicit.
-  - id: D-context-stated
+  - name: context_stated
     depends_on: [D06]
     diagnostic: false
     condition: Target population or deployment context is explicit when relevant.
-  - id: D-assumptions-stated
+  - name: assumptions_stated
     depends_on: [D09]
     diagnostic: false
     condition: Key assumptions are explicit.
-  - id: D-related-concepts
+  - name: related_concepts
     depends_on: [D08]
     diagnostic: false
     condition: Related concepts and structural dependencies are identified.
-  - id: D-baseline-stated
+  - name: baseline_stated
     depends_on: [D10]
     diagnostic: false
     condition: Baseline is stated.
-  - id: D-error-costs-stated
+  - name: error_costs_stated
     depends_on: [D11]
     diagnostic: false
     condition: Error costs and unacceptable errors are stated.
-  - id: D-uplift-stated
+  - name: uplift_stated
     depends_on: [D12]
     diagnostic: false
     condition: Minimum useful uplift is stated.
-  - id: D-prior-art-reviewed
+  - name: prior_art_reviewed
     depends_on: [D13]
     diagnostic: false
     condition: Prior art implications are reviewed and connected to scope or order.
-  - id: D-unfeasible-flagged
+  - name: unfeasible_flagged
     depends_on: [D01, D02]
     diagnostic: false
     condition: Un-operationalizable terms are flagged with a recommended action.
-  - id: D-measurement-mismatch
+  - name: measurement_mismatch
     depends_on: [D03]
     diagnostic: true
     condition: Direct-measure versus proxy risk is assessed for each chosen operationalization.
-  - id: D-confounding
+  - name: confounding
     depends_on: [D08]
     diagnostic: true
     condition: Confounding or identification relevance is assessed at a high level.

@@ -20,11 +20,6 @@ outputs:
   - route candidates
   - downstream protocol constraint summary
   - cycle decision recorded in stage YAML history
-checklist_ids:
-  - C01
-  - C02
-  - C03
-  - C04
 checklists:
   - id: C01
     question: Based on the rough question and Cycle A-B findings, which of the six question types best fits?
@@ -38,20 +33,16 @@ checklists:
   - id: C04
     question: If the data cannot support the preferred type, what would be required for the original?
     skip_when: data supports the preferred type
-gate_ids:
-  - C-type-classified
-  - C-type-supported
-  - C-downstream-constraints-stated
 gates:
-  - id: C-type-classified
+  - name: type_classified
     depends_on: [C01]
     diagnostic: false
     condition: The question is classified into one of the six Skeptic types.
-  - id: C-type-supported
+  - name: type_supported
     depends_on: [C02]
     diagnostic: false
     condition: The data collection and design plausibly support the classified type.
-  - id: C-downstream-constraints-stated
+  - name: downstream_constraints_stated
     depends_on: [C03]
     diagnostic: false
     condition: Consequences for protocol, route overlays, and later analyze are stated.
