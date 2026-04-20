@@ -271,12 +271,16 @@ Rules:
 
 ### 3. Computed Metrics
 
-Every stage finalization phase produces a canonical machine-readable metrics
-artifact. Human-readable summaries are optional derived renders only.
+Every stage finalization phase produces machine-readable state for the
+decisions that matter. Human-readable summaries are optional derived renders
+only.
 
 Rules:
 
-- the canonical metrics artifact is JSON or YAML, not markdown
+- keep metrics in the stage YAML when they stay compact and tightly coupled to
+  stage state
+- use a separate JSON or YAML metrics artifact only when a stage proves it
+  needs one
 - every metric must cite its source artifact or log field
 - common metrics across all stages: checklist items answered, mandatory cycles
   completed, blocking failures total, blocking failures resolved by iteration,
@@ -300,9 +304,6 @@ projects_root/
       01_formulation.py
       01_formulation.yaml
       01_formulation.md
-      formulation_metrics.json
-      formulation_decision_log.jsonl
-      claim_boundary_registry.yaml
       02_protocol.md
       03_cleaning.md
       04_examination.md
@@ -408,7 +409,7 @@ python 01_formulation.py --cycle A
 ```
 
 Then read the structured output, validate required keys, and update canonical
-YAML and metrics artifacts.
+YAML and any compact state blocks the stage keeps inside it.
 
 After execution, scan the current cycle output for Python exceptions, malformed
 JSON, missing checklist answers, or missing gate evidence. Any unhandled

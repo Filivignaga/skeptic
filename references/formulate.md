@@ -1,6 +1,6 @@
 ---
 name: formulate
-description: Use when starting a new data analysis project. Refine a rough domain question into a precise, data-answerable formulation through cycle-specific YAML specs, a project-side Python execution script, canonical YAML state, compact machine-readable logs, and a final rendered markdown report.
+description: Use when starting a new data analysis project. Refine a rough domain question into a precise, data-answerable formulation through cycle-specific YAML specs, a project-side Python execution script, one canonical stage YAML file, and a final rendered markdown report.
 ---
 
 # /skeptic:formulate - Problem Formulation and Data Context
@@ -37,24 +37,16 @@ Write these files in the project documentation directory:
 skeptic_documentation/
   01_formulation.py
   01_formulation.yaml
-  formulation_metrics.json
-  formulation_decision_log.jsonl
   01_formulation.md
-  claim_boundary_registry.yaml
 ```
 
 Artifact roles:
 
 - `01_formulation.py` -> project-side execution script for this stage
 - `01_formulation.yaml` -> canonical stage contract and state
-- `formulation_metrics.json` -> machine-readable counts, gate results, and
-  references to canonical files
-- `formulation_decision_log.jsonl` -> append-only event log, one JSON object per
-  decision or cycle result
 - `01_formulation.md` -> final rendered human-readable report only
-- `claim_boundary_registry.yaml` -> canonical claim-boundary registry
 
-If markdown disagrees with YAML or JSON, YAML or JSON wins.
+If markdown disagrees with YAML, YAML wins.
 
 ## Stage-Specific Files
 
@@ -155,6 +147,7 @@ claim_boundary:
   verbs_allowed: []
   verbs_forbidden: []
   generalization_limit: null
+  narrowing_log: []
 protocol_handoff:
   data_usage_mode: pending_protocol
   frozen_artifacts: []
@@ -170,11 +163,15 @@ cycle_state:
 gates:
   latest: {}
   history: []
+metrics:
+  checklist_answered: {}
+  blocking_failures: {}
+  overrides: []
+  acknowledged_gaps: []
+cycle_history: []
 artifacts:
   markdown_report: null
-  metrics_file: formulation_metrics.json
-  decision_log: formulation_decision_log.jsonl
-  claim_boundary_registry: claim_boundary_registry.yaml
+  readme_updated: false
 ```
 
 Use additional fields when needed. Do not remove these sections.
@@ -189,8 +186,8 @@ For each cycle:
 4. Inspect the structured JSON output.
 5. Apply the cycle YAML checklist and gate rules.
 6. Update `01_formulation.yaml` first.
-7. Append one compact event to `formulation_decision_log.jsonl`.
-8. Update `formulation_metrics.json`.
+7. Record one compact cycle history entry inside `01_formulation.yaml` `cycle_history`.
+8. Update the `metrics` block inside `01_formulation.yaml`.
 9. Move forward only if the cycle decision allows it.
 
 Do not keep the whole stage file or all cycle files in active memory.
@@ -203,7 +200,7 @@ For formulate:
 
 - pass -> move to the next cycle
 - iterate -> rerun the same cycle after targeted fixes
-- acknowledge gap -> only with written justification in the decision log
+- acknowledge gap -> only with written justification in `01_formulation.yaml`
 - data insufficient -> stop, log why, and present options
 - reopen formulate -> allowed inside the stage if a prior cycle needs repair
 - user override -> log the exact override reason before moving forward
@@ -222,15 +219,14 @@ Finalize only after:
    override
 2. the approved question is locked
 3. the protocol handoff is complete
-4. the claim boundary registry is written
-5. the final markdown report is rendered from canonical YAML and JSON artifacts
+4. the claim boundary section is finalized inside `01_formulation.yaml`
+5. the final markdown report is rendered from canonical YAML
 
 Finalization outputs:
 
-1. render `01_formulation.md` from the canonical YAML plus JSON metrics and log
-2. write `claim_boundary_registry.yaml`
-3. update `README.md` with the short formulate summary block
-4. verify the README block exists and is non-empty before declaring completion
+1. render `01_formulation.md` from the canonical YAML
+2. update `README.md` with the short formulate summary block
+3. verify the README block exists and is non-empty before declaring completion
 
 Do not treat the markdown report as working memory. It is a final render only.
 

@@ -228,7 +228,7 @@ Before Cycle A, create:
 **The evaluate notebook is not optional.** Unlike a documentation-only stage, evaluate must contain executable verification cells that programmatically confirm reproducibility and claim compliance. At minimum, the notebook must:
 - re-verify SHA-256 hashes of all protocol-frozen artifacts
 - re-load and re-compute at least one key metric from each analysis output to confirm reproducibility
-- programmatically check that the claim boundary was not widened (compare `claim_boundary_registry.yaml` against communicated claims if available)
+- programmatically check that the claim boundary was not widened (compare the `01_formulation.yaml` `claim_boundary` section against communicated claims if available)
 - document all PCS checks with executable evidence, not just prose assertions
 
 A `06_evaluation.md` without a corresponding executed `06_evaluation.ipynb` is a blocking defect at the stage boundary. The stage-boundary validator Check 4 enforces this.

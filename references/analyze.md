@@ -278,7 +278,7 @@ The analysis contract locked in Cycle A must contain all of the following fields
 
 | Field | Description | Required |
 |-------|-------------|----------|
-| Estimand or target quantity | Exact thing being estimated, predicted, or characterized, refined from formulate; note whether formulate's competing operationalizations were stability-tested and whether any would change the method family or route — divergence requires a narrowing entry in claim_boundary_registry.yaml. | All routes |
+| Estimand or target quantity | Exact thing being estimated, predicted, or characterized, refined from formulate; note whether formulate's competing operationalizations were stability-tested and whether any would change the method family or route -- divergence requires a narrowing entry in `01_formulation.yaml` `claim_boundary.narrowing_log`. | All routes |
 | Decision anchor | Stakeholder decision, candidate actions, and how the answer changes the chosen action — inherited from formulate A06 | All routes |
 | Method family | The specific algorithm, estimator, or analytical procedure | All routes |
 | Primary specification | Exact variables, functional form, parameters, or configuration | All routes |
@@ -654,7 +654,7 @@ Do not execute anything in this cycle. This cycle produces a locked specificatio
 
 Do not treat contract lock as a second examination stage. The examination handoff tells you what the data can support. The contract lock translates that into one executable specification within those constraints.
 
-**Cycle A PCS checkpoint.** Before Step 5, record one line each: (P) does the locked contract produce outputs that the protocol-specified reality check can actually evaluate? (C) does the primary specification survive any obvious operationalization variant as stable, or does it depend on fragile examination-stage support? (S) can another analyst reproduce the full execution from the contract fields plus the locked artifacts without ambiguity? Stability FAIL → revise the contract or append a narrowing entry to claim_boundary_registry.yaml narrowing_log.
+**Cycle A PCS checkpoint.** Before Step 5, record one line each: (P) does the locked contract produce outputs that the protocol-specified reality check can actually evaluate? (C) does the primary specification survive any obvious operationalization variant as stable, or does it depend on fragile examination-stage support? (S) can another analyst reproduce the full execution from the contract fields plus the locked artifacts without ambiguity? Stability FAIL -> revise the contract or append a narrowing entry to `01_formulation.yaml` `claim_boundary.narrowing_log`.
 
 **Research questions:**
 

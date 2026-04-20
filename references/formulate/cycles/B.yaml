@@ -12,13 +12,12 @@ required_artifacts:
     - 01_formulation.yaml
   update:
     - 01_formulation.yaml
-    - formulation_metrics.json
-    - formulation_decision_log.jsonl
 outputs:
   - variable meaning map
   - unit-of-analysis assessment
   - ambiguity registry
   - ideal-versus-available data gap assessment
+  - cycle decision recorded in stage YAML history
 checklist_ids:
   - B01
   - B02

@@ -13,13 +13,9 @@ required_artifacts:
   create:
     - 01_formulation.py
     - 01_formulation.yaml
-    - formulation_metrics.json
-    - formulation_decision_log.jsonl
     - README.md
   update:
     - 01_formulation.yaml
-    - formulation_metrics.json
-    - formulation_decision_log.jsonl
 outputs:
   - project structure exists
   - raw source manifest recorded
@@ -28,6 +24,7 @@ outputs:
   - first-pass data relevance assessment
   - decision anchor candidates
   - audience candidate
+  - initial history and metrics blocks initialized in stage YAML
 checklist_ids:
   - A00
   - A01

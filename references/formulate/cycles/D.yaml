@@ -14,8 +14,6 @@ required_artifacts:
     - 01_formulation.yaml
   update:
     - 01_formulation.yaml
-    - formulation_metrics.json
-    - formulation_decision_log.jsonl
 outputs:
   - approved question wording
   - operationalization table
@@ -23,6 +21,7 @@ outputs:
   - claim boundary
   - route ranking
   - assumptions and decision costs
+  - cycle decision recorded in stage YAML history
 checklist_ids:
   - D01
   - D02

@@ -688,7 +688,7 @@ If a proposed cleaning action would require protocol-forbidden visibility, unaut
 
 The evaluation subagent checks: 1. For each checklist item: was it answered with evidence in the notebook? If not, dependent gates auto-fail. 2. For each gate where depends_on includes items from this cycle: does the answer satisfy the condition?
 
-**Cycle C PCS checkpoint.** Before Step 5, record one line each: (P) do cleaning policies match the data-generating process, not just convenience? (C) would any single judgment call, reversed, change the analyzable population enough to alter the claim boundary? (S) is every material transformation implemented in reproducible code that another analyst can rerun? Stability FAIL → revise the cleaning policy or append a narrowing entry to claim_boundary_registry.yaml narrowing_log.
+**Cycle C PCS checkpoint.** Before Step 5, record one line each: (P) do cleaning policies match the data-generating process, not just convenience? (C) would any single judgment call, reversed, change the analyzable population enough to alter the claim boundary? (S) is every material transformation implemented in reproducible code that another analyst can rerun? Stability FAIL -> revise the cleaning policy or append a narrowing entry to `01_formulation.yaml` `claim_boundary.narrowing_log`.
 
 ## Cycles D+: Cleaning Follow-ups
 

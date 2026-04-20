@@ -35,7 +35,6 @@ approvals.
 - `references/formulate/cycles/*.yaml` hold cycle-specific rules
 - the project writes `01_formulation.yaml` first
 - the project runs `01_formulation.py --cycle {X}` one cycle at a time
-- the project keeps compact JSON metrics and a JSONL decision log
 - the project renders `01_formulation.md` only after canonical artifacts are consistent
 
 ## What It Produces
@@ -51,10 +50,7 @@ your-project/
   skeptic_documentation/
     01_formulation.py
     01_formulation.yaml
-    formulation_metrics.json
-    formulation_decision_log.jsonl
     01_formulation.md
-    claim_boundary_registry.yaml
   README.md
 ```
 

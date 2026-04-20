@@ -534,7 +534,7 @@ The evaluation subagent checks: 1. For each checklist item: was it answered with
 - visibility restrictions
 - rejected alternatives and why
 
-**Cycle B PCS checkpoint.** Before Step 5, record one line each: (P) does the chosen data-usage mode match the real deployment or reporting context? (C) could a different defensible mode change the allowed claim boundary? (S) is the frozen artifact creation logic reproducible deterministically from the documented seed and split rules? Stability FAIL → reconsider mode choice or append to claim_boundary_registry.yaml narrowing_log.
+**Cycle B PCS checkpoint.** Before Step 5, record one line each: (P) does the chosen data-usage mode match the real deployment or reporting context? (C) could a different defensible mode change the allowed claim boundary? (S) is the frozen artifact creation logic reproducible deterministically from the documented seed and split rules? Stability FAIL -> reconsider mode choice or append to `01_formulation.yaml` `claim_boundary.narrowing_log`.
 
 ## Cycle C: Evidence, Validation, and Risk Rules
 

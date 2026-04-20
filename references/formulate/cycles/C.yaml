@@ -14,13 +14,12 @@ required_artifacts:
     - 01_formulation.yaml
   update:
     - 01_formulation.yaml
-    - formulation_metrics.json
-    - formulation_decision_log.jsonl
 outputs:
   - locked primary question type
   - active route
   - route candidates
   - downstream protocol constraint summary
+  - cycle decision recorded in stage YAML history
 checklist_ids:
   - C01
   - C02

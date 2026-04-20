@@ -15,15 +15,12 @@ required_artifacts:
     - 01_formulation.yaml
   update:
     - 01_formulation.yaml
-    - formulation_metrics.json
-    - formulation_decision_log.jsonl
-    - claim_boundary_registry.yaml
     - 01_formulation.md
 outputs:
   - protocol handoff facts
   - bias and generalizability assessment
   - validation-needs framing
-  - claim boundary registry
+  - claim boundary section finalized in stage YAML
   - final rendered markdown report
 checklist_ids:
   - E01
@@ -113,9 +110,9 @@ stage_yaml_updates:
 guidance:
   judgment_rules:
     - Surface protocol-relevant facts and leave the final protocol choices for the downstream stage.
-    - Finalize the claim boundary registry from canonical YAML, not from prose.
-    - Render the markdown report only after canonical YAML and metrics are consistent.
+    - Finalize the claim boundary section inside canonical YAML, not in a standalone file.
+    - Render the markdown report only after canonical YAML is consistent.
   execution_goals:
     - Hand protocol the facts it needs to choose data-usage mode well.
     - Describe serious bias in concrete, decision-relevant terms.
-    - Complete YAML and metrics first so markdown can be rendered from settled artifacts.
+    - Complete the stage YAML first so markdown can be rendered from settled artifacts.

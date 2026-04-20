@@ -207,7 +207,7 @@ Escalate when:
 
 - required inputs are missing and cannot be inferred safely
 - a stage script cannot execute after repair attempts
-- canonical YAML or metrics artifacts cannot be parsed or repaired
+- canonical stage artifacts cannot be parsed or repaired
 - a backtrack is recommended
 - an iteration cap is hit
 - a stage-boundary validator fails repeatedly
@@ -241,8 +241,8 @@ Stage-boundary validator requirements:
    and has content
 3. empty-section detection: if the stage renders markdown sections, verify no
    required section is empty
-4. canonical artifact validation: parse the stage YAML, metrics JSON or YAML,
-   and any claim-boundary registry required for that stage
+4. canonical artifact validation: parse the stage YAML and any additional
+   stage-specific machine-readable artifacts required for that stage
 5. next-stage precondition pre-check: read the next stage's precondition rules
    and verify the new outputs satisfy them
 6. README consistency: verify the stage summary block exists and matches the
