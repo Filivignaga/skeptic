@@ -596,6 +596,7 @@ This cycle must explicitly ask whether the data can support the intended claim b
 | id | question | skip_when |
 |----|----------|-----------|
 | C01 | What anomalies, contradictions, sparse regions, extreme values, inconsistent signals, and measurement artifacts exist? | never |
+| C01a | Against the ROBINS-I seven domains (confounding, participant selection, exposure classification, protocol departure, missing data, outcome measurement, reporting selection) plus immortal-time, Berkson, and positivity-violation, which biases are present in the visible data, their likely direction, and whether they threaten the claim boundary? | never |
 | C02 | Do patterns that matter for analyze-stage contract lock survive reasonable examination perturbations (alternative binning, scales, subgroup definitions, aggregation windows)? | never |
 | C03 | Which patterns are stable enough to inform contract lock, which are conditionally informative, and which are too fragile? | never |
 | C04 | Can the visible data support the approved question and claim boundary as stated, and does the active route now look materially weaker or invalid? | never |
@@ -617,6 +618,8 @@ Do not bury failure. If support fails, say it clearly.
 The evaluation subagent checks:
 1. For each checklist item: was it answered with evidence in the notebook? If not, dependent gates auto-fail.
 2. For each gate where depends_on includes items from this cycle: does the answer satisfy the condition?
+
+**Cycle C PCS checkpoint.** Before Step 5, record one line each: (P) does the support characterization reflect what the visible data shows, or did framing choices overread first-pass patterns? (C) do patterns survive reasonable examination alternatives (alternative binning, stratification, scale)? (S) is each support claim backed by specific notebook evidence a second analyst could verify? Stability FAIL → demote the affected pattern or append a narrowing entry to claim_boundary_registry.yaml narrowing_log.
 
 ## Cycles D+: Follow-up Examinations
 

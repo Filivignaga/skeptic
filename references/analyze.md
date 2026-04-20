@@ -278,7 +278,8 @@ The analysis contract locked in Cycle A must contain all of the following fields
 
 | Field | Description | Required |
 |-------|-------------|----------|
-| Estimand or target quantity | Exact thing being estimated, predicted, or characterized, refined from formulate | All routes |
+| Estimand or target quantity | Exact thing being estimated, predicted, or characterized, refined from formulate; note whether formulate's competing operationalizations were stability-tested and whether any would change the method family or route — divergence requires a narrowing entry in claim_boundary_registry.yaml. | All routes |
+| Decision anchor | Stakeholder decision, candidate actions, and how the answer changes the chosen action — inherited from formulate A06 | All routes |
 | Method family | The specific algorithm, estimator, or analytical procedure | All routes |
 | Primary specification | Exact variables, functional form, parameters, or configuration | All routes |
 | Accuracy metric | How primary output quality is measured | Route-dependent |
@@ -313,6 +314,7 @@ Every evaluation gate has a stable ID used in cycle metrics. The evaluation suba
 | `A-subgroup-specified` | A12 | Subgroup rule is specified when route-dependent |
 | `A-support-informed` | A13 | Examination support registry informs each contract field |
 | `A-route-overlay-stated` | A14 | Route overlay requirements and prohibitions are stated for each contract field |
+| `A-decision-anchor-stated` | A01 | Contract names the stakeholder decision, candidate actions, and action-change logic from formulate A06 |
 
 ### Cycle B: Assumption Verification
 
@@ -652,6 +654,8 @@ Do not execute anything in this cycle. This cycle produces a locked specificatio
 
 Do not treat contract lock as a second examination stage. The examination handoff tells you what the data can support. The contract lock translates that into one executable specification within those constraints.
 
+**Cycle A PCS checkpoint.** Before Step 5, record one line each: (P) does the locked contract produce outputs that the protocol-specified reality check can actually evaluate? (C) does the primary specification survive any obvious operationalization variant as stable, or does it depend on fragile examination-stage support? (S) can another analyst reproduce the full execution from the contract fields plus the locked artifacts without ambiguity? Stability FAIL → revise the contract or append a narrowing entry to claim_boundary_registry.yaml narrowing_log.
+
 **Research questions:**
 
 - What method families are standard for this question type and data profile, given the examination support registry?
@@ -821,7 +825,7 @@ This cycle produces the structured handoff that `evaluate` must use when perform
 
 | id | question | skip_when |
 |----|----------|-----------|
-| F01 | Is the deviation register complete, systematically comparing the locked contract against actual execution with cause and impact for each deviation (or explicit "no deviations")? | never |
+| F01 | Is the deviation register complete, systematically comparing the locked contract against actual execution with cause and impact for each deviation (or explicit "no deviations"); each deviation entry must state whether it deviates from the formulation pre-registration (01_formulation.md  Summary) and, if so, log the deviation in 06_evaluation.md per formulate's protocol.? | never |
 | F02 | Are primary, sensitivity, and challenger outputs assembled into one structured package with explicit separation maintained? | never |
 | F03 | Is the claim boundary as-narrowed explicitly stated (narrower or equal to what entered analyze, never wider)? | never |
 | F04 | Are contract amendments listed with triggers and confirmation of narrowing? | no amendments occurred |

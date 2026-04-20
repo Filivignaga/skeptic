@@ -688,6 +688,8 @@ If a proposed cleaning action would require protocol-forbidden visibility, unaut
 
 The evaluation subagent checks: 1. For each checklist item: was it answered with evidence in the notebook? If not, dependent gates auto-fail. 2. For each gate where depends_on includes items from this cycle: does the answer satisfy the condition?
 
+**Cycle C PCS checkpoint.** Before Step 5, record one line each: (P) do cleaning policies match the data-generating process, not just convenience? (C) would any single judgment call, reversed, change the analyzable population enough to alter the claim boundary? (S) is every material transformation implemented in reproducible code that another analyst can rerun? Stability FAIL → revise the cleaning policy or append a narrowing entry to claim_boundary_registry.yaml narrowing_log.
+
 ## Cycles D+: Cleaning Follow-ups
 
 Use a `D+` follow-up only when a material cleaning issue remains unresolved after Cycle C or a later cycle exposes an upstream cleaning problem.
@@ -901,7 +903,7 @@ These artifacts are mandatory for every clean stage. If preprocessing or derived
    If protocol chose full-data or resampling-only logic with no restricted artifacts for this stage, do not hallucinate holdout transfer checks.
 
 3. **Stability analysis** in `notebooks/stability_configurations.py` and notebook cells:
-   - Layer 1 always: one-at-a-time perturbations for high-impact judgment calls
+   - Layer 1 always: one-at-a-time perturbations for high-impact judgment calls; for each question-critical variable, include at least one competing cleaning policy as a stability axis, and record whether any alternative changes the analyzable population definition
    - Layer 2 only when the user approves a fuller track or when protocol complexity makes interaction effects plausible
    - variable-level and question-level comparison metrics
    - output tables showing which judgment calls exceed thresholds

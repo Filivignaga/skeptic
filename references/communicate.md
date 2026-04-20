@@ -327,7 +327,7 @@ Every evaluation gate has a stable ID used in cycle metrics. The evaluation suba
 | `F-self-sufficient` | F05 | The deliverable is interpretable by someone with no prior project context |
 | `F-narrowing-logged` | F04 | If communicate narrowed any claims, Claim Boundary Registry in metrics.md is updated with narrowing reason and cycle |
 | `F-question-led` | F06 | The deliverable opens with the audience-relevant question and context, not a method-first description |
-| `F-methods-grounded` | F07 | The Methods Summary states provenance, processing, route, and what was actually done in plain language without assuming shared context |
+| `F-methods-grounded` | F07 | The Methods Summary states provenance, processing, route, and what was actually done in plain language without assuming shared context; and states intended use and prohibited use |
 | `F-problems-disclosed` | F08 | Material problems, caveats, and limitations are surfaced clearly rather than hidden or downplayed |
 | `F-encoding-clean` | F10 | All files in `deliverables/` pass the ASCII encoding scan with zero non-ASCII typographic punctuation |
 | `F-data-dictionary` | F11 | Every companion data file has a data dictionary defining all columns or fields. Any column name that uses a relative temporal reference (e.g., `last_year_presence`, `rolling3_years_positive`, `lag1_*`) must include the explicit year range or reference year in either (a) the column name itself (e.g., `presence_2024`) or (b) the data dictionary entry with exact year ranges. Ambiguous temporal column names without year disambiguation are a blocking defect. |
@@ -598,6 +598,7 @@ This cycle does not make audience decisions or translate claims. It maps the ter
 | A06 | Did zero claims survive, requiring activation of the null-result path? | never |
 | A07 | What claims will be communicated, what limitations must be disclosed, and what mandatory sections must the deliverable contain? | never |
 | A08 | What recommendations are possible within the claim boundary? | never |
+| A09 | Does the communication plan confirm that surviving claims speak to the stakeholder decision and candidate actions named in 01_formulation.md `## Summary`? | never |
 
 Claude writes notebook cells using this default sequence:
 
@@ -763,6 +764,8 @@ Claude writes notebook cells using this default sequence:
 **Evaluation focus for Cycle C:**
 The evaluation subagent checks: 1. For each checklist item: was it answered with evidence in the notebook? If not, dependent gates auto-fail. 2. For each gate where depends_on includes items from this cycle: does the answer satisfy the condition?
 
+**Cycle C PCS checkpoint.** Before Step 5, record one line each: (P) does translated language reflect the evaluate verdict strength exactly, or was assertive language applied to a survived-with-caveats claim? (C) would a second analyst translating the same claim reach the same language strength and caveat visibility? (S) can each translated claim be traced back to the specific evaluate registry row and verdict that authorizes it? Stability FAIL → downgrade the language or surface the caveat more prominently.
+
 ## Cycle D: Uncertainty and Evidence Presentation
 
 **Focus:** Decide how to present the perturbation landscape, stability evidence, predictability results, mandatory limitations, and unresolved risks to the identified audience.
@@ -894,7 +897,7 @@ The evaluation subagent checks: 1. For each checklist item: was it answered with
 | F04 | If communicate narrowed any claims, is the Claim Boundary Registry in `metrics.md` updated with the narrowing reason and cycle? | no narrowing occurred |
 | F05 | Is the deliverable self-sufficient for someone with no prior project context? | never |
 | F06 | Does the deliverable lead with the audience-relevant question and why it matters, rather than opening with method or workflow details? | never |
-| F07 | Does the Methods Summary state data provenance, key processing steps, question type and route, and what was actually done in plain language? | never |
+| F07 | Does the Methods Summary state data provenance, key processing steps, question type and route, and what was actually done in plain language; and include a one-paragraph intended-use statement and a prohibited-use statement inherited from 01_formulation.md `## Summary`? | never |
 | F08 | Are material problems, caveats, and limitations surfaced clearly in the deliverable rather than buried, and are exploratory dead ends excluded unless needed to explain a limitation? | never |
 | F10 | Do all files in `deliverables/` pass the ASCII encoding scan (no em dashes, curly quotes, en dashes, or other non-ASCII typographic punctuation)? | never |
 | F11 | If companion data files exist, does each have a data dictionary (header comment, companion README, or dedicated column-definition section in the primary deliverable) defining every column or field? | no companion data files |

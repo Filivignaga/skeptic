@@ -50,7 +50,7 @@ Every evaluation gate has a stable ID used in cycle metrics. The evaluation suba
 |---------|-------|------------|-----------|
 | `A-loadable` | A | A01 | Data loadable and structurally sound |
 | `A-relevant` | A | A01, A02, A03 | Data appears relevant to the stated question |
-| `A-question-fit` | A | A01, A02, A03, A06 | The question is framed as a real stakeholder or scientific problem, not a method request; at least two plausible framings were considered; and the approved framing is useful, specific, not already sufficiently answered, and plausibly answerable with available evidence |
+| `A-question-fit` | A | A01, A02, A03, A06 | The question is framed as a real stakeholder or scientific problem, not a method request; at least two plausible framings were considered; the approved framing is useful, specific, not already sufficiently answered, and plausibly answerable with available evidence; AND the approved framing names the stakeholder decision, the candidate actions, and how the answer changes the chosen action (or, if academic, the prior + evidence threshold) |
 | `A-audience-defined` | A | A08 | The intended audience is identified and the question is framed to be relevant to them |
 | `A-no-red-flags` | A | A03, A04, A05 | No immediate structural red flags likely to derail formulation |
 | `B-variables-understood` | B | B01, B02 | Relevant variables are understood well enough to reason about the question |
@@ -62,7 +62,7 @@ Every evaluation gate has a stable ID used in cycle metrics. The evaluation suba
 | `C-downstream-constraints-stated` | C | C03 | Consequences for `protocol`, route overlays, and later `analyze` are stated |
 | `D-terms-identified` | D | D01 | Abstract or ambiguous terms are identified |
 | `D-terms-operationalized` | D | D02 | Each key term is mapped to a column, metric, or derived metric |
-| `D-competing-defs` | D | D02 | Competing operationalizations are considered before choosing one |
+| `D-competing-defs` | D | D02 | For each critical operationalization, one alternative is instantiated and shown to yield the same claim_type and same top-ranked route; divergence forces a narrowing entry (added verbs_forbidden or tightened generalization_limit) in claim_boundary_registry.yaml |
 | `D-availability-checked` | D | D03 | Practical availability is verified for chosen operationalizations |
 | `D-target-quantity-stated` | D | D04 | Target quantity or estimand is named |
 | `D-claim-boundary-stated` | D | D05 | Claim boundary is stated explicitly |
@@ -319,7 +319,7 @@ Before loading data, read `references/data-formats.md` and apply the format-spec
 | A03 | What are the basic statistics and missing-value counts per column? | never |
 | A04 | For low-cardinality categorical columns, what are the value distributions? | never |
 | A05 | If the question involves time, what is the date coverage and time grain? If grouping matters, what are group counts? If multiple tables, what is join-key overlap? | never |
-| A06 | Is the question framed as a real stakeholder or scientific problem, not a method request; have at least two plausible framings been considered; and is the approved framing useful, specific, not already sufficiently answered, and plausibly answerable with available evidence? | never |
+| A06 | Is the question framed as a real stakeholder or scientific problem, not a method request; have at least two plausible framings been considered; is the approved framing useful, specific, not already sufficiently answered, and plausibly answerable with available evidence; AND does the approved framing name three things: (1) the concrete decision the stakeholder will take, (2) the candidate actions they choose between, (3) how the answer to the question changes which action they pick? If the project is academic, replace (1-3) with: the prior to be updated and the evidence threshold that would update it. | never |
 | A07 | For each raw data file, what is its SHA-256 hash? (Compute and log in the notebook and in `01_formulation.md` under a `## Raw File Hashes` section. These hashes serve as the immutability baseline for all downstream stages.) | never |
 | A08 | Who is the intended audience for this question, and is the question interesting or useful to them? | never |
 
@@ -408,6 +408,8 @@ Operational note:
 **Evaluation focus for Cycle C:**
 The evaluation subagent checks: 1. For each checklist item: was it answered with evidence in the notebook? If not, dependent gates auto-fail. 2. For each gate where depends_on includes items from this cycle: does the answer satisfy the condition?
 
+**Cycle C PCS checkpoint.** Before Step 5, record one line each: (P) does the classified type match what Cycle A's prior art used for similar questions? Cite the closest comparable. (C) is the classification traceable to specific C01-C04 cells? (S) would the nearest alternative framing change the type? Stability FAIL → reclassify or log a non-blocking defect carried to Protocol.
+
 ## Cycle D: Operationalization
 
 **Focus:** Turn the approved question into a measurable, bounded, downstream-usable object.
@@ -461,6 +463,8 @@ User approves or rejects the wording and the boundary. Do not auto-finalize this
 **Evaluation focus for Cycle D:**
 The evaluation subagent checks: 1. For each checklist item: was it answered with evidence in the notebook? If not, dependent gates auto-fail. 2. For each gate where depends_on includes items from this cycle: does the answer satisfy the condition?
 
+**Cycle D PCS checkpoint.** Before Step 5, record one line each: (P) does the chosen operationalization estimate the same quantity the validated literature measure does? Cite the source. (C) can another analyst reconstruct target quantity, claim boundary, and top route from the notebook alone? (S) does the nearest alternative for the top critical term change `claim_type` or the top route? Stability FAIL → revise or append to `narrowing_log`.
+
 **Log extension:** Append after the standard log entry:
 
 ```markdown
@@ -493,7 +497,7 @@ The evaluation subagent checks: 1. For each checklist item: was it answered with
 | E03 | Is there grouping, clustering, panel, hierarchy, or interference structure? | never |
 | E04 | Is the data a one-off extract, a monitoring stream, or a partially refreshed process? Are leakage-relevant fields or structures present (future information, post-outcome fields, target proxies, delayed labels, timestamp lookahead)? | never |
 | E05 | How representative is the data relative to the target population or deployment context? | never |
-| E06 | What selection, recall, measurement, survivorship, missingness, and other relevant biases are present? | never |
+| E06 | Enumerate biases against a named taxonomy (ROBINS-I seven domains: confounding, participant selection, exposure classification, protocol departure, missing data, outcome measurement, reporting selection; plus immortal-time, Berkson, and positivity-violation). For each domain: state present / absent / uncertain, direction (toward null / away / unknown), severity (critical / serious / moderate / low), and current mitigation. For any row rated serious or critical, give a quantitative bound (E-value, Lash-style range, or direction-and-magnitude estimate) or an explicit deferral naming what data would allow bounding it. | never |
 | E07 | Is the question tied to a deployment context, a reporting frame, or a population-level claim, and what kinds of future validation may be needed at a high level? | never |
 | E08 | What unresolved questions must be passed to `protocol`? | never |
 
@@ -693,6 +697,10 @@ Only this finalization artifact is the Claim Boundary Registry. Earlier working 
    - what business or scientific decision the question is meant to support
    - what success looks like in substantive terms
    - if inferential or causal: hypothesis structure, or an explicit note that it is not needed
+   - intended uses (deployment contexts the approved question licenses)
+   - prohibited uses (uses that exceed the claim boundary, including superficially adjacent ones)
+   - provenance anchor: data SHA-256 (from A07), collection purpose, sampling frame, upstream exclusions (one line each)
+   - formulation-locked-at: ISO timestamp; this Summary functions as the project pre-registration. Downstream deviations are logged in `06_evaluation.md`, not by editing this block
 
    The Summary is a synthesis for quick reference, not a copy of the Decision Log. Do not repeat cycle content verbatim. Where a cycle already documents something in full detail (e.g., operationalization, research findings), the Summary should reference the cycle entry rather than duplicating it.
 

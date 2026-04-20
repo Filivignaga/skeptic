@@ -464,7 +464,7 @@ Every cycle logs the same base fields.
 | id | question | skip_when |
 |----|----------|-----------|
 | A01 | Are all required formulate sections present (Summary, Protocol Handoff, PCS Assessment)? | never |
-| A02 | Are all required fields extractable: approved question, question type, target quantity, claim boundary, route candidates, unit of analysis, target population, key assumptions, protocol handoff facts, unresolved protocol questions? | never |
+| A02 | Are all required fields extractable: approved question, question type, target quantity, claim boundary, route candidates, unit of analysis, target population, key assumptions, protocol handoff facts, unresolved protocol questions; verify 01_formulation.md `## Summary` contains intended-use block, prohibited-use block, and a formulation-locked-at timestamp? | never |
 | A03 | Are there contradictions between Summary and Protocol Handoff? | never |
 | A04 | Is each required field present, partial, or missing (intake completeness)? | never |
 | A05 | Are unresolved ambiguities classified as protocol-safe, protocol-blocking, or formulate-level contradiction? | never |
@@ -503,6 +503,7 @@ This cycle is where the project chooses among `full_data`, frozen partitions, ro
 | B02 | For each plausible mode, how does it score on: match to question type, target quantity, claim boundary, time structure, grouping/hierarchy, deployment/reporting context, and main risk? | never |
 | B03 | Is full-data analysis a serious candidate? When is it correct and when would it be a mistake for this project? | never |
 | B04 | What is the chosen working data-usage mode (or justified hybrid)? | never |
+| B04a | For the rejected plausible data-usage modes, was the claim type and active route verified to be unchanged, or does divergence force a claim-boundary narrowing entry? | never |
 | B05 | Are frozen artifacts required? If yes, what are the exact output paths? | never |
 | B06 | If frozen artifacts are created: what is the deterministic creation logic, random seed, row/group identifier logic, restriction rules, and access rules per artifact? | no frozen artifacts required |
 | B07 | If no frozen artifacts are required, why not? | frozen artifacts required |
@@ -532,6 +533,8 @@ The evaluation subagent checks: 1. For each checklist item: was it answered with
 - exact artifact list
 - visibility restrictions
 - rejected alternatives and why
+
+**Cycle B PCS checkpoint.** Before Step 5, record one line each: (P) does the chosen data-usage mode match the real deployment or reporting context? (C) could a different defensible mode change the allowed claim boundary? (S) is the frozen artifact creation logic reproducible deterministically from the documented seed and split rules? Stability FAIL → reconsider mode choice or append to claim_boundary_registry.yaml narrowing_log.
 
 ## Cycle C: Evidence, Validation, and Risk Rules
 

@@ -630,6 +630,7 @@ This cycle does not adjudicate. It maps the territory before adjudication begins
 | A05 | Is the evaluation plan derived from upstream contracts (protocol validation logic, claim ceiling, perturbation axes, challengers, route-specific checks)? | never |
 | A06 | Are all route-specific checks from the loaded route file enumerated and mapped to cycles B, C, and D? | never |
 | A07 | Are all primary outputs, sensitivity outputs, and challenger outputs present and accounted for? | never |
+| A08 | Are all deviations in the analyze deviation register checked against the formulation pre-registration prohibited-use list? Any deviation that enables a prohibited use is a BLOCKING defect. | never |
 
 Claude writes notebook cells using this default sequence:
 
@@ -666,6 +667,7 @@ Do not render stability, predictability, or validity verdicts in this cycle. Inv
 | B01 | Are all perturbation axes and challengers from the analysis contract explicitly stated as being adjudicated? | never |
 | B02 | For each perturbation axis, is the direction of change, magnitude of change, whether the qualitative conclusion changes, and whether the claim boundary needs narrowing documented? | never |
 | B03 | For each challenger, is it documented whether it contradicts the primary conclusion, the magnitude and direction of disagreement, and whether disagreement is structural or parametric? | never |
+| B03a | If formulate's Cycle D identified competing operationalizations that diverged, are they represented in the challenger set? If not, document the gap as a caveat on claim stability. | never |
 | B04 | Are judgment-call perturbation axes weighted alongside data perturbation axes (not dismissed as less important)? | never |
 | B05 | Is the convergence/divergence framework applied: convergent results strengthen, divergent results diagnosed as genuine instability vs. known limitation vs. execution artifact? | never |
 | B06 | For each claim, is a stability verdict rendered (stable / conditionally stable / unstable) with specific notebook evidence? | never |
@@ -761,7 +763,7 @@ Cycle D has two phases: formal route-specific tools and qualitative adversarial 
 | D01 | Are the formal tools required by the route overlay for this route explicitly stated? | never |
 | D02 | Is each required formal tool executed on actual data in the notebook? | route overlay requires no formal tools |
 | D03 | For each formal tool, is the output documented with: what was tested, what the output was, and what it implies for claim survival? | route overlay requires no formal tools |
-| D04 | Is the bias inversion thought experiment documented: assume primary result is incorrect, reason backward to identify plausible systematic errors, assess plausibility of each? | never |
+| D04 | Bias inversion: enumerate against ROBINS-I seven domains (confounding, participant selection, exposure classification, protocol departure, missing data, outcome measurement, reporting selection) plus immortal-time, Berkson, and positivity-violation; for each domain record plausibility (present / absent / unknown), direction, and whether it is fatal, threatening, or defended. | never |
 | D05 | Is construct validity assessed: does the operationalized measure still capture the intended concept after the full pipeline, or did the measurement chain drift? | never |
 | D06 | Is expert falsification attempted (using only already-executed challengers, protocol-specified outputs, or conceptual critique) or is the gap documented with justification? | never |
 | D07 | For each threat assessed, is a validity verdict rendered (defended / threatened / fatal)? | never |
@@ -846,6 +848,7 @@ This is the core adjudication decision of the Skeptic. The user must explicitly 
 | F06 | If the final claim boundary is narrower, is the narrowing appended to the Claim Boundary Registry `narrowing_log`? | claim boundary did not narrow |
 | F07 | Is the `## Claim Survival Registry` produced in `06_evaluation.md` and presented to the user for explicit approval? | never |
 | F08 | Is a concise overall interpretation synthesis written that ties stability, predictability, validity, and examine-stage support together without audience framing or recommendations? | never |
+| F09 | Do surviving claims speak to the stakeholder decision and candidate actions named in formulate A06, or has the claim drifted to a different decision? | never |
 
 Claude writes notebook cells using this default sequence:
 
@@ -873,6 +876,8 @@ Claude writes notebook cells using this default sequence:
 - How are PCS-style claim verdicts typically structured in published veridical data science work?
 - What precedents exist for downgrading claims based on partial instability or marginal predictability?
 - What conventions exist for distinguishing claims that survived from claims that survived with caveats?
+
+**Cycle F PCS checkpoint.** Before locking verdicts, record one line each: (P) do survival verdicts align with what protocol's validation logic would predict for this evidence profile? (C) would reversing any single adjudication decision change a verdict from survived to survived-with-caveats (or vice versa)? (S) is every verdict traceable to specific notebook outputs from cycles B, C, and D with no assertion-only reasoning? Stability FAIL → re-adjudicate or downgrade the affected verdict.
 
 ## Cycle G: Evaluation Assembly and Handoff
 
