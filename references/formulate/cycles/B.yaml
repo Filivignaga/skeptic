@@ -36,19 +36,15 @@ gates:
   - id: B-variables-understood
     depends_on: [B01, B02]
     condition: Relevant variables are understood well enough to reason about the question
-    diagnostic: false
   - id: B-units-clear
     depends_on: [B03]
     condition: Unit of analysis or observational unit is clear
-    diagnostic: false
   - id: B-no-ambiguity
     depends_on: [B04]
     condition: Major ambiguities that would distort interpretation are surfaced, and the user's chosen interpretation is recorded
-    diagnostic: false
   - id: B-gap-assessed
     depends_on: [B05]
     condition: Gap between available data and ideal data is explicitly assessed
-    diagnostic: false
 
 research_questions:
   - What do the specific variables and measurements mean in domain context?

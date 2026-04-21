@@ -48,27 +48,18 @@ gates:
   - id: E-collection-understood
     depends_on: [E01]
     condition: Data collection process is understood well enough to proceed
-    diagnostic: false
   - id: E-biases-assessed
     depends_on: [E05, E06]
     condition: Collection, selection, recall, measurement, and other relevant biases are assessed against the named taxonomy
-    diagnostic: false
   - id: E-generalizability
     depends_on: [E06]
     condition: Generalizability risks relative to target population or deployment context are assessed
-    diagnostic: false
   - id: E-data-usage-facts
     depends_on: [E01, E02, E03, E04]
     condition: Facts needed by `protocol` to decide data-usage mode are surfaced
-    diagnostic: false
-  - id: E-validation-needs-framed
-    depends_on: [E07]
-    condition: High-level future validation needs are framed without locking the protocol
-    diagnostic: true
   - id: E-open-protocol-questions
     depends_on: [E08]
     condition: Unresolved questions for `protocol` are explicitly listed
-    diagnostic: false
 
 research_questions:
   - How is this type of data typically collected in practice, and what limitations usually follow?

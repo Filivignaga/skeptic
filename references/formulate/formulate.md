@@ -130,7 +130,7 @@ Each `cycle_history` entry:
     research_verbatim:              # preserved with inline source URLs
     evaluation_verbatim:            # preserved; contains per-gate reasoning
     evaluation_verdict:             # PASS|FAIL
-    blocking_failures:              # int (blocking defects + non-diagnostic gate failures)
+    blocking_failures:              # int (blocking defects + failed gates)
   decision:                         # pass|iterate|acknowledge_gap|data_insufficient|reformulate|archive
   # Optional (include only when applicable):
   # unanswered: [A03, A05]          # required when checklist_complete is false

@@ -68,75 +68,51 @@ gates:
   - id: D-terms-identified
     depends_on: [D01]
     condition: Abstract or ambiguous terms are identified
-    diagnostic: false
   - id: D-terms-operationalized
     depends_on: [D02]
     condition: Each key term is mapped to a column, metric, or derived metric
-    diagnostic: false
   - id: D-competing-defs
     depends_on: [D02]
     condition: For each critical operationalization, one alternative is instantiated and shown to yield the same claim_type and same top-ranked route; divergence forces a narrowing entry (added verbs_forbidden or tightened generalization_limit) in claim_boundary
-    diagnostic: false
   - id: D-availability-checked
     depends_on: [D03]
     condition: Practical availability is verified for chosen operationalizations
-    diagnostic: false
   - id: D-target-quantity-stated
     depends_on: [D04]
     condition: Target quantity or estimand is named
-    diagnostic: false
   - id: D-claim-boundary-stated
     depends_on: [D05]
     condition: Claim boundary is stated explicitly
-    diagnostic: false
   - id: D-unit-of-analysis-stated
     depends_on: [D06]
     condition: Unit of analysis is explicitly stated
-    diagnostic: false
   - id: D-context-stated
     depends_on: [D06]
     condition: Target population or deployment context is stated if relevant
-    diagnostic: false
   - id: D-route-candidates-ranked
     depends_on: [D07]
     condition: Route candidates are ranked and justified
-    diagnostic: false
   - id: D-related-concepts
     depends_on: [D08]
     condition: Related concepts, modifiers, or confounders are identified
-    diagnostic: false
   - id: D-assumptions-stated
     depends_on: [D09]
     condition: Key assumptions are stated explicitly
-    diagnostic: false
   - id: D-baseline-stated
     depends_on: [D10]
     condition: Baseline the project must beat is stated
-    diagnostic: false
   - id: D-error-costs-stated
     depends_on: [D11]
     condition: Error types and their costs in the decision context are stated, including which errors are unacceptable
-    diagnostic: false
   - id: D-uplift-stated
     depends_on: [D12]
     condition: Minimum useful uplift over baseline is stated
-    diagnostic: false
   - id: D-prior-art-reviewed
     depends_on: [D13]
     condition: Prior art or analogous work is reviewed and its consequences for scope, assumptions, or project order are stated
-    diagnostic: false
   - id: D-unfeasible-flagged
     depends_on: [D01, D02]
     condition: Un-operationalizable terms are flagged with a recommended action
-    diagnostic: false
-  - id: D-measurement-mismatch
-    depends_on: [D03]
-    condition: Direct measure vs. proxy risk is assessed for each chosen operationalization
-    diagnostic: true
-  - id: D-confounding
-    depends_on: [D08]
-    condition: Confounding or identification relevance is assessed at a high level
-    diagnostic: true
 
 research_questions:
   - For each abstract term, what are the standard and competing operationalizations in credible literature or domain practice?
@@ -177,7 +153,6 @@ contract_writes:
 
 guidance:
   - If no viable operationalization exists for a key term, do not bury it. Flag it and force the user decision in Step 4.
-  - D-measurement-mismatch and D-confounding are diagnostic. A FAIL signals a bounded risk. It does not auto-fail the cycle if the issue is surfaced clearly and the user proceeds with the risk documented.
   - The approved question wording must include operationalized definitions inline.
   - If the question is inferential or causal, `contract.hypothesis` must be populated (null, alt, treatment, outcome). For other types, leave `contract.hypothesis` as null.
 

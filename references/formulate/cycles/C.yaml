@@ -31,15 +31,12 @@ gates:
   - id: C-type-classified
     depends_on: [C01]
     condition: Question classified into one of the six types
-    diagnostic: false
   - id: C-type-supported
     depends_on: [C02]
     condition: Data collection and design plausibly support the classified type
-    diagnostic: false
   - id: C-downstream-constraints-stated
     depends_on: [C03]
     condition: Consequences for `protocol`, route overlays, and later `analyze` are stated
-    diagnostic: false
 
 research_questions:
   - What question types and study designs have been used to answer similar questions?

@@ -31,8 +31,7 @@ gates:
   - id: F{n}-{short-name}
     depends_on: [F{n}01]
     condition: "{condition that closes the follow-up topic}"
-    diagnostic: false
-  # At least one non-diagnostic gate is required so the cycle has an enforceable exit.
+  # At least one gate is required so the cycle has an enforceable exit.
 
 research_questions:
   - "{at most a handful; narrow to the follow-up topic}"

@@ -236,11 +236,11 @@ Rules:
 - Gates carry a `depends_on` list of checklist IDs. If any depended-on item was not answered, the gate auto-fails without judgment.
 - The evaluation subagent verifies all checklist items before evaluating gate conditions.
 - Items may not be skipped unless their `skip_when` condition is satisfied.
-- Gates flagged `diagnostic: true` do not count toward `blocking_failures`.
+- Every gate is binary: PASS or FAIL. A FAIL contributes to `blocking_failures`. If a project needs to proceed with a bounded risk, use `override: {reason, gate}` rather than a soft-fail concept.
 
 ### 2. Decision Matrix
 
-Every Step 4 (Decision) in every stage uses a two-row matrix based on `blocking_failures` (count of blocking defects plus failed non-diagnostic gates from the evaluation subagent):
+Every Step 4 (Decision) in every stage uses a two-row matrix based on `blocking_failures` (count of blocking defects plus failed gates from the evaluation subagent):
 
 | blocking_failures | forward actions allowed |
 |-------------------|------------------------|
@@ -252,7 +252,6 @@ Rules:
 - Backward actions are always available regardless of `blocking_failures`: reopen relevant upstream stages (each stage file specifies which), archive.
 - User override is always available: user states the specific reason the FAIL is incorrect, logged as `override: {reason, gate}`, forward actions unlock.
 - The stage presents only the allowed forward actions plus the universal options.
-- Diagnostic gates do not count toward `blocking_failures`.
 
 ## Project Folder Structure
 
