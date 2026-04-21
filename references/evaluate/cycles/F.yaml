@@ -61,7 +61,3 @@ guidance:
   - Mandatory limitations are mandatory for communicate -- communicate may not drop them.
   - Caveats attached to "survived with caveats" claims are part of those claims; communicate may not separate the claim from its caveats.
   - The handoff statement at the end must read explicitly "Next stage: communicate" and enumerate what communicate may and may not do.
-
-step4_additions: null
-pcs_focus: null
-log_extension: null

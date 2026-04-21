@@ -65,6 +65,3 @@ step4_additions:
     - declared_error_pass_rate
     - declared_warn_pass_rate
     - constraint_file_paths
-
-pcs_focus: null
-log_extension: null

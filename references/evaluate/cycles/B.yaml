@@ -69,7 +69,3 @@ guidance:
   - Convergent results strengthen the claim; divergent results must be diagnosed (genuine instability, known method limitation, or execution artifact) before driving a verdict.
   - All challengers producing materially different results from the primary is NOT a backtracking trigger on its own. Backtracking is warranted only when divergence invalidates the primary conclusion across the claim boundary.
   - The three stability verdicts are: stable (conclusions survive every perturbation), conditionally stable (survives most, sensitive to specific axes -- caveats required), unstable (changes materially under reasonable perturbations -- claim must be downgraded or killed).
-
-step4_additions: null
-pcs_focus: null
-log_extension: null

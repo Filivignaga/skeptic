@@ -48,7 +48,3 @@ guidance:
   - If the topic recurs across follow-ups, escalate instead of looping.
   - If the issue is actually a protocol or formulation mismatch, stop and reopen upstream rather than forcing a D-series resolution.
   - Close the follow-up as pass, acknowledge_gap, data_insufficient, reopen_protocol, reopen_formulate, or archive under the standard decision matrix.
-
-step4_additions: null
-pcs_focus: null
-log_extension: null

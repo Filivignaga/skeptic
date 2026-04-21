@@ -75,12 +75,9 @@ guidance:
   - A cleaning action that materially changes the analyzable population must carry an explicit population-shift statement and, where relevant, a narrowing entry in claim_boundary_updates.narrowing_log.
   - If a value-cleaning fix would really require a semantic rethink, route the issue to a D-series follow-up or back upstream rather than resolving it in C.
 
-step4_additions: null
 
 pcs_focus:
   items:
     - "P: Do cleaning policies match the data-generating process rather than convenience? Cite the rationale source for each material decision."
     - "C: Is every material transformation implemented in {scripts_dir_name}/03_cleaning.py code that another analyst can rerun from the canonical YAML and the raw files alone?"
     - "S: Would any single judgment call, reversed, change the analyzable population enough to alter the claim boundary?"
-
-log_extension: null

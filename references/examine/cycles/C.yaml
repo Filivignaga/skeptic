@@ -66,11 +66,8 @@ guidance:
   - Recommended narrowing (added verbs_forbidden, tightened generalization_limit, narrower scope) belongs in claim_boundary_narrowing in the examine YAML; it becomes canonical only when formulate is reopened and adopts it.
   - Opening a Dn follow-up requires that the narrow topic would materially change the support picture; Dn is reserved for a single well-scoped question, not for generic extra exploration.
 
-step4_additions: null
 pcs_focus:
   items:
     - "P: Does the support characterization reflect what the visible data shows, or did framing choices overread first-pass patterns? Cite the specific A02 or B02 evidence that grounds the claim."
     - "C: Can another analyst reproduce each stability verdict in C03 from the canonical YAML and script alone?"
     - "S: For every analysis-contract-relevant pattern, does at least one reasonable alternative confirm or weaken it (not just repeat it)?"
-
-log_extension: null

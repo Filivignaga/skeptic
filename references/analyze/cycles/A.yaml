@@ -158,5 +158,3 @@ pcs_focus:
     - "P: Does the locked contract produce outputs that the protocol-specified reality check can actually evaluate?"
     - "C: Can another analyst reproduce the full execution from contract fields plus the locked artifacts without ambiguity?"
     - "S: Does the primary specification survive obvious operationalization variants, or does it depend on fragile examination-stage support?"
-
-log_extension: null

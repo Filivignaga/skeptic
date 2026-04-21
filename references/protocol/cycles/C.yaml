@@ -105,5 +105,3 @@ pcs_focus:
     - "P: Do the required validation checks match the reality check the claim actually requires, rather than a template attached to the question type?"
     - "C: Could another analyst implement every listed required_check without re-deriving protocol rules?"
     - "S: Does the nearest alternative framing of validation_logic change the allowed claim boundary? If yes, append a narrowing entry to 01_formulation.yaml:claim_boundary.narrowing_log."
-
-log_extension: null

@@ -44,7 +44,3 @@ guidance:
   - Skip this cycle and record the skip in status.skipped_cycles when no derived variables are justified by the approved question and protocol (e.g., "Cycle F skipped: no derived variables justified by the approved question and protocol").
   - Feature engineering and analysis-shaped variable construction are not the purpose of this stage; defer them to the route file or analyze.
   - A derived variable that would widen the claim boundary is forbidden here; if the question requires it, reopen formulate rather than resolving it in F.
-
-step4_additions: null
-pcs_focus: null
-log_extension: null

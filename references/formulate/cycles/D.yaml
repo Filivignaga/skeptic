@@ -109,5 +109,3 @@ pcs_focus:
     - "P: Does the chosen operationalization estimate the same quantity the validated literature measure does? Cite the source."
     - "C: Can another analyst reconstruct target_quantity, claim_boundary, and top route from the script evidence and canonical YAML alone?"
     - "S: Does the nearest alternative for the top critical term change claim_type or the top route?"
-
-log_extension: null

@@ -107,7 +107,3 @@ guidance:
   - Every column using a relative temporal reference must carry an explicit year range in the column name or in the data dictionary entry. Ambiguous temporal names are a blocking defect.
   - Intended-use and prohibited-use statements inherit from formulate's Summary. Do not invent new ones here.
   - When plan.null_result_mode is true, Section 2 (Findings) states that no claims survived evaluation, and Section 3 (Confidence) states why. The other sections still apply.
-
-step4_additions: null
-pcs_focus: null
-log_extension: null

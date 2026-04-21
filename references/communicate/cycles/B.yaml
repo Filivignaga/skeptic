@@ -64,6 +64,3 @@ guidance:
 step4_additions:
   description: Audience identification requires explicit user approval before Cycle C may start. Record audience.user_approved_at as the ISO timestamp of that approval.
   user_approval: required
-
-pcs_focus: null
-log_extension: null

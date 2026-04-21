@@ -53,7 +53,3 @@ guidance:
   - Predictability is not always held-out prediction. It is the route-appropriate reality check named in protocol. Descriptive, exploratory, inferential, causal, and mechanistic routes each have their own natural checks (see the loaded route file).
   - The three predictability verdicts are: adequate (reality check passed; result reemerges), marginal (partially passed; some aspects hold, others weaker), inadequate (failed; result does not reemerge).
   - If held-out data must be unsealed, verify protocol authorizes unsealing for this stage before executing the check. Unauthorized unsealing is a BLOCKING defect and forces reopening protocol.
-
-step4_additions: null
-pcs_focus: null
-log_extension: null

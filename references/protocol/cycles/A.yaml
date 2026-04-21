@@ -76,6 +76,3 @@ step4_additions:
     - protocol_safe_unresolved_risks
     - minimum_decisions_for_this_stage
   user_approval: required_if_protocol_blockers_present
-
-pcs_focus: null
-log_extension: null

@@ -71,6 +71,3 @@ step4_additions:
     - claim_boundary_narrowing_summary_if_any
     - explicit_next_stage_is_analyze_and_no_contract_selection_here
   user_approval: required
-
-pcs_focus: null
-log_extension: null

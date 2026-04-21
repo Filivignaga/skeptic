@@ -97,7 +97,3 @@ guidance:
   - Default tidy-data rules (narrow with formulate, protocol, or the route file only): one variable per column, one observation per row, one observational unit per row unless a multi-row representation is explicitly documented, explicit keys for joins and repeated measurements, categorical meaning stored in values, column names consistent and mechanically readable, merged fields split when components have distinct meanings, unit conversions documented and verified, label-switching or contradictory joins treated as semantic issues rather than value-cleaning issues.
   - If a needed semantic contract is missing and cannot be resolved from available documentation, stop and surface the exact ambiguity rather than guessing.
   - Route files may narrow or prohibit actions; they may not widen this stage-core or the protocol contract.
-
-step4_additions: null
-pcs_focus: null
-log_extension: null

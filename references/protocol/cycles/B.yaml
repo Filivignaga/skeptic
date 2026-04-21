@@ -167,5 +167,3 @@ pcs_focus:
     - "P: Does the chosen data-usage mode match the real deployment or reporting context named in formulate?"
     - "C: Could a different defensible mode change the allowed claim boundary? If yes, is the divergence either absorbed by the rejection audit in B04a or captured by a narrowing entry?"
     - "S: Is the frozen-artifact creation logic reproducible deterministically from the documented seed and split rules?"
-
-log_extension: null
