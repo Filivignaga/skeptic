@@ -122,7 +122,9 @@ Each per-cycle YAML carries:
 
 ### Load Pattern
 
-The model reads the stage-entry markdown once at stage start. Per-cycle YAMLs are loaded one at a time as each cycle runs. Do not re-read the stage entry between cycles. Read the canonical stage YAML at the start of every cycle to recover prior decisions.
+The model reads the stage-entry markdown once at stage start. Per-cycle YAMLs are loaded one at a time as each cycle runs. Do not re-read the stage entry between cycles.
+
+Read the canonical stage YAML only on first entry to the stage (new chat session, or reopen after a backtrack). Within a continuous session, the model just wrote the canonical YAML -- its content is already in context. Re-reading it between cycles in the same session is waste.
 
 ## Role of Protocol
 

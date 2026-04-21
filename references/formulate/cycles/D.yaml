@@ -207,17 +207,4 @@ pcs_checkpoint:
     - "S: Does the nearest alternative for the top critical term change claim_type or the top route?"
   fail_action: On a Stability FAIL, revise the operationalization or append a narrowing entry to claim_boundary.narrowing_log (via the canonical YAML, only by this stage while still open).
 
-log_extension:
-  description: Cycle D's cycle_history entry must include explicit decision-register fields even though they duplicate contract fields. This keeps the per-cycle audit of the operationalization decisions self-contained.
-  cycle_history_extra_fields:
-    approved_question:
-    question_type:
-    target_quantity:
-    claim_boundary_summary:
-    route_candidates_ordered:
-    unit_of_analysis:
-    target_population:
-    key_assumptions: []
-    operationalization_decisions: {}      # {term: {chosen, rationale}}
-    alternatives_ruled_out: {}            # {term: [{alternative, why_rejected}]}
-    derived_metrics_introduced: {}        # {name: formula}
+log_extension: null

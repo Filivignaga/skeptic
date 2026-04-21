@@ -86,14 +86,10 @@ script_contract:
     - bias_taxonomy_table           # list of {domain: one of [confounding, participant_selection, exposure_classification, protocol_departure, missing_data, outcome_measurement, reporting_selection, immortal_time, berkson, positivity_violation], presence: present|absent|uncertain, direction: toward_null|away|unknown, severity: critical|serious|moderate|low, current_mitigation, quantitative_bound_or_deferral}
 
 contract_writes:
-  - provenance.collection_purpose
-  - provenance.sampling_frame
-  - provenance.upstream_exclusions
-  - protocol_handoff.data_usage_considerations
+  - protocol_handoff.data_usage_considerations    # include collection purpose, sampling frame, upstream exclusions, structural notes (confounding / time-ordering / grouping / monitoring) as separate bullets
   - protocol_handoff.leakage_risks
   - protocol_handoff.forbidden_variable_candidates
   - protocol_handoff.validation_needs
-  - protocol_handoff.structure_notes
   - protocol_handoff.route_family_stability
   - protocol_handoff.generalizability_risks
   - protocol_handoff.open_questions

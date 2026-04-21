@@ -40,11 +40,13 @@ Also ask: "Do you have any documentation for this data (codebook, README, data d
 
 ## Canonical YAML Schema
 
-`01_formulation.yaml` has this shape. The model initializes it at stage start and updates it at the end of every cycle. The script never writes to this file.
+`01_formulation.yaml` is the stage's memory. The model initializes it in Cycle A and extends it at the end of every cycle. The script never writes to this file.
+
+Write only fields that apply to the project. Omit fields that would be null; readers treat a missing key as "not applicable." The schema below names every possible field; a concrete project will populate a subset.
 
 ```yaml
 stage: formulate
-schema_version: 2
+schema_version: 3
 
 project:
   name:
@@ -56,28 +58,27 @@ status:
   current_cycle:                    # A|B|C|D|E|F1|F2|null
   completed_cycles: []
   stage_locked: false
-  locked_at: null
+  locked_at: null                   # set at stage close
 
-provenance:
+provenance:                         # immutable audit facts only
   file_hashes: {}                   # {filename: sha256}
   encoding: {}                      # {filename: detected_encoding}
-  collection_purpose:
-  sampling_frame:
-  upstream_exclusions: []
 
 contract:
   approved_question:
   question_type:                    # descriptive|exploratory|inferential|predictive|causal|mechanistic
   target_quantity:
   unit_of_analysis:
-  target_population:                # null if not central
   audience:
   decision_context:
+    mode:                           # stakeholder | academic
+    # when mode == stakeholder:
     stakeholder:
     actions: []
     how_answer_changes_action:
-    prior: null                     # academic alt (use instead of stakeholder fields when project is scholarly)
-    evidence_threshold: null
+    # when mode == academic:
+    prior:
+    evidence_threshold:
   route_candidates: []              # ordered, best first
   baseline:
   minimum_uplift:
@@ -85,29 +86,31 @@ contract:
   key_assumptions: []
   operationalization: {}            # {term: {chosen, rationale, rejected_alternatives: []}}
   derived_metrics: {}               # {name: formula}
-  hypothesis: null                  # null, or {null, alt, treatment, outcome} for inferential/causal
   intended_uses: []
   prohibited_uses: []
+  # Optional (include only when populated):
+  # target_population:              # include when target population is central to the question
+  # hypothesis:                     # required for inferential and causal: {null, alt, treatment, outcome}
 
 claim_boundary:
   claim_type:
   scope:
-  verbs_allowed: []
-  verbs_forbidden: []
   evidence_ceiling:
   generalization_limit:
   narrowing_log: []                 # appended by downstream stages only
+  # Optional (include only when the project diverges from the question-type defaults):
+  # verbs_forbidden_added: []       # project-specific verbs to add on top of the default-forbidden list
+  # verbs_allowed_added: []         # rare; project-specific verbs to re-allow
+  # Default verbs_allowed / verbs_forbidden are implied by claim_type. See the claim-boundary
+  # defaults table in the Finalization section. Do NOT serialize the defaults into this file.
 
 protocol_handoff:
-  data_usage_considerations: []
+  data_usage_considerations: []     # include collection purpose, sampling frame, upstream exclusions,
+                                    # and structural notes (confounding / time-ordering / grouping /
+                                    # monitoring) as separate bullets when relevant
   leakage_risks: []
   forbidden_variable_candidates: []
   validation_needs: []
-  structure_notes:
-    confounding:
-    time_ordering:
-    grouping_or_hierarchy:
-    monitoring_or_refresh:
   route_family_stability:
   generalizability_risks: []
   open_questions: []
@@ -121,18 +124,21 @@ Each `cycle_history` entry:
 ```yaml
 - cycle:                            # A|B|C|D|E|F1|...
   iteration:                        # 1-based per cycle letter
-  checklist: {}                     # {id: {answered: bool, evidence: short-string}}
-  gates: {}                         # {id: {verdict: PASS|FAIL, evidence: short-string}}
+  checklist_complete: true          # false when any checklist item could not be answered
   script_evidence: {}               # the JSON object captured from the script's stdout
   subagents:
-    research_verbatim:
-    evaluation_verbatim:
+    research_verbatim:              # preserved with inline source URLs
+    evaluation_verbatim:            # preserved; contains per-gate reasoning
     evaluation_verdict:             # PASS|FAIL
-    blocking_failures:              # int
+    blocking_failures:              # int (blocking defects + non-diagnostic gate failures)
   decision:                         # pass|iterate|acknowledge_gap|data_insufficient|reformulate|archive
-  decision_reason:
-  override: null                    # null, or {reason, gate}
+  # Optional (include only when applicable):
+  # unanswered: [A03, A05]          # required when checklist_complete is false
+  # decision_reason:                # required when decision != pass
+  # override:                       # {reason, gate} when a FAIL was overridden; omit otherwise
 ```
+
+Gate-level detail lives inside `subagents.evaluation_verbatim`. Do not re-serialize gate verdicts in the cycle_history entry; `evaluation_verdict` plus `blocking_failures` carry the enforceable summary.
 
 `pcs_review` when set:
 
@@ -144,9 +150,10 @@ pcs_review:
 ```
 
 Rules:
-- The YAML must parse with a standard YAML loader after every write. If parsing fails, repair before proceeding.
+- The YAML must parse with a standard YAML loader after every write.
 - `cycle_history` is append-only. Superseded iterations stay in the list; new iterations append.
 - Only downstream stages append to `claim_boundary.narrowing_log`. `formulate` must not write to it after stage close.
+- Write only fields that apply. Do not pre-fill optional fields with `null` or empty containers just because the schema shows them.
 - Use only ASCII characters in generated YAML content. Replace em dashes with `--`, curly quotes with straight quotes. Source-data strings may keep non-ASCII when the encoding is declared.
 
 ## Cycle Structure
@@ -187,12 +194,15 @@ This protocol applies to every cycle, mandatory or follow-up.
 ### Step 1: Setup and Execution
 
 1. Read `cycles/{cycle}.yaml`.
-2. Read the current `01_formulation.yaml` to recover prior decisions.
-3. Cycle A only: create the project folder structure, copy raw data and documentation into the data directory, initialize `01_formulation.yaml` with `project`, `status.current_cycle: A`, and empty scaffolding, create `01_formulation.py` with the skeleton below.
+2. Recover prior stage state:
+   - Cycle A: no prior state to recover.
+   - First cycle entered in a fresh session (not Cycle A), or first cycle after a backtrack reopens the stage: read `01_formulation.yaml` once to load the contract, claim boundary, protocol handoff, and prior `cycle_history`.
+   - Every other case (continuing the same chat session): do not re-read `01_formulation.yaml`. The model just wrote it; its content is already in context.
+3. Cycle A only: create the project folder structure, copy raw data and documentation into the data directory, initialize `01_formulation.yaml` with `stage`, `schema_version`, `project`, and `status.current_cycle: A`, and create `01_formulation.py` with the shape specified below.
 4. Every cycle: extend `01_formulation.py` by writing or updating the cycle's function (`run_cycle_a`, `run_cycle_b`, ...). The function must produce the `script_contract.evidence_keys` listed in the cycle YAML.
 5. Run `python {scripts_dir_name}/01_formulation.py --cycle {cycle}`. Capture stdout.
 6. Parse stdout as JSON. That dictionary becomes the candidate `script_evidence` for this cycle iteration.
-7. Scan stderr and stdout for unhandled exceptions. Any unhandled exception is a blocking defect and must be fixed before continuing. Cells that intentionally demonstrate failure must be explicitly flagged in the function body with a `# expected_failure` comment.
+7. Scan stderr and stdout for unhandled exceptions. Any unhandled exception is a blocking defect and must be fixed before continuing. Functions that intentionally demonstrate failure must be explicitly flagged with a `# expected_failure` comment.
 
 Script shape: one `run_cycle_*` function per cycle, a `load_state()` helper that reads `01_formulation.yaml`, an `argparse --cycle X` CLI, and a `main()` that prints exactly one JSON object to stdout. Claude writes the file from scratch in Cycle A and extends it with a new function at the start of every subsequent cycle.
 
@@ -336,23 +346,27 @@ Do not fabricate findings or force optimistic assessments to keep the process mo
 
 ### Step 5: Log
 
-Append one entry to `cycle_history` in `01_formulation.yaml` with the shape specified in the schema. The entry must carry:
+Append one entry to `cycle_history`. Required fields:
 
-- `checklist`: one record per item in the cycle YAML's `checklist`
-- `gates`: one record per gate in the cycle YAML's `gates`
-- `script_evidence`: the full JSON captured in Step 1
-- `subagents.research_verbatim`: the research subagent output, unedited, with URLs intact
-- `subagents.evaluation_verbatim`: the evaluation subagent output, unedited
-- `subagents.evaluation_verdict`: parsed `PASS` or `FAIL`
-- `subagents.blocking_failures`: parsed count
-- `decision`, `decision_reason`
-- `override`: null, or `{reason, gate}` when a FAIL was overridden
+- `cycle`, `iteration`
+- `checklist_complete` (bool)
+- `script_evidence` (the full JSON captured in Step 1)
+- `subagents.research_verbatim`, `subagents.evaluation_verbatim`, `subagents.evaluation_verdict`, `subagents.blocking_failures`
+- `decision`
 
-Then update every canonical-YAML field listed in the cycle YAML's `contract_writes`. Cycle-specific additions (step4_additions, pcs_checkpoint, log_extension) are applied at this point if the cycle YAML defines them.
+Write conditional fields only when they apply:
+
+- `unanswered`: list of checklist IDs that could not be answered. Required when `checklist_complete: false`.
+- `decision_reason`: required when `decision != pass`.
+- `override`: `{reason, gate}` only when a FAIL was overridden.
+
+Do not re-serialize gate verdicts. Gate-level detail lives in `evaluation_verbatim`; `evaluation_verdict` plus `blocking_failures` are the enforceable summary.
+
+Update every canonical-YAML field listed in the cycle YAML's `contract_writes`, but only for fields this project actually populates. Leave non-applicable optional fields out entirely rather than setting them to null. Cycle-specific additions (`step4_additions`, `pcs_checkpoint`) are applied at this point if the cycle YAML defines them.
 
 Set `status.current_cycle` to the next cycle letter (or keep for another iteration). Append the closed cycle letter to `status.completed_cycles` only when the cycle passes or is closed by override.
 
-Re-parse `01_formulation.yaml` to confirm validity. If parsing fails, repair before starting the next cycle.
+Re-parse `01_formulation.yaml` to confirm validity.
 
 ## Ending the Cycle Loop
 
@@ -417,7 +431,7 @@ The subagent advises. It does not silently widen scope or bypass a blocking conc
 
 After the PCS review clears or the user overrides it:
 
-1. Build the Claim Boundary Registry fields inside `claim_boundary`. Start from the question-type defaults and adapt to project specifics from Cycles D and E:
+1. Finalize `claim_boundary`: set `scope`, `evidence_ceiling`, and `generalization_limit` from Cycle D and Cycle E evidence. Add project-specific verb overrides under `verbs_forbidden_added` (and, rarely, `verbs_allowed_added`) when Cycle D operationalization tradeoffs or Cycle E bias findings demand narrowing beyond the defaults. The default verb lists implied by `claim_type` are the table below; downstream stages derive the effective verb set from `claim_type` + the `*_added` overrides. Do not serialize the defaults into the canonical YAML.
 
    | question_type | verbs_allowed (defaults) | verbs_forbidden (defaults) |
    |---------------|--------------------------|----------------------------|
@@ -428,26 +442,9 @@ After the PCS review clears or the user overrides it:
    | causal        | estimate effect, attribute, compare counterfactual | predict deployment, generalize beyond identification, explain mechanism from fit alone |
    | mechanistic   | model process, simulate, calibrate, explain mechanism | predict deployment, generalize beyond structural assumptions, claim causation from fit alone |
 
-   Project-specific forbidden verbs must be added based on operationalization tradeoffs (Cycle D) and bias findings (Cycle E). `scope`, `evidence_ceiling`, and `generalization_limit` are derived from Cycles D and E evidence.
+2. Parse `01_formulation.yaml` with a standard YAML loader. Repair if parsing fails.
 
-2. Parse `01_formulation.yaml` with a standard YAML loader to confirm validity. Repair if parsing fails.
-
-3. Render `01_formulation.md` from the canonical YAML. The report has these sections, in this order:
-
-   - `## Approved Question` - question, question_type, audience, target_quantity, unit_of_analysis, target_population
-   - `## Decision Context` - stakeholder/actions/how_answer_changes_action, or the academic alt (prior + evidence_threshold)
-   - `## Operationalization` - for each term: chosen metric, rationale, rejected alternatives
-   - `## Route Candidates` - ordered list with one-line rationale each
-   - `## Baseline, Uplift, and Error Costs`
-   - `## Key Assumptions`
-   - `## Claim Boundary` - claim_type, scope, verbs_allowed, verbs_forbidden, evidence_ceiling, generalization_limit
-   - `## Intended and Prohibited Uses`
-   - `## Provenance` - file_hashes, encoding, collection_purpose, sampling_frame, upstream_exclusions
-   - `## Protocol Handoff` - every field in `protocol_handoff`
-   - `## Cycle Summary` - one row per cycle: letter, iterations, verdict, override if any, key decisions
-   - `## PCS Assessment` - `pcs_review.verbatim` followed by `Disposition:` and `Reason:`
-
-   The markdown is a derived render. Do not duplicate subagent verbatim output inside the markdown; it already lives in the YAML. Reference the YAML as the canonical source.
+3. Render `01_formulation.md` from the canonical YAML. Keep the report compact: one `##` section per top-level YAML key that is populated (`Approved Question`, `Decision Context`, `Operationalization`, `Route Candidates`, `Baseline / Uplift / Error Costs`, `Key Assumptions`, `Claim Boundary` with effective verbs derived from `claim_type` + overrides, `Intended and Prohibited Uses`, `Provenance`, `Protocol Handoff`, `Cycle Summary` with one line per cycle, `PCS Assessment`). Omit sections whose YAML keys are empty or absent. Do not re-embed subagent verbatims; they already live in the YAML.
 
 4. Update `README.md` with:
 
