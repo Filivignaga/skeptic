@@ -1,0 +1,80 @@
+cycle: C
+focus: Question Type Classification
+mandatory: true
+
+upstream:
+  - contract.audience
+  - contract.decision_context
+  - contract.unit_of_analysis
+
+setup_side_effects: []
+
+checklist:
+  - id: C01
+    question: Based on the rough question and Cycle A-B findings, which of the six question types best fits (descriptive, exploratory, inferential, predictive, causal, mechanistic)?
+    skip_when: never
+    script_evidence_key: type_candidates
+  - id: C02
+    question: Does the current data collection, design, and variable coverage support the proposed type? If not, what is the strongest defensible alternative?
+    skip_when: never
+    script_evidence_key: type_support_evidence
+  - id: C03
+    question: What are the downstream consequences for `protocol`, route overlays, and later `analyze`?
+    skip_when: never
+    script_evidence_key: null
+    note: Judgment-driven. The model records consequences in contract.route_candidates, protocol_handoff.data_usage_considerations, and protocol_handoff.validation_needs.
+  - id: C04
+    question: If the data cannot support the preferred type, what would be required for the original?
+    skip_when: data supports the preferred type
+    script_evidence_key: unmet_requirements
+
+gates:
+  - id: C-type-classified
+    depends_on: [C01]
+    condition: Question classified into one of the six types
+    diagnostic: false
+  - id: C-type-supported
+    depends_on: [C02]
+    condition: Data collection and design plausibly support the classified type
+    diagnostic: false
+  - id: C-downstream-constraints-stated
+    depends_on: [C03]
+    condition: Consequences for `protocol`, route overlays, and later `analyze` are stated
+    diagnostic: false
+
+research_questions:
+  - What question types and study designs have been used to answer similar questions?
+  - What methodological requirements typically apply to each plausible type in this domain?
+  - Are there published examples where similar data was sufficient or insufficient for this type of question?
+
+script_contract:
+  evidence_keys:
+    - type_candidates               # {candidate_type: {fit_score, supporting_evidence, conflicting_evidence}} for each of the six types the model considers
+    - type_support_evidence         # {chosen_type: {design_support, variable_coverage_support, known_blockers}}
+    - unmet_requirements            # list of {requirement, current_gap, hypothetical_fix} when the preferred type is not currently supported; else []
+  forbidden:
+    - Writing to 01_formulation.yaml
+    - Emitting anything other than one JSON object to stdout
+    - Dumping full DataFrames; summarize to fixed-size records
+
+contract_writes:
+  - contract.question_type
+  - contract.route_candidates                # seed ordered list; refined further in Cycle D
+  - protocol_handoff.data_usage_considerations
+  - protocol_handoff.validation_needs
+
+guidance:
+  - The six types are descriptive, exploratory, inferential, predictive, causal, mechanistic. See `../../core-principles.md` for admissible evidence and interpretation boundary per type.
+  - Cycle C produces exactly two things. A locked primary question type, plus the set of "facts and recommended ranges" that `protocol` will use to make its own decisions. Do not pre-empt `protocol`.
+  - Classification is not a model-selection shortcut. Classification or unsupervised methods do not become predictive by default just because they are machine-learning methods.
+  - Inferential questions estimate quantities in a population or sampling frame. Predictive questions target unseen outcomes in a deployment context. Do not conflate.
+
+step4_additions: null
+pcs_checkpoint:
+  before: Step 5
+  items:
+    - "P: Does the classified type match what Cycle A's prior art used for similar questions? Cite the closest comparable."
+    - "C: Is the classification traceable to specific C01-C04 evidence entries?"
+    - "S: Would the nearest alternative framing change the type?"
+  fail_action: On a Stability FAIL, reclassify or log a non-blocking defect carried to Protocol.
+log_extension: null

@@ -1,0 +1,63 @@
+cycle: F{n}                          # F1, F2, F3, ... assigned in order opened
+focus: "{short description of the follow-up topic, e.g. 'Resolve unit-of-analysis ambiguity for transactions vs. accounts'}"
+mandatory: false
+
+# Follow-up cycles run under the exact same 5-step cycle protocol as the
+# mandatory cycles A through E. They are triggered when:
+#   1. Claude proposes one based on accumulated findings across A-E
+#   2. The evaluation subagent recommends one
+# The user approves or skips each proposed follow-up.
+#
+# The model does NOT create a new YAML file on disk for each follow-up.
+# Instead, it materializes the concrete Fn spec inline inside
+# 01_formulation.yaml under a scratch area (e.g., status.active_followup_spec),
+# runs the cycle, then appends the closing cycle_history entry.
+#
+# Use this template as the shape for that inline spec.
+
+upstream:
+  - "{list which canonical-YAML fields must be set before the follow-up runs}"
+
+setup_side_effects: []
+
+checklist:
+  - id: F{n}01
+    question: "{question derived from the specific follow-up topic}"
+    skip_when: never
+    script_evidence_key: "{key name or null if judgment-driven}"
+  # Add F{n}02, F{n}03, ... as required. Keep follow-ups narrow and purpose-built.
+
+gates:
+  - id: F{n}-{short-name}
+    depends_on: [F{n}01]
+    condition: "{condition that closes the follow-up topic}"
+    diagnostic: false
+  # At least one non-diagnostic gate is required so the cycle has an enforceable exit.
+
+research_questions:
+  - "{at most a handful; narrow to the follow-up topic}"
+
+script_contract:
+  evidence_keys:
+    - "{evidence key 1}"
+    - "{evidence key 2}"
+  forbidden:
+    - Writing to 01_formulation.yaml
+    - Emitting anything other than one JSON object to stdout
+    - Dumping full DataFrames; summarize to fixed-size records
+
+contract_writes:
+  # Only the canonical-YAML fields that this follow-up is specifically resolving.
+  # Examples: claim_boundary.verbs_forbidden (append), claim_boundary.narrowing_log
+  # (append, only while formulate is still open), contract.operationalization[term].
+  - "{field 1}"
+  - "{field 2}"
+
+guidance:
+  - Keep the follow-up narrow. One topic per cycle.
+  - If the same topic recurs across follow-ups, escalate instead of looping.
+  - Close the follow-up as pass, acknowledge_gap, data_insufficient, reformulate, or archive under the standard decision matrix.
+
+step4_additions: null
+pcs_checkpoint: null
+log_extension: null

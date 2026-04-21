@@ -9,7 +9,7 @@ These checklists supplement, not replace, the Cycle A checklist in `formulate.md
 | check | question |
 |-------|----------|
 | CSV01 | What is the detected character encoding? (Apply the Source Data Encoding rules from `core-principles.md`.) |
-| CSV02 | What is the field delimiter? Verify by inspecting the first 5 rows. Do not assume comma — semicolons, tabs, and pipes are common. |
+| CSV02 | What is the field delimiter? Verify by inspecting the first 5 rows. Do not assume comma. Semicolons, tabs, and pipes are common. |
 | CSV03 | Is a BOM (byte order mark) present? If yes, ensure the reader handles or strips it. |
 | CSV04 | Does the file have a header row? Verify column names match expected schema or documentation. |
 | CSV05 | Do any fields contain quoted values with embedded delimiters, newlines, or quotes? Verify the quoting convention (double-quote, escape character). |
