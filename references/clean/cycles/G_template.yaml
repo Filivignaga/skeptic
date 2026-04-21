@@ -44,7 +44,3 @@ guidance:
   - Keep the follow-up narrow. One representation topic per cycle.
   - If the issue is really about upstream data quality or semantic validity, route it back to a D-series follow-up instead of keeping it here.
   - Close the follow-up as pass, acknowledge_gap, data_insufficient, reopen_protocol, reopen_formulate, or archive under the standard decision matrix.
-
-step4_additions: null
-pcs_checkpoint: null
-log_extension: null

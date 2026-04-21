@@ -67,7 +67,3 @@ guidance:
   - Keep A02 universal: describe structure, support, and coverage of question-critical fields regardless of whether the question has a target variable. Response-versus-predictor framing belongs to analyze (and only for predictive routes).
   - When a subsample is used in A05, record seed, method, and a reconciliation check against the full artifact so the script remains reproducible.
   - When listing well/weakly/unsupported items in A04, cite the specific A02 (or A03) evidence refs that ground each line.
-
-step4_additions: null
-pcs_checkpoint: null
-log_extension: null

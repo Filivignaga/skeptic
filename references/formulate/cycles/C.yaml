@@ -44,12 +44,8 @@ guidance:
   - Inferential questions estimate quantities in a population or sampling frame. Predictive questions target unseen outcomes in a deployment context.
   - contract.route_candidates is seeded here and refined further in Cycle D.
 
-step4_additions: null
-pcs_checkpoint:
-  before: Step 5
+pcs_focus:
   items:
     - "P: Does the classified type match what Cycle A's prior art used for similar questions? Cite the closest comparable."
     - "C: Is the classification traceable to specific C01-C04 evidence entries?"
     - "S: Would the nearest alternative framing change the type?"
-  fail_action: On a Stability FAIL, reclassify or log a non-blocking defect carried to Protocol.
-log_extension: null

@@ -67,7 +67,3 @@ guidance:
   - State both what was tested and what was not tested. Do not imply all possible perturbations were explored.
   - If a mandatory limitation would weaken the headline finding, present it at the same visual weight as the finding; do not hide it in an appendix.
   - Calibration is symmetric: false confidence and false alarm both count as miscommunication.
-
-step4_additions: null
-pcs_checkpoint: null
-log_extension: null

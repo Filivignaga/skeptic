@@ -162,12 +162,8 @@ step4_additions:
     - identifier_strategy_if_any
     - cross_fitting_authorized_if_any
 
-pcs_checkpoint:
-  before: Step 5
+pcs_focus:
   items:
     - "P: Does the chosen data-usage mode match the real deployment or reporting context named in formulate?"
     - "C: Could a different defensible mode change the allowed claim boundary? If yes, is the divergence either absorbed by the rejection audit in B04a or captured by a narrowing entry?"
     - "S: Is the frozen-artifact creation logic reproducible deterministically from the documented seed and split rules?"
-  fail_action: On a Stability FAIL, reconsider the mode choice or append a narrowing entry to 01_formulation.yaml:claim_boundary.narrowing_log (via the canonical YAML, only while protocol is still open).
-
-log_extension: null

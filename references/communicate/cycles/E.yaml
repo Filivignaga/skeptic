@@ -76,7 +76,3 @@ guidance:
   - Visualization effort scales with project complexity. A simple descriptive report with two claims needs less visualization than a predictive output with twelve.
   - Companion data files must include per-row uncertainty. If the upstream pipeline did not produce per-row uncertainty, disclose the absence as a limitation and add a qualitative indicator derived from existing stability evidence.
   - When plan.null_result_mode is true, E01-E05 are formally skipped for quantitative claims; E06 and E07 still apply where companion data files exist.
-
-step4_additions: null
-pcs_checkpoint: null
-log_extension: null

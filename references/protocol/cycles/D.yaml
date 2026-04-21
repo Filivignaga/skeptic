@@ -72,6 +72,3 @@ step4_additions:
     - analyze_contract_lock_obligations
     - analyze_claim_limits
     - backtracking_triggers_with_return_paths
-
-pcs_checkpoint: null
-log_extension: null

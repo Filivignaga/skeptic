@@ -62,7 +62,3 @@ guidance:
   - If the locked policy is backtrack_only and any assumption fails or is marginal in a way that undermines the method, route back to protocol rather than amending the contract.
   - Every amendment must invoke only a named pre-approved narrowing fallback from contract.assumption_failure_policy.named_fallbacks; invoking any other fallback is a blocking defect.
   - If amendment narrows the claim boundary, append a narrowing entry to claim_boundary.narrowing_log_additions with the triggering assumption, the fallback invoked, and the narrowed boundary.
-
-step4_additions: null
-pcs_checkpoint: null
-log_extension: null

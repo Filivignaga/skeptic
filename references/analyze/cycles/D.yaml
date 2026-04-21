@@ -75,7 +75,3 @@ guidance:
   - Every run records seeds and parameters; unseeded stochastic steps are absent or explicitly justified.
   - If a sensitivity or challenger run accesses a restricted artifact, treat it as a blocking defect and reopen protocol.
   - All-challengers-diverging is a finding for evaluate, not a trigger for revising the primary result.
-
-step4_additions: null
-pcs_checkpoint: null
-log_extension: null

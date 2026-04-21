@@ -78,7 +78,3 @@ guidance:
   - When zero claims survived, set plan.null_result_mode true and activate the null-result path. Cycles C through E run lighter; the deliverable at Cycle F documents what was attempted and why nothing survived.
   - Every recommendation must cite a surviving claim and stay within the claim boundary.
   - If upstream artifacts contradict each other (for example, 05_analysis.md narrows the boundary further than 06_evaluation.md records), stop and reopen the affected upstream stage.
-
-step4_additions: null
-pcs_checkpoint: null
-log_extension: null

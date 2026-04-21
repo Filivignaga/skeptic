@@ -71,7 +71,3 @@ guidance:
   - The goal of this cycle is diagnosis, not premature resolution. Catalog every pattern with counts and example rows so Cycle C has a concrete basis for policy choices.
   - If an integrity issue is actually a protocol or formulation mismatch, flag it and plan to route upstream; masking it with a cleaning policy in Cycle C is a defect.
   - Missingness that carries meaning (indicator of a real event, structural zero, deliberate censoring) must be recorded as a meaning hypothesis, not quietly imputed in Cycle C.
-
-step4_additions: null
-pcs_checkpoint: null
-log_extension: null

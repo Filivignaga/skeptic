@@ -91,6 +91,3 @@ step4_additions:
     - reproducibility_pass_confirmed
     - protocol_commitment_reconciliation_confirmed
   user_approval: required
-
-pcs_checkpoint: null
-log_extension: null

@@ -59,7 +59,3 @@ guidance:
   - If the same issue recurs across follow-ups, escalate instead of looping.
   - Close the follow-up as pass, acknowledge_gap, reopen_examine, reopen_protocol, reopen_formulate, reopen_clean, data_insufficient, or archive under the standard decision matrix.
   - Do not use En as a side channel to reshape the contract. Contract amendments allowed under contract.assumption_failure_policy belong to Cycle B, not En.
-
-step4_additions: null
-pcs_checkpoint: null
-log_extension: null

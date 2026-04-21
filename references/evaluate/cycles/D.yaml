@@ -77,7 +77,3 @@ guidance:
   - For any bias domain rated serious or critical, state either a quantitative bound (E-value, Lash-style range, or direction-and-magnitude estimate) or an explicit deferral naming what data would allow bounding it. "Unknown" is acceptable only with a concrete deferral.
   - The three validity verdicts are: defended (threat assessed and ruled out), threatened (threat plausible; caveat required), fatal (threat strong enough to kill the claim or trigger backtracking).
   - Scale translation applies before verdicts. A statistically-notable effect on an uninterpretable scale is insufficient evidence for a survived verdict.
-
-step4_additions: null
-pcs_checkpoint: null
-log_extension: null

@@ -153,12 +153,8 @@ step4_additions:
     - backtracking_triggers
   user_approval: required
 
-pcs_checkpoint:
-  before: Step 5
+pcs_focus:
   items:
     - "P: Does the locked contract produce outputs that the protocol-specified reality check can actually evaluate?"
     - "C: Can another analyst reproduce the full execution from contract fields plus the locked artifacts without ambiguity?"
     - "S: Does the primary specification survive obvious operationalization variants, or does it depend on fragile examination-stage support?"
-  fail_action: On a Stability FAIL, revise the contract or append a narrowing entry to claim_boundary.narrowing_log_additions before closing the cycle.
-
-log_extension: null

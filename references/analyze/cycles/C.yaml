@@ -69,7 +69,3 @@ guidance:
   - If the script or execution environment accesses a restricted artifact -- even read-only -- treat it as a blocking defect and reopen protocol.
   - Artifact-access logging is mandatory. The script must enumerate every read and write and confirm it against provenance.visibility_set.
   - Library versions and implementation details that affect numerical output (for example, BLAS backend or optimizer defaults) should be captured alongside seeds when they could change results materially.
-
-step4_additions: null
-pcs_checkpoint: null
-log_extension: null

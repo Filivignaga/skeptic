@@ -104,12 +104,8 @@ step4_additions:
     - intended_and_prohibited_uses
   user_approval: required
 
-pcs_checkpoint:
-  before: Step 5
+pcs_focus:
   items:
     - "P: Does the chosen operationalization estimate the same quantity the validated literature measure does? Cite the source."
     - "C: Can another analyst reconstruct target_quantity, claim_boundary, and top route from the script evidence and canonical YAML alone?"
     - "S: Does the nearest alternative for the top critical term change claim_type or the top route?"
-  fail_action: On a Stability FAIL, revise the operationalization or append a narrowing entry to claim_boundary.narrowing_log (via the canonical YAML, only by this stage while still open).
-
-log_extension: null

@@ -77,6 +77,3 @@ step4_additions:
     - main_unstable_variables
     - main_risk_drivers
     - robustness_summary_paragraph
-
-pcs_checkpoint: null
-log_extension: null

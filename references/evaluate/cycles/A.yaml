@@ -80,7 +80,3 @@ guidance:
   - Divergence triage classes are provisional: notable and major axes will be adjudicated in Cycle B. A provisional classification is not a verdict.
   - Reproducibility failures (hash mismatch or metric mismatch) block the stage until resolved. If an artifact cannot be reproduced, route back to analyze.
   - Record every route-specific check the route file requires, mapped to the cycle that will execute it.
-
-step4_additions: null
-pcs_checkpoint: null
-log_extension: null

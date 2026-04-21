@@ -48,7 +48,3 @@ guidance:
   - Record the chosen interpretation in contract.operationalization with rationale, and list rejected interpretations in rejected_alternatives.
   - The "ideal dataset" gap is not a failure signal by itself. Record it so `protocol` and later stages can reason about it.
   - contract.key_assumptions may be appended from any checklist item when an assumption surfaces that later stages must respect.
-
-step4_additions: null
-pcs_checkpoint: null
-log_extension: null
