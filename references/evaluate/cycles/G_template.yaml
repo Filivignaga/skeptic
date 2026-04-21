@@ -1,0 +1,63 @@
+cycle: G{n}                          # G1, G2, G3, ... assigned in order opened
+focus: "{short description of the follow-up topic, e.g. 'Resolve whether challenger X divergence is execution artifact or genuine instability'}"
+mandatory: false
+
+# Follow-up cycles run under the exact same 5-step cycle protocol as the
+# mandatory cycles A through F. They resolve a material ambiguity from
+# Cycles B, C, or D that must be settled before rendering claim survival
+# verdicts in Cycle E. They are triggered when:
+#   1. Claude proposes one based on ambiguities surfaced in B, C, or D
+#   2. The evaluation subagent recommends one
+# The user approves or skips each proposed follow-up.
+#
+# The model does NOT create a new YAML file on disk for each follow-up.
+# Instead, it materializes the concrete Gn spec inline inside
+# 06_evaluation.yaml under a scratch area (e.g., status.active_followup_spec),
+# runs the cycle, then appends the closing cycle_history entry.
+#
+# Use this template as the shape for that inline spec.
+#
+# Valid follow-up topics include: clarifying whether a specific stability
+# concern changes the qualitative conclusion or only the magnitude, resolving
+# whether a marginal predictability result tips to adequate or inadequate
+# with one additional check, requesting domain-expert input on a specific
+# validity threat, or disentangling an execution artifact from genuine
+# instability. If the issue requires new analysis computation, backtrack to
+# analyze. If the issue is a cleaning, protocol, or formulation problem,
+# route back upstream instead of opening a follow-up.
+
+upstream:
+  - "{list which canonical-YAML fields must be set before the follow-up runs}"
+
+setup_side_effects: []
+
+checklist:
+  - id: G{n}01
+    question: "{question derived from the specific follow-up topic}"
+    evidence_key: "{key name, or null if judgment-driven}"
+    writes_to: "{canonical-YAML field, list of fields, or null}"
+  # Add G{n}02, G{n}03, ... as required. Keep follow-ups narrow and purpose-built.
+  # Add `skip_when: <condition>` on any item that has a non-default skip condition.
+  # Common writes_to targets for evaluate follow-ups: stability_verdicts[claim_id],
+  # predictability_verdicts[claim_id], validity_verdicts[claim_id],
+  # claim_boundary_final.narrowing_log (append, only while evaluate is still open).
+
+gates:
+  - id: "G{n}01-{short-name}"
+    condition: "{condition that closes the follow-up topic}"
+  # Single-dep gates encode the checklist ID in the gate ID (e.g. G{n}01-resolved).
+  # Multi-dep gates use id: "G{n}-{short-name}" and depends_on: [G{n}01, G{n}02, ...].
+  # At least one gate is required so the cycle has an enforceable exit.
+
+research_questions:
+  - "{at most a handful; narrow to the follow-up topic}"
+
+guidance:
+  - Keep the follow-up narrow. One topic per cycle.
+  - Do not turn the follow-up into re-analysis, unrestricted exploration, or post-hoc testing. If new analysis computation is needed, backtrack to analyze.
+  - If the same topic recurs across follow-ups, escalate instead of looping.
+  - Close the follow-up as pass, acknowledge_gap, reopen_analyze, reopen_examine, reopen_protocol, reopen_formulate, or archive under the standard decision matrix.
+
+step4_additions: null
+pcs_checkpoint: null
+log_extension: null

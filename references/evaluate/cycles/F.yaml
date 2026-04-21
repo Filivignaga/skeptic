@@ -1,0 +1,67 @@
+cycle: F
+focus: Evaluation Assembly and Handoff
+mandatory: true
+
+upstream:
+  - claim_survival_registry
+  - claim_boundary_final
+
+setup_side_effects: []
+
+checklist:
+  - id: F01
+    question: Is the final claim survival registry from Cycle E assembled and internally consistent (survival verdicts, caveats, and failure reasons present for every claim)?
+    evidence_key: registry_consistency_check        # {total_claims, claims_with_survival_verdict, caveats_complete: bool, failure_reasons_complete: bool, inconsistencies: []}
+    writes_to: null
+  - id: F02
+    question: For each surviving claim (with or without caveats), what is the one-paragraph evidence summary citing the specific cycle outputs from B, C, and D that support it?
+    evidence_key: null
+    writes_to: communicate_handoff
+  - id: F03
+    question: For each claim that did not survive, what is the one-line reason?
+    skip_when: every claim survived
+    evidence_key: null
+    writes_to: communicate_handoff
+  - id: F04
+    question: What mandatory limitations must communicate disclose -- caveats from "survived with caveats" claims, acknowledged gaps, documented validity threats that were not fully resolved, data limitations surfaced across the pipeline, and scope restrictions from claim-boundary narrowing?
+    evidence_key: null
+    writes_to: communicate_handoff.mandatory_limitations
+  - id: F05
+    question: What unresolved risks are carried forward, stating what is unknown and why?
+    evidence_key: null
+    writes_to: communicate_handoff.unresolved_risks
+  - id: F06
+    question: What is the final claim boundary restated in the handoff, matching claim_boundary_final on every axis (claim_type, scope, verbs_allowed, verbs_forbidden, evidence_ceiling, generalization_limit)?
+    evidence_key: null
+    writes_to: null
+  - id: F07
+    question: What per-dimension summaries (stability, predictability, validity) and handoff discipline constraints are drafted in communicate_handoff, with no audience framing, narrative suggestions, hedging language, or recommendations?
+    evidence_key: null
+    writes_to: [communicate_handoff.per_dimension_summaries, communicate_handoff.handoff_discipline]
+  - id: F08
+    question: Does the handoff end with an explicit statement that the next stage is communicate, and state that communicate may package only claims that survived evaluation, may not drop mandatory caveats, and may not widen the claim boundary?
+    evidence_key: null
+    writes_to: communicate_handoff.handoff_discipline
+
+gates:
+  - id: F01-registry-complete
+    condition: Claim survival registry is complete and internally consistent (every claim has survival verdict, mandatory caveats where applicable, and failure reasons where applicable; no row is missing fields; no survival verdict contradicts a caveat row)
+  - id: F-handoff-complete
+    depends_on: [F02, F03, F04, F05, F06, F07]
+    condition: communicate_handoff contains evidence summaries for every surviving claim, reasons for every dead claim, mandatory limitations, unresolved risks, final claim boundary, per-dimension summaries, and handoff discipline
+  - id: F07-no-audience-framing
+    condition: communicate_handoff contains no audience framing, narrative suggestions, hedging language, or recommendations; it packages verdicts rather than frames them
+
+research_questions:
+  - What evaluation-to-communication packaging standards exist for this route?
+  - What information does communicate typically need to properly contextualize caveated claims?
+
+guidance:
+  - Cycle F packages verdicts. It does not frame them for an audience. Audience framing, narrative, visualization choices, and recommendation generation belong to communicate.
+  - Mandatory limitations are mandatory for communicate -- communicate may not drop them.
+  - Caveats attached to "survived with caveats" claims are part of those claims; communicate may not separate the claim from its caveats.
+  - The handoff statement at the end must read explicitly "Next stage: communicate" and enumerate what communicate may and may not do.
+
+step4_additions: null
+pcs_checkpoint: null
+log_extension: null

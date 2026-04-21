@@ -1,0 +1,96 @@
+cycle: F
+focus: Results Assembly, Reproducibility, and Evaluate Handoff
+mandatory: true
+
+upstream:
+  - contract
+  - assumptions
+  - primary_execution
+  - sensitivity_execution
+  - challenger_execution
+  - comparison_table
+  - contract_amendments
+  - claim_boundary
+  - provenance.visibility_set
+  - 02_protocol.yaml:protocol_committed_analyses
+
+setup_side_effects: []
+
+checklist:
+  - id: F01
+    question: For each deviation between the locked (or amended) contract and actual execution across Cycles B, C, D, and any En follow-ups, what is the deviation, was it forced or chosen, what caused it, what is the potential impact on error control or claim credibility, and does it deviate from the formulate pre-registration in 01_formulation.yaml?
+    evidence_key: deviation_register           # [{what_changed, forced|chosen, cause, potential_impact, pre_registration_delta: bool, pre_registration_notes}]
+    writes_to: [deviations, evaluation_handoff.deviation_register]
+  - id: F02
+    question: Are primary, sensitivity, and challenger outputs assembled into one structured package with explicit separation between the three groups preserved in the handoff?
+    evidence_key: handoff_package              # {contract_summary, execution_summary: {primary, sensitivity_by_axis, challengers_by_name}, explicit_separation_confirmed: bool}
+    writes_to: [evaluation_handoff.contract_summary, evaluation_handoff.execution_summary]
+  - id: F03
+    question: What is the claim boundary as-narrowed at stage close, listing every narrowing entry added during analyze and confirming no widening has occurred?
+    evidence_key: claim_boundary_final         # {claim_type, scope, evidence_ceiling, generalization_limit, verbs_forbidden_added, verbs_allowed_added, narrowing_log_additions_by_cycle}
+    writes_to: claim_boundary
+  - id: F04
+    question: If contract amendments occurred, what is the amendment list with trigger, what changed, and the narrowing confirmation for each?
+    skip_when: no contract amendments occurred
+    evidence_key: null
+    writes_to: [contract_amendments, evaluation_handoff.contract_amendments]
+  - id: F05
+    question: What flags for evaluate are listed -- perturbation divergences, challenger contradictions, computational issues, claim-boundary narrowing, unresolved execution risks -- without interpreting any of them as verdicts?
+    evidence_key: flags_for_evaluate           # [{kind: perturbation_divergence|challenger_contradiction|computational_issue|claim_narrowing|unresolved_risk, summary, source: {cycle, id_if_any}}]
+    writes_to: evaluation_handoff.flags_for_evaluate
+  - id: F06
+    question: What handoff discipline statements are recorded so that evaluate reads the correct standing orders (next stage is evaluate; do not treat outputs as confirmed claims; do not resolve challenger divergence by picking a winner; do not widen the claim boundary)?
+    evidence_key: null
+    writes_to: evaluation_handoff.handoff_discipline
+  - id: F07
+    question: Does the handoff avoid result-quality judgments, claim-scope assertions, and language that preempts evaluate's adjudication?
+    evidence_key: null
+    writes_to: null
+  - id: F08
+    question: For every item in 02_protocol.yaml.protocol_committed_analyses, is the item completed with documented outputs (primary, sensitivity, or challenger) or logged in the deviation register with justification for why it was not executed?
+    evidence_key: protocol_commitment_reconciliation   # [{protocol_item, status: completed|deviation_logged, location: cycle_or_section, justification_if_deviation}]
+    writes_to: null
+  - id: F09
+    question: Does the reproducibility re-run -- full re-execution of primary, sensitivity, and challenger pipelines from cleaned artifacts plus protocol-defined frozen artifacts plus the locked (or amended) contract -- match the original outputs (exact, numerical-tolerance with stated tolerance, or mismatch)?
+    evidence_key: reproducibility_result       # {status: pass|fail, match_kind: exact|numerical_tolerance|mismatch, runtime_seconds, tolerance_notes_if_any, mismatch_details_if_any}
+    writes_to: reproducibility
+
+gates:
+  - id: F01-register-complete
+    condition: The deviation register either enumerates every deviation with all five fields (what, forced-or-chosen, cause, potential impact, pre-registration delta) or states "no deviations" explicitly; silent omissions are not allowed
+  - id: F02-separation
+    condition: Handoff package preserves explicit separation between primary, sensitivity (by axis), and challenger (by name) outputs; no merged tables
+  - id: F03-not-widened
+    condition: Claim boundary at stage close preserves or narrows the boundary that entered analyze; scope, evidence_ceiling, generalization_limit, and effective verb set are never widened
+  - id: F-no-interpretation
+    depends_on: [F02, F05, F06, F07]
+    condition: Handoff contains no result-quality judgments, no claim-scope assertions beyond the claim boundary as-narrowed, and no wording that preempts evaluate's adjudication
+  - id: F08-commitments-reconciled
+    condition: Every protocol-committed analysis is either completed with documented outputs or logged in the deviation register with justification; silent drops are blocking defects
+  - id: F09-reproducibility-pass
+    condition: Reproducibility re-run status is pass (exact match or numerical-tolerance match within a stated, justified tolerance); mismatch blocks finalization until the discrepancy is debugged
+
+research_questions:
+  - What evaluation-ready packaging standards exist for this route and method family that evaluate can consume without re-running the analysis?
+  - Are there domain-standard benchmarks or baselines that contextualize the magnitude of results without making claims?
+  - What numerical-tolerance conventions are standard for reproducibility re-runs of this method family, and which discrepancies are acceptable versus material?
+
+guidance:
+  - Cycle F assembles and verifies. It does not interpret results or decide whether findings are adequate.
+  - Reproducibility is a full re-run from cleaned plus frozen artifacts plus the locked contract, not a structural check. If the analysis is too slow for a full re-run, record that as a computability concern for evaluate and run the fullest re-run the environment allows, naming the gap explicitly.
+  - The deviation register is the authoritative record of contract-versus-execution divergence. Every deviation entry records whether it deviates from the formulate pre-registration; pre-registration deltas are surfaced to evaluate as flags.
+  - Every protocol-committed analysis is accounted for in F08. Uncommitted items that were silently dropped are a blocking defect.
+  - Handoff discipline statements are standing orders to evaluate. They do not resolve divergence. They frame what evaluate must do.
+
+step4_additions:
+  description: After the standard decision, confirm that the deviation register, evaluation handoff, claim boundary as-narrowed, and reproducibility result are ready for stage close. Request user confirmation before moving to PCS Subagent Review and Finalization.
+  items:
+    - deviation_register_confirmed
+    - evaluation_handoff_confirmed
+    - claim_boundary_as_narrowed_confirmed
+    - reproducibility_pass_confirmed
+    - protocol_commitment_reconciliation_confirmed
+  user_approval: required
+
+pcs_checkpoint: null
+log_extension: null

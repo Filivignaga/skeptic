@@ -1,0 +1,111 @@
+cycle: C
+focus: Evidence, Validation, and Risk Rules
+mandatory: true
+
+upstream:
+  - route.active
+  - handoff_audit.confirmed
+  - data_usage.mode
+
+setup_side_effects: []
+
+route_pressure:
+  - question_type: descriptive
+    validation_emphasis: coverage checks, denominator integrity, refreshed-extract comparison when relevant
+    leakage_default: often irrelevant when the claim is purely about observed data; never default to irrelevant without checking deployment or reporting frame
+  - question_type: exploratory
+    validation_emphasis: perturbation stability, triangulation, explicit hypothesis-generating boundary
+    leakage_default: possible_limited; protect against search-artifact inflation
+  - question_type: inferential
+    validation_emphasis: sampling logic, uncertainty calibration, design-aware checks
+    leakage_default: possible_limited; representativeness and dependence dominate
+  - question_type: predictive
+    validation_emphasis: holdout, temporal, group, rolling, or external validation as justified
+    leakage_default: central; treat every post-outcome, post-treatment, future-information, and deployment-unavailable field as suspect
+  - question_type: causal
+    validation_emphasis: design diagnostics, falsification, overlap, sensitivity, interference checks
+    leakage_default: central for post-treatment or post-outcome adjustment; central when the estimand is deployment-oriented
+  - question_type: mechanistic
+    validation_emphasis: simulation checks, calibration, boundary-condition checks, out-of-regime failure checks
+    leakage_default: possible_limited; identifiability and calibration dominate
+
+checklist:
+  - id: C01
+    question: Is leakage central, possible but limited, or irrelevant to the allowed claim? If irrelevant, what is the specific reason the claim boundary makes leakage inapplicable?
+    evidence_key: leakage_scan                 # {candidate_target_proxies, candidate_post_outcome_fields, candidate_future_info_fields, candidate_deployment_unavailable_fields, candidate_label_echoes} scanned from the data and from protocol_handoff.leakage_risks
+    writes_to: [evidence_rules.leakage.relevance, evidence_rules.leakage.rationale_if_irrelevant]
+  - id: C02
+    question: What are the forbidden variable classes for this project, chosen from post_outcome, post_treatment, future_information, direct_target_proxies, label_echoes, denominator_defined_artifacts, and deployment_unavailable (or deployment-frame-unavailable for reporting-frame claims)?
+    evidence_key: forbidden_class_candidates   # {forbidden_class: [fields_or_patterns_in_scope]} intersected with the dataset columns
+    writes_to: evidence_rules.leakage.forbidden_variable_classes
+  - id: C03
+    question: Are there project-specific leakage vectors beyond the standard classes (for example a feature engineered from a monitoring stream that ingests post-outcome data, or an external lookup table that resolves at deployment time)?
+    evidence_key: null
+    writes_to: evidence_rules.leakage.project_specific_vectors
+  - id: C04
+    question: Is confounding or identification central, secondary, or not relevant? State the rationale with reference to the claim_type, unit_of_analysis, and target_population.
+    evidence_key: null
+    writes_to: evidence_rules.confounding_identification
+  - id: C05
+    question: Does time order matter? Does grouping, hierarchy, or interference constrain later work? State each as a bool with a shared rationale.
+    evidence_key: null
+    writes_to: evidence_rules.structure
+  - id: C06
+    question: What validation logic must later stages satisfy, chosen from denominator_integrity, resampling_stability, holdout_scoring, temporal_backtesting, group_transfer_checks, external_corroboration, placebo_falsification, overlap_sensitivity, simulation_based_validation? Include the rationale grounding each choice in the claim boundary.
+    evidence_key: null
+    writes_to: evidence_rules.validation_logic
+  - id: C07
+    question: What are the high-level uncertainty expectations (interval_estimates, calibration_uncertainty, sensitivity_bands, perturbation_ranges, simulation_envelopes, or uncertainty_not_central)? Keep them high level; do not choose a final inferential procedure here.
+    evidence_key: null
+    writes_to: evidence_rules.uncertainty
+
+gates:
+  - id: C-leakage-ruled
+    depends_on: [C01, C02, C03]
+    condition: Leakage relevance is decided, forbidden variable classes are named, and project-specific leakage vectors are either enumerated or explicitly ruled out with reason
+  - id: C04-confounding-ruled
+    condition: Confounding or identification centrality is decided (central, secondary, or not relevant) with a rationale tied to claim_type and target_population
+  - id: C05-structure-ruled
+    condition: Time order, grouping, hierarchy, and interference relevance are each decided with a rationale
+  - id: C06-validation-ruled
+    condition: Validation logic is specified at a level later stages can implement without rewriting protocol, and every check is tied to a claim-boundary justification
+  - id: C07-uncertainty-framed
+    condition: High-level uncertainty expectations are stated and remain high-level (no final inferential procedure chosen here)
+
+research_questions:
+  - What constitutes leakage, target proxies, post-treatment adjustment, or forbidden conditioning in this domain?
+  - What evidence patterns are accepted for this question type and this claim type?
+  - What validation logic is typically required for similar claims, and which common templates over- or under-constrain the allowed claim?
+  - What high-level uncertainty statements are credible for similar analyses, and which would usually be dismissed as ceremonial?
+
+guidance:
+  - A verdict of leakage irrelevant is allowed only when the claim boundary genuinely makes leakage inapplicable. State the specific reason in evidence_rules.leakage.rationale_if_irrelevant.
+  - A verdict of no split needed does not mean no validation needed. If data_usage.mode is full_data or resampling_only, validation logic under C06 still must be specified.
+  - A verdict of confounding not central does not mean all comparison language is safe. Surface that distinction explicitly.
+  - Validation logic must be stated in a way later stages can implement without rewriting protocol. If the rule cannot be enforced as written, tighten it.
+  - Uncertainty expectations must stay high-level. Do not pin down an estimator, test, or interval method in this stage.
+  - When the active route is descriptive, include denominator_integrity in required_checks unless the claim genuinely does not depend on denominators.
+  - When the active route is predictive, the validation_logic must match the frozen-artifact choice locked in Cycle B.
+
+step4_additions:
+  description: After the standard decision, write a one-page protocol rule summary covering the fields below. The summary is derived from evidence_rules and becomes the anchor for Cycle D's prohibitions.
+  items:
+    - leakage_relevance_and_rationale
+    - forbidden_variable_classes
+    - project_specific_leakage_vectors
+    - confounding_or_identification_centrality
+    - time_order_relevance
+    - grouping_hierarchy_interference_relevance
+    - validation_logic_required_later
+    - uncertainty_framing
+    - claim_boundary_coherence_check
+
+pcs_checkpoint:
+  before: Step 5
+  items:
+    - "P: Do the required validation checks match the reality check the claim actually requires, rather than a template attached to the question type?"
+    - "C: Could another analyst implement every listed required_check without re-deriving protocol rules?"
+    - "S: Does the nearest alternative framing of validation_logic change the allowed claim boundary? If yes, append a narrowing entry to 01_formulation.yaml:claim_boundary.narrowing_log."
+  fail_action: On a Stability FAIL, revise evidence_rules or append a narrowing entry to 01_formulation.yaml:claim_boundary.narrowing_log.
+
+log_extension: null
