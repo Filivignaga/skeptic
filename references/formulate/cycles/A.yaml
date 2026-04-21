@@ -65,8 +65,6 @@ gates:
   - id: A-question-fit
     depends_on: [A01, A02, A03, A06]
     condition: Question is framed as a real stakeholder or scientific problem; at least two plausible framings considered; approved framing is useful, specific, not already sufficiently answered, plausibly answerable with available evidence; names stakeholder decision, candidate actions, and how the answer changes the chosen action (or academic alt names prior and evidence threshold)
-  - id: A08-audience-defined
-    condition: Intended audience identified and question framed to be relevant to them
   - id: A-no-red-flags
     depends_on: [A03, A04, A05]
     condition: No immediate structural red flags likely to derail formulation

@@ -29,12 +29,8 @@ checklist:
     writes_to: null
 
 gates:
-  - id: C01-type-classified
-    condition: Question classified into one of the six types
   - id: C02-type-supported
-    condition: Data collection and design plausibly support the classified type
-  - id: C03-downstream-constraints-stated
-    condition: Consequences for `protocol`, route overlays, and later `analyze` are stated
+    condition: Data collection and design plausibly support the classified type (an answer of "not supported; alternative is X" fails this gate)
 
 research_questions:
   - What question types and study designs have been used to answer similar questions?

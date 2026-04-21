@@ -229,16 +229,16 @@ Every cycle is specified by a cycle YAML under `references/{stage}/cycles/{cycle
 Rules:
 
 - Checklist IDs use the format `{CycleLetter}{TwoDigitNumber}` (A01, A02, B01, ...).
-- Every checklist item must be answered before the cycle's gates can be evaluated. If an item cannot be answered, record why and what is missing inside the cycle-history entry.
 - Each checklist item carries `evidence_key` (the JSON key the script must produce for this item, or `null` if judgment-driven) and `writes_to` (the canonical-YAML field or list of fields the answer populates, or `null` if the item only feeds gates).
+- Every item must be answered for a cycle to pass. Unanswered items feed `blocking_failures` directly; there is no 1:1 "was this answered" gate. Gates exist only for checks stricter than "the item was answered."
 - Gates depend on one or more checklist items. Single-dep gates encode the dep in the gate ID (e.g. `A01-loadable` depends on A01). Multi-dep gates use a short ID plus an explicit `depends_on: [ID1, ID2, ...]` field. If any depended-on item was not answered, the gate auto-fails without judgment.
-- The evaluation subagent verifies all checklist items before evaluating gate conditions.
+- The evaluation subagent lists the unanswered items, the blocking defects, and the failed gates. The model sums the three counts into `blocking_failures`.
 - Items may not be skipped unless a `skip_when` condition is present and satisfied. Absent `skip_when` means "never skip."
-- Every gate is binary: PASS or FAIL. A FAIL contributes to `blocking_failures`. If a project needs to proceed with a bounded risk, use `override: {reason, gate}` rather than a soft-fail concept.
+- Every gate is binary: PASS or FAIL. If a project needs to proceed with a bounded risk, use `override: {reason, gate}` rather than a soft-fail concept.
 
 ### 2. Decision Matrix
 
-Every Step 4 (Decision) in every stage uses a two-row matrix based on `blocking_failures` (count of blocking defects plus failed gates from the evaluation subagent):
+Every Step 4 (Decision) in every stage uses a two-row matrix based on `blocking_failures` (unanswered checklist items + blocking defects + failed gates from the evaluation subagent):
 
 | blocking_failures | forward actions allowed |
 |-------------------|------------------------|

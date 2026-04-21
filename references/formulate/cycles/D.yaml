@@ -66,36 +66,10 @@ checklist:
     writes_to: null
 
 gates:
-  - id: D01-terms-identified
-    condition: Abstract or ambiguous terms are identified
   - id: D02-terms-operationalized
     condition: Each key term is mapped to a column, metric, or derived metric
   - id: D02-competing-defs
     condition: For each critical operationalization, one alternative is instantiated and shown to yield the same claim_type and same top-ranked route; divergence forces a narrowing entry (added verbs_forbidden or tightened generalization_limit) in claim_boundary
-  - id: D03-availability-checked
-    condition: Practical availability is verified for chosen operationalizations
-  - id: D04-target-quantity-stated
-    condition: Target quantity or estimand is named
-  - id: D05-claim-boundary-stated
-    condition: Claim boundary is stated explicitly
-  - id: D06-unit-of-analysis-stated
-    condition: Unit of analysis is explicitly stated
-  - id: D06-context-stated
-    condition: Target population or deployment context is stated if relevant
-  - id: D07-route-candidates-ranked
-    condition: Route candidates are ranked and justified
-  - id: D08-related-concepts
-    condition: Related concepts, modifiers, or confounders are identified
-  - id: D09-assumptions-stated
-    condition: Key assumptions are stated explicitly
-  - id: D10-baseline-stated
-    condition: Baseline the project must beat is stated
-  - id: D11-error-costs-stated
-    condition: Error types and their costs in the decision context are stated, including which errors are unacceptable
-  - id: D12-uplift-stated
-    condition: Minimum useful uplift over baseline is stated
-  - id: D13-prior-art-reviewed
-    condition: Prior art or analogous work is reviewed and its consequences for scope, assumptions, or project order are stated
   - id: D-unfeasible-flagged
     depends_on: [D01, D02]
     condition: Un-operationalizable terms are flagged with a recommended action

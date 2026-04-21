@@ -249,13 +249,12 @@ Agent(
   Script evidence produced this iteration: {the candidate script_evidence}
   User observations: {user's questions or observations, if any}
 
-  Before evaluating gates, verify that every checklist item for this cycle was
-  answered with evidence in the script output. If any item was not answered,
-  the gates that depend on it auto-fail.
-
   Produce this structured output, in order, with these exact section headings:
 
   EVALUATION: Cycle {X} - {focus}
+
+  UNANSWERED CHECKLIST ITEMS (list the IDs of any checklist item that was not answered -- absence of an item's evidence_key in the script output, or absence of the corresponding judgment, counts as unanswered):
+  - Unanswered: [list of IDs, or "none"]
 
   DEFECT SCAN (adversarial mode):
   Assume the work contains errors. Actively falsify each gate and checklist
@@ -273,7 +272,7 @@ Agent(
   - Defect 1: BLOCKING | NON-BLOCKING - [one-line reason]
   - Defect 2: BLOCKING | NON-BLOCKING - [one-line reason]
 
-  GATE ASSESSMENTS (use gate IDs from the cycle YAML; list every gate, not only failures):
+  GATE ASSESSMENTS (use gate IDs from the cycle YAML; list every gate, not only failures. A gate whose `depends_on` includes any unanswered item fails automatically):
   - {gate_id}: PASS | FAIL - [evidence]
 
   ALTERNATIVES CONSIDERED:
@@ -285,10 +284,8 @@ Agent(
   PROTOCOL IMPLICATIONS: [facts this cycle surfaced for `protocol`, or "none"]
   RECOMMENDED FOLLOW-UP CYCLE: [topic and why, or "none"]
 
-  VERDICT:
-  PASS = zero BLOCKING defects and zero FAIL gates.
-  FAIL = one or more BLOCKING defects or FAIL gates.
-  Verdict: [PASS | FAIL]
+  FINAL COUNTS:
+  Unanswered items: [count]
   Blocking defects: [count]
   Failed gates: [count]
 
@@ -297,15 +294,15 @@ Agent(
 )
 ```
 
-Both outputs are preserved verbatim. The model parses two values from the evaluation output: the `Blocking defects` count and the `Failed gates` count. `blocking_failures = blocking_defects + failed_gates`; `blocking_failures == 0` means PASS.
+Both outputs are preserved verbatim. The model parses three counts from the evaluation output: `Unanswered items`, `Blocking defects`, `Failed gates`. `blocking_failures = unanswered + blocking_defects + failed_gates`; `blocking_failures == 0` means PASS. Every checklist item must be answered for the cycle to pass -- unanswered items feed the count directly so there is no need for a 1:1 gate per item.
 
 ### Step 4: Decision
 
 When both subagents return:
 
 1. Verify each result is non-empty and contains its required sections. If malformed, escalate to the user (interactive) or follow `../auto-mode.md` (auto).
-2. Parse `Verdict`, `Blocking defects`, `Failed gates`.
-3. Compute `blocking_failures`.
+2. Parse `Unanswered items`, `Blocking defects`, `Failed gates` from the evaluation output.
+3. Compute `blocking_failures = unanswered + blocking_defects + failed_gates`.
 4. Apply the decision matrix.
 
 Decision matrix:

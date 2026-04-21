@@ -45,18 +45,15 @@ checklist:
     writes_to: protocol_handoff.open_questions
 
 gates:
-  - id: E01-collection-understood
-    condition: Data collection process is understood well enough to proceed
   - id: E-biases-assessed
     depends_on: [E05, E06]
     condition: Collection, selection, recall, measurement, and other relevant biases are assessed against the named taxonomy
-  - id: E06-generalizability
+  - id: E-generalizability
+    depends_on: [E05, E06]
     condition: Generalizability risks relative to target population or deployment context are assessed
   - id: E-data-usage-facts
     depends_on: [E01, E02, E03, E04]
     condition: Facts needed by `protocol` to decide data-usage mode are surfaced
-  - id: E08-open-protocol-questions
-    condition: Unresolved questions for `protocol` are explicitly listed
 
 research_questions:
   - How is this type of data typically collected in practice, and what limitations usually follow?
