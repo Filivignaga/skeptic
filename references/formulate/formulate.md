@@ -131,8 +131,8 @@ pcs_review:
 Rules:
 - The YAML must parse with a standard YAML loader after every write.
 - `cycle_history` is append-only. Superseded iterations stay in the list; new iterations append.
-- Only downstream stages append to `claim_boundary.narrowing_log`. `formulate` must not write to it after stage close.
-- Write only fields that apply. Do not pre-fill optional fields with `null` or empty containers just because the schema shows them.
+- Only downstream stages append to `claim_boundary.narrowing_log`.
+- Write only fields that apply.
 - Use only ASCII characters in generated YAML content. Replace em dashes with `--`, curly quotes with straight quotes. Source-data strings may keep non-ASCII when the encoding is declared.
 
 ## Cycle Structure
@@ -145,8 +145,6 @@ Rules:
 | D | Operationalization | Yes |
 | E | Collection and Biases | Yes |
 | F1, F2, ... | Follow-ups | Conditional |
-
-Do not skip A through E. Do not collapse them into one pass.
 
 ## Per-cycle Reference Files
 
@@ -169,7 +167,7 @@ Before running cycle X, load only `cycles/{X}.yaml`. Each cycle YAML carries:
 - `guidance`: short, cycle-specific judgment rules
 - `step4_additions`, `pcs_checkpoint`, `log_extension`: present only when the cycle adds a specific discipline
 
-The stage entry (this file) is read once at stage start. Per-cycle files are loaded one at a time as each cycle runs. Do not re-read the full stage entry between cycles.
+The stage entry (this file) is read once at stage start. Per-cycle files are loaded one at a time as each cycle runs.
 
 Follow-up cycles use `cycles/F_template.yaml` as a starting shape. Materialize the concrete Fn spec inside the canonical YAML (not as a new file on disk) when a follow-up is opened.
 
@@ -183,7 +181,7 @@ This protocol applies to every cycle, mandatory or follow-up.
 2. Recover prior stage state:
    - Cycle A: no prior state to recover.
    - First cycle entered in a fresh session (not Cycle A), or first cycle after a backtrack reopens the stage: read `01_formulation.yaml` once to load the contract, claim boundary, protocol handoff, and prior `cycle_history`.
-   - Every other case (continuing the same chat session): do not re-read `01_formulation.yaml`. The model just wrote it; its content is already in context.
+   - Every other case (continuing the same chat session): skip the re-read; the canonical YAML content is already in context from the cycle that just wrote it.
 3. Cycle A only: create the project folder structure, copy raw data and documentation into the data directory, initialize `01_formulation.yaml` with `stage`, `schema_version`, `project`, and `status.current_cycle: A`, and create `01_formulation.py` with the shape specified below.
 4. Every cycle: extend `01_formulation.py` by writing or updating the cycle's function (`run_cycle_a`, `run_cycle_b`, ...). The function must produce every non-null `evidence_key` named in the cycle's checklist.
 5. Run `python {scripts_dir_name}/01_formulation.py --cycle {cycle}`. Capture stdout.
@@ -324,11 +322,11 @@ Always available regardless of `blocking_failures`:
 - `archive` -> stop with documentation of why
 - `override` -> user states the specific reason a FAIL is incorrect; logged as `override: {reason, gate}`; forward actions unlock
 
-Interactive mode: present the synthesized assessment and the allowed actions via `AskUserQuestion`. Do not invoke any other tool until the user answers.
+Interactive mode: present the synthesized assessment and the allowed actions via `AskUserQuestion`. Wait for the user's answer before invoking any other tool.
 
 Auto mode: apply the autonomous decision protocol from `../auto-mode.md`.
 
-Do not fabricate findings or force optimistic assessments to keep the process moving. If the data cannot answer the cycle's question, choose `data_insufficient`, `reformulate`, or `archive`.
+If the data cannot answer the cycle's question, choose `data_insufficient`, `reformulate`, or `archive`.
 
 ### Step 5: Log
 
@@ -345,7 +343,7 @@ Write conditional fields only when they apply:
 - `decision_reason`: required when `decision != pass`.
 - `override`: `{reason, gate}` only when a FAIL was overridden.
 
-Do not re-serialize gate verdicts. Gate-level detail lives in `evaluation_verbatim`; `blocking_failures` (0 = PASS, >0 = FAIL) is the enforceable summary.
+Gate-level detail lives in `evaluation_verbatim`; `blocking_failures` (0 = PASS, >0 = FAIL) is the enforceable summary. The cycle_history entry stores only those two.
 
 Update every canonical-YAML field named in a checklist item's `writes_to`, but only for fields this project actually populates. Leave non-applicable optional fields out entirely rather than setting them to null. Cycle-specific additions (`step4_additions`, `pcs_checkpoint`) are applied at this point if the cycle YAML defines them.
 
@@ -362,7 +360,7 @@ The loop ends when all of the following hold:
 - interactive mode: the user explicitly approves the final contract, claim boundary, and protocol handoff
 - auto mode: the stage approval gate in `../auto-mode.md` completes
 
-Do not close the loop because it "seems good enough." Finalization requires explicit stage-close discipline.
+Finalization requires explicit stage-close discipline.
 
 ## PCS Subagent Review
 
@@ -405,7 +403,7 @@ Agent(
 
 Store the full output in `pcs_review.verbatim`.
 
-- Interactive mode: present via `AskUserQuestion` with options `satisfied`, `valid_concern`, `disagree_override`. Do not invoke any other tool until the user answers.
+- Interactive mode: present via `AskUserQuestion` with options `satisfied`, `valid_concern`, `disagree_override`. Wait for the user's answer before invoking any other tool.
 - Auto mode: apply `../auto-mode.md` stage-close rules.
 
 Record the chosen disposition and reason in `pcs_review.disposition` and `pcs_review.disposition_reason`.
@@ -416,7 +414,7 @@ The subagent advises. It does not silently widen scope or bypass a blocking conc
 
 After the PCS review clears or the user overrides it:
 
-1. Finalize `claim_boundary`: set `scope`, `evidence_ceiling`, and `generalization_limit` from Cycle D and Cycle E evidence. Add project-specific verb overrides under `verbs_forbidden_added` (and, rarely, `verbs_allowed_added`) when Cycle D operationalization tradeoffs or Cycle E bias findings demand narrowing beyond the defaults. The default verb lists implied by `claim_type` are the table below; downstream stages derive the effective verb set from `claim_type` + the `*_added` overrides. Do not serialize the defaults into the canonical YAML.
+1. Finalize `claim_boundary`: set `scope`, `evidence_ceiling`, and `generalization_limit` from Cycle D and Cycle E evidence. Add project-specific verb overrides under `verbs_forbidden_added` (and, rarely, `verbs_allowed_added`) when Cycle D operationalization tradeoffs or Cycle E bias findings demand narrowing beyond the defaults. Serialize only the `*_added` overrides; the default verb lists implied by `claim_type` live in the table below, and downstream stages derive the effective verb set from `claim_type` + the overrides.
 
    | question_type | verbs_allowed (defaults) | verbs_forbidden (defaults) |
    |---------------|--------------------------|----------------------------|
@@ -429,7 +427,7 @@ After the PCS review clears or the user overrides it:
 
 2. Parse `01_formulation.yaml` with a standard YAML loader. Repair if parsing fails.
 
-3. Render `01_formulation.md` from the canonical YAML. Keep the report compact: one `##` section per top-level YAML key that is populated (`Approved Question`, `Decision Context`, `Operationalization`, `Route Candidates`, `Baseline / Uplift / Error Costs`, `Key Assumptions`, `Claim Boundary` with effective verbs derived from `claim_type` + overrides, `Intended and Prohibited Uses`, `Provenance`, `Protocol Handoff`, `Cycle Summary` with one line per cycle, `PCS Assessment`). Omit sections whose YAML keys are empty or absent. Do not re-embed subagent verbatims; they already live in the YAML.
+3. Render `01_formulation.md` from the canonical YAML. Keep the report compact: one `##` section per top-level YAML key that is populated (`Approved Question`, `Decision Context`, `Operationalization`, `Route Candidates`, `Baseline / Uplift / Error Costs`, `Key Assumptions`, `Claim Boundary` with effective verbs derived from `claim_type` + overrides, `Intended and Prohibited Uses`, `Provenance`, `Protocol Handoff`, `Cycle Summary` with one line per cycle, `PCS Assessment`). Omit sections whose YAML keys are empty or absent. Reference the subagent verbatims through the YAML; the markdown is a rendered summary.
 
 4. Update `README.md` with:
 
@@ -450,7 +448,7 @@ After the PCS review clears or the user overrides it:
 
 If a downstream stage reopens `formulate`:
 
-- Preserve every entry in `cycle_history`. Append new iterations; do not edit old ones.
+- Preserve every entry in `cycle_history`. Append new iterations.
 - Unlock the stage: set `status.locked_at: null`.
 - Re-run the affected cycles and re-render the markdown at the end.
 - Downstream narrowing entries already written to `claim_boundary.narrowing_log` remain in place.

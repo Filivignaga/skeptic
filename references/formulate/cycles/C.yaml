@@ -43,9 +43,9 @@ research_questions:
 
 guidance:
   - The six types are descriptive, exploratory, inferential, predictive, causal, mechanistic. See `../../core-principles.md` for admissible evidence and interpretation boundary per type.
-  - Cycle C produces exactly two things. A locked primary question type, plus the set of "facts and recommended ranges" that `protocol` will use to make its own decisions. Do not pre-empt `protocol`.
-  - Classification is not a model-selection shortcut. Classification or unsupervised methods do not become predictive by default just because they are machine-learning methods.
-  - Inferential questions estimate quantities in a population or sampling frame. Predictive questions target unseen outcomes in a deployment context. Do not conflate.
+  - Cycle C produces exactly two things. A locked primary question type, plus the set of "facts and recommended ranges" that `protocol` will use to make its own decisions.
+  - Classification and unsupervised methods are predictive only when the question targets unseen-outcome forecasting in a defined deployment; otherwise they serve exploratory, descriptive, or inferential questions.
+  - Inferential questions estimate quantities in a population or sampling frame. Predictive questions target unseen outcomes in a deployment context.
   - contract.route_candidates is seeded here and refined further in Cycle D.
 
 step4_additions: null

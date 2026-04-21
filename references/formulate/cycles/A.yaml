@@ -90,7 +90,7 @@ guidance:
   - If the source contains non-ASCII text, verify values display correctly before proceeding.
   - Framing must name the stakeholder, the candidate actions, and how the answer changes which action they pick. If the project is academic, name the prior to be updated and the evidence threshold that would update it.
   - At least two plausible framings must be surfaced before one is approved. Record rejected framings inside contract.decision_context so they survive backtracking.
-  - Do not create split artifacts, folds, or any data visibility partitioning. Those belong to `protocol`.
+  - All splits, folds, and data-visibility partitioning belong to `protocol`.
 
 step4_additions: null
 pcs_checkpoint: null

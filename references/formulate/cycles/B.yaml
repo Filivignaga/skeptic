@@ -50,7 +50,7 @@ research_questions:
   - What sampling or instrumentation details matter for interpreting these variables correctly?
 
 guidance:
-  - Where materially different interpretations exist, force the user to choose. Do not let ambiguity survive into later stages.
+  - Where materially different interpretations exist, force the user to choose.
   - Record the chosen interpretation in contract.operationalization with rationale, and list rejected interpretations in rejected_alternatives.
   - The "ideal dataset" gap is not a failure signal by itself. Record it so `protocol` and later stages can reason about it.
   - contract.key_assumptions may be appended from any checklist item when an assumption surfaces that later stages must respect.

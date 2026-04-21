@@ -109,7 +109,7 @@ research_questions:
   - What baseline or success criteria are used in similar work, and do they change the practical framing here?
 
 guidance:
-  - If no viable operationalization exists for a key term, do not bury it. Flag it and force the user decision in Step 4.
+  - If no viable operationalization exists for a key term, flag it and force the user decision in Step 4.
   - The approved question wording must include operationalized definitions inline.
   - If the question is inferential or causal, `contract.hypothesis` must be populated (null, alt, treatment, outcome). For other types, omit `contract.hypothesis`.
 
@@ -129,7 +129,6 @@ step4_additions:
     - hypothesis_structure_if_inferential_or_causal
     - intended_and_prohibited_uses
   user_approval: required
-  note: Do not auto-finalize this cycle without explicit user approval of the wording and the boundary.
 
 pcs_checkpoint:
   before: Step 5

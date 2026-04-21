@@ -65,8 +65,7 @@ research_questions:
   - What validation patterns are commonly needed for similar questions (refreshed data, external corroboration, group-aware checks, rolling validation, resampling, or something else)?
 
 guidance:
-  - Do not decide the final data-usage mode here. Surface the facts that `protocol` needs to decide those things.
-  - Do not create splits, folds, frozen holdouts, or validation artifacts.
+  - Surface the facts `protocol` needs to decide the data-usage mode. All splits, folds, frozen holdouts, and validation artifacts belong to `protocol`.
   - For any bias row rated serious or critical, require a quantitative bound or an explicit deferral. "Unknown" is only acceptable with a concrete deferral that names what would allow bounding.
   - protocol_handoff.data_usage_considerations collects collection purpose, sampling frame, upstream exclusions, and structural notes (confounding / time-ordering / grouping / monitoring) as separate bullets when relevant.
 
