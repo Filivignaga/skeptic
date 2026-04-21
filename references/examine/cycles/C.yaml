@@ -67,12 +67,10 @@ guidance:
   - Opening a Dn follow-up requires that the narrow topic would materially change the support picture; Dn is reserved for a single well-scoped question, not for generic extra exploration.
 
 step4_additions: null
-pcs_checkpoint:
-  before: Step 5
+pcs_focus:
   items:
     - "P: Does the support characterization reflect what the visible data shows, or did framing choices overread first-pass patterns? Cite the specific A02 or B02 evidence that grounds the claim."
     - "C: Can another analyst reproduce each stability verdict in C03 from the canonical YAML and script alone?"
     - "S: For every analysis-contract-relevant pattern, does at least one reasonable alternative confirm or weaken it (not just repeat it)?"
-  fail_action: On a Stability FAIL, demote the affected pattern to weakly_supported or unsupported, append the narrowing to claim_boundary_narrowing, or set backtracking_decision to the matching target.
 
 log_extension: null

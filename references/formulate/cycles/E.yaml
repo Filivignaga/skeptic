@@ -78,5 +78,5 @@ step4_additions:
     - data_collection_and_generalizability_risks
     - unresolved_protocol_questions
 
-pcs_checkpoint: null
+pcs_focus: null
 log_extension: null

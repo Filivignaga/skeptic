@@ -78,5 +78,5 @@ step4_additions:
     - main_risk_drivers
     - robustness_summary_paragraph
 
-pcs_checkpoint: null
+pcs_focus: null
 log_extension: null

@@ -80,5 +80,5 @@ guidance:
   - If upstream artifacts contradict each other (for example, 05_analysis.md narrows the boundary further than 06_evaluation.md records), stop and reopen the affected upstream stage.
 
 step4_additions: null
-pcs_checkpoint: null
+pcs_focus: null
 log_extension: null

@@ -55,5 +55,5 @@ guidance:
   - If held-out data must be unsealed, verify protocol authorizes unsealing for this stage before executing the check. Unauthorized unsealing is a BLOCKING defect and forces reopening protocol.
 
 step4_additions: null
-pcs_checkpoint: null
+pcs_focus: null
 log_extension: null

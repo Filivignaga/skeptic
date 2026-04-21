@@ -66,5 +66,5 @@ step4_additions:
     - declared_warn_pass_rate
     - constraint_file_paths
 
-pcs_checkpoint: null
+pcs_focus: null
 log_extension: null

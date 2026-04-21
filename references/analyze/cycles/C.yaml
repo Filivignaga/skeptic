@@ -71,5 +71,5 @@ guidance:
   - Library versions and implementation details that affect numerical output (for example, BLAS backend or optimizer defaults) should be captured alongside seeds when they could change results materially.
 
 step4_additions: null
-pcs_checkpoint: null
+pcs_focus: null
 log_extension: null

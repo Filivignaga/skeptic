@@ -71,5 +71,5 @@ guidance:
   - If a view the route file prohibits appears important, record it in scope_excluded_views and raise the topic as a route_pressure so analyze can address it under its contract lock; the view itself stays unexecuted in examine.
 
 step4_additions: null
-pcs_checkpoint: null
+pcs_focus: null
 log_extension: null

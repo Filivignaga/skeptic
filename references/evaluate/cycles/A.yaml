@@ -82,5 +82,5 @@ guidance:
   - Record every route-specific check the route file requires, mapped to the cycle that will execute it.
 
 step4_additions: null
-pcs_checkpoint: null
+pcs_focus: null
 log_extension: null

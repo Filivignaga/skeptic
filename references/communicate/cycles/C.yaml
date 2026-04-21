@@ -79,12 +79,10 @@ guidance:
 
 step4_additions: null
 
-pcs_checkpoint:
-  before: Step 5
+pcs_focus:
   items:
     - "P: Does translated language reflect the evaluate verdict strength exactly, or was assertive language applied to a survived-with-caveats claim?"
     - "C: Would a second analyst translating the same claim reach the same language strength and caveat visibility?"
     - "S: Can each translated claim be traced back to the specific evaluate registry row and verdict that authorizes it?"
-  fail_action: On a Stability FAIL, downgrade the language or surface the caveat more prominently; record the narrowing in boundary.narrowing if the downgrade tightens the boundary.
 
 log_extension: null

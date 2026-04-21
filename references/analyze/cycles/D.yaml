@@ -77,5 +77,5 @@ guidance:
   - All-challengers-diverging is a finding for evaluate, not a trigger for revising the primary result.
 
 step4_additions: null
-pcs_checkpoint: null
+pcs_focus: null
 log_extension: null

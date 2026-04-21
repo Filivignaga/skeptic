@@ -50,5 +50,5 @@ guidance:
   - contract.key_assumptions may be appended from any checklist item when an assumption surfaces that later stages must respect.
 
 step4_additions: null
-pcs_checkpoint: null
+pcs_focus: null
 log_extension: null

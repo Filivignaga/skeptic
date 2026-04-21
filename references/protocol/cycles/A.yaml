@@ -77,5 +77,5 @@ step4_additions:
     - minimum_decisions_for_this_stage
   user_approval: required_if_protocol_blockers_present
 
-pcs_checkpoint: null
+pcs_focus: null
 log_extension: null

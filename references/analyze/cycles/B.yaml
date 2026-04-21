@@ -64,5 +64,5 @@ guidance:
   - If amendment narrows the claim boundary, append a narrowing entry to claim_boundary.narrowing_log_additions with the triggering assumption, the fallback invoked, and the narrowed boundary.
 
 step4_additions: null
-pcs_checkpoint: null
+pcs_focus: null
 log_extension: null

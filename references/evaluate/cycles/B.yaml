@@ -71,5 +71,5 @@ guidance:
   - The three stability verdicts are: stable (conclusions survive every perturbation), conditionally stable (survives most, sensitive to specific axes -- caveats required), unstable (changes materially under reasonable perturbations -- claim must be downgraded or killed).
 
 step4_additions: null
-pcs_checkpoint: null
+pcs_focus: null
 log_extension: null

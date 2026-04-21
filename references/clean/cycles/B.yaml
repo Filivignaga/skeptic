@@ -73,5 +73,5 @@ guidance:
   - Missingness that carries meaning (indicator of a real event, structural zero, deliberate censoring) must be recorded as a meaning hypothesis, not quietly imputed in Cycle C.
 
 step4_additions: null
-pcs_checkpoint: null
+pcs_focus: null
 log_extension: null

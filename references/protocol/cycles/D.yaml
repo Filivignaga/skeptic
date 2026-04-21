@@ -73,5 +73,5 @@ step4_additions:
     - analyze_claim_limits
     - backtracking_triggers_with_return_paths
 
-pcs_checkpoint: null
+pcs_focus: null
 log_extension: null

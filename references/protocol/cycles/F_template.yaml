@@ -60,5 +60,5 @@ guidance:
   - Never defer a decision that belongs to protocol (data-usage mode, frozen artifacts, leakage rules, validation logic, prohibitions, backtracking triggers) into a follow-up without closing it here.
 
 step4_additions: null
-pcs_checkpoint: null
+pcs_focus: null
 log_extension: null

@@ -70,5 +70,5 @@ guidance:
   - Any transform that must be fit from data for later use must respect protocol-defined visibility rules and must not use reserved validation, future, or restricted artifacts.
 
 step4_additions: null
-pcs_checkpoint: null
+pcs_focus: null
 log_extension: null

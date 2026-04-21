@@ -72,5 +72,5 @@ step4_additions:
     - explicit_next_stage_is_analyze_and_no_contract_selection_here
   user_approval: required
 
-pcs_checkpoint: null
+pcs_focus: null
 log_extension: null

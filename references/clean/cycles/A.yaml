@@ -99,5 +99,5 @@ guidance:
   - Route files may narrow or prohibit actions; they may not widen this stage-core or the protocol contract.
 
 step4_additions: null
-pcs_checkpoint: null
+pcs_focus: null
 log_extension: null

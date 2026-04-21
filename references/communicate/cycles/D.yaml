@@ -69,5 +69,5 @@ guidance:
   - Calibration is symmetric: false confidence and false alarm both count as miscommunication.
 
 step4_additions: null
-pcs_checkpoint: null
+pcs_focus: null
 log_extension: null

@@ -116,7 +116,7 @@ Each per-cycle YAML carries:
 - `gates`: verifiable conditions. Single-dep gates encode the dep in the ID (e.g. `A01-loadable`); multi-dep gates use a short ID plus `depends_on`
 - `research_questions`: topics for the research subagent
 - `guidance`: short, cycle-specific judgment rules
-- `step4_additions`, `pcs_checkpoint`, `log_extension`: present only when the cycle adds a specific discipline
+- `step4_additions`, `pcs_focus`, `log_extension`: present only when the cycle adds a specific discipline. `pcs_focus` holds cycle-specific PCS questions injected into the evaluation subagent prompt; it has no separate Step 5 application.
 
 ### Load Pattern
 
@@ -289,6 +289,9 @@ projects_root/
       06_evaluation.py
       07_communication.py
       *.json                   # Optional companion artifacts shared across cycles.
+      stdout/                  # Per-cycle-iteration stdout captures, one file per iteration:
+                               #   cycle_{cycle}_iter{iteration}.json
+                               # Referenced by cycle_history[*].script_evidence_ref.
     readme_name
 ```
 
@@ -312,6 +315,8 @@ Rules:
 - Each function returns a dict. `main()` prints exactly one JSON object to stdout. Nothing else on stdout.
 - The script reads the canonical stage YAML to find data paths and prior decisions. It does not write the canonical YAML; only the model writes the canonical YAML.
 - Heavy data (full DataFrames, long arrays) is summarized, not dumped. Evidence packets stay compact.
+- Each cycle's stdout is written verbatim to `{scripts_dir_name}/stdout/cycle_{cycle}_iter{iteration}.json`. `cycle_history[*].script_evidence` in the canonical YAML stores only a compact summary (4-8 one-line bullets, or one-line value per `evidence_key`) plus `script_evidence_ref` pointing at that file. Do not dump the full JSON into the canonical YAML.
+- Per-file provenance (schema, encoding, sha256) is emitted only the first time a file is recorded -- typically Cycle A iter 1. After it lands in `provenance.files`, neither the stdout packet nor `cycle_history[*].script_evidence` re-emits those fields; downstream cycles reference those files by filename.
 - Seeds are set inside the function whenever stochastic steps run, and the seed value is echoed into the evidence packet.
 - After script execution, scan stdout and stderr for unhandled exceptions. Any unhandled exception is a blocking defect and must be fixed before continuing, unless the function body explicitly marks an expected failure with a `# expected_failure` comment.
 
@@ -326,6 +331,7 @@ Rules:
 - Re-run from raw data plus protocol-defined frozen artifacts, not from ad hoc saved intermediates.
 - Record random seeds when stochastic procedures matter.
 - Preserve an audit trail when backtracking. `cycle_history` is append-only; new iterations append to the list. Do not edit past entries.
+- Never add ad-hoc keys to `cycle_history` entries. The schema defined in the stage entry file is exhaustive. If a finding has no schema home, fold it into `subagents.open_risks`, attach it to an existing `subagents.decisions[*]` or `subagents.rejected_alternatives[*]` entry, or omit it. Never invent a new field.
 - Generated project documents must reference real project files. Do not leave stale references to deleted artifacts, placeholder scripts, or personal workspace paths.
 - README summaries must be derived from the actual project filesystem state and verified against artifacts on disk, not written from memory.
 

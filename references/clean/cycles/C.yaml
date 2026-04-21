@@ -77,12 +77,10 @@ guidance:
 
 step4_additions: null
 
-pcs_checkpoint:
-  before: Step 5
+pcs_focus:
   items:
     - "P: Do cleaning policies match the data-generating process rather than convenience? Cite the rationale source for each material decision."
     - "C: Is every material transformation implemented in {scripts_dir_name}/03_cleaning.py code that another analyst can rerun from the canonical YAML and the raw files alone?"
     - "S: Would any single judgment call, reversed, change the analyzable population enough to alter the claim boundary?"
-  fail_action: On a Stability FAIL, revise the cleaning policy or append a narrowing entry to claim_boundary_updates.narrowing_log (via the canonical YAML, only by this stage while still open).
 
 log_extension: null

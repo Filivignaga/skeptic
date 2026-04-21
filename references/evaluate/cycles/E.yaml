@@ -86,12 +86,10 @@ step4_additions:
     - decision_alignment_statement
   user_approval: required
 
-pcs_checkpoint:
-  before: Step 5
+pcs_focus:
   items:
     - "P: Do survival verdicts align with what protocol's validation logic would predict for this evidence profile? Cite 02_protocol.yaml."
     - "C: Would reversing any single adjudication decision change a verdict from survived to survived-with-caveats (or vice versa)?"
     - "S: Is every verdict traceable to specific cycle_history entries from Cycles B, C, and D with no assertion-only reasoning?"
-  fail_action: On a Stability FAIL, re-adjudicate or downgrade the affected verdict.
 
 log_extension: null

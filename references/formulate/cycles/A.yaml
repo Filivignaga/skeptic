@@ -8,14 +8,7 @@ upstream:
   - project.rough_question
 
 setup_side_effects:
-  - Create {projects_root}/{project-name}/{data_dir_name}/
-  - Create {projects_root}/{project-name}/{docs_dir_name}/
-  - Create {projects_root}/{project-name}/{scripts_dir_name}/
-  - Copy each raw data source into {data_dir_name}/ without modification
-  - Copy any provided documentation (codebook, README, data dictionary, collection notes) into {data_dir_name}/
-  - Create {readme_name} with project name, date, and data source names
-  - Initialize {docs_dir_name}/01_formulation.yaml with stage, schema_version, project (including project.started_at as ISO timestamp), and status.current_cycle: A
-  - Create {scripts_dir_name}/01_formulation.py with the shape specified in the stage entry
+  - Execute the numbered bootstrap sequence in ../bootstrap.md (project folder creation, raw data copy, documentation copy, README init, canonical YAML init, script_shape.py copy). One-time only; not rerun on backtrack.
 
 checklist:
   - id: A00
@@ -91,5 +84,5 @@ guidance:
   - All splits, folds, and data-visibility partitioning belong to `protocol`.
 
 step4_additions: null
-pcs_checkpoint: null
+pcs_focus: null
 log_extension: null

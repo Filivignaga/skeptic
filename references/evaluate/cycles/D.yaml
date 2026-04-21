@@ -79,5 +79,5 @@ guidance:
   - Scale translation applies before verdicts. A statistically-notable effect on an uninterpretable scale is insufficient evidence for a survived verdict.
 
 step4_additions: null
-pcs_checkpoint: null
+pcs_focus: null
 log_extension: null

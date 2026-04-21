@@ -92,5 +92,5 @@ step4_additions:
     - protocol_commitment_reconciliation_confirmed
   user_approval: required
 
-pcs_checkpoint: null
+pcs_focus: null
 log_extension: null

@@ -50,5 +50,5 @@ guidance:
   - Close the follow-up as pass, acknowledge_gap, data_insufficient, reopen_protocol, reopen_formulate, or archive under the standard decision matrix.
 
 step4_additions: null
-pcs_checkpoint: null
+pcs_focus: null
 log_extension: null
