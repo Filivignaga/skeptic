@@ -57,12 +57,10 @@ project:
 status:
   current_cycle:                    # A|B|C|D|E|F1|F2|null
   completed_cycles: []
-  stage_locked: false
-  locked_at: null                   # set at stage close
+  locked_at: null                   # set at stage close; presence = locked
 
 provenance:                         # immutable audit facts only
-  file_hashes: {}                   # {filename: sha256}
-  encoding: {}                      # {filename: detected_encoding}
+  files: {}                         # {filename: {sha256, encoding}}
 
 contract:
   approved_question:
@@ -70,15 +68,8 @@ contract:
   target_quantity:
   unit_of_analysis:
   audience:
-  decision_context:
-    mode:                           # stakeholder | academic
-    # when mode == stakeholder:
-    stakeholder:
-    actions: []
-    how_answer_changes_action:
-    # when mode == academic:
-    prior:
-    evidence_threshold:
+  decision_context:                 # stakeholder -> {stakeholder, actions, how_answer_changes_action}; academic -> {prior, evidence_threshold}
+    mode:
   route_candidates: []              # ordered, best first
   baseline:
   minimum_uplift:
@@ -88,9 +79,7 @@ contract:
   derived_metrics: {}               # {name: formula}
   intended_uses: []
   prohibited_uses: []
-  # Optional (include only when populated):
-  # target_population:              # include when target population is central to the question
-  # hypothesis:                     # required for inferential and causal: {null, alt, treatment, outcome}
+  # Add target_population (central population) and hypothesis {null, alt, treatment, outcome} (inferential/causal) only when relevant.
 
 claim_boundary:
   claim_type:
@@ -98,16 +87,10 @@ claim_boundary:
   evidence_ceiling:
   generalization_limit:
   narrowing_log: []                 # appended by downstream stages only
-  # Optional (include only when the project diverges from the question-type defaults):
-  # verbs_forbidden_added: []       # project-specific verbs to add on top of the default-forbidden list
-  # verbs_allowed_added: []         # rare; project-specific verbs to re-allow
-  # Default verbs_allowed / verbs_forbidden are implied by claim_type. See the claim-boundary
-  # defaults table in the Finalization section. Do NOT serialize the defaults into this file.
+  # Default verbs are implied by claim_type (see Finalization table). Add verbs_forbidden_added / verbs_allowed_added only when diverging.
 
 protocol_handoff:
-  data_usage_considerations: []     # include collection purpose, sampling frame, upstream exclusions,
-                                    # and structural notes (confounding / time-ordering / grouping /
-                                    # monitoring) as separate bullets when relevant
+  data_usage_considerations: []     # collection purpose, sampling frame, upstream exclusions, structural notes (confounding / time-ordering / grouping / monitoring)
   leakage_risks: []
   forbidden_variable_candidates: []
   validation_needs: []
@@ -124,21 +107,17 @@ Each `cycle_history` entry:
 ```yaml
 - cycle:                            # A|B|C|D|E|F1|...
   iteration:                        # 1-based per cycle letter
-  checklist_complete: true          # false when any checklist item could not be answered
-  script_evidence: {}               # the JSON object captured from the script's stdout
+  unanswered: []                    # checklist IDs not answered; empty = all answered
+  script_evidence: {}               # JSON captured from script stdout
   subagents:
     research_verbatim:              # preserved with inline source URLs
     evaluation_verbatim:            # preserved; contains per-gate reasoning
-    evaluation_verdict:             # PASS|FAIL
-    blocking_failures:              # int (blocking defects + failed gates)
+    blocking_failures:              # int (0 = PASS, >0 = FAIL)
   decision:                         # pass|iterate|acknowledge_gap|data_insufficient|reformulate|archive
-  # Optional (include only when applicable):
-  # unanswered: [A03, A05]          # required when checklist_complete is false
-  # decision_reason:                # required when decision != pass
-  # override:                       # {reason, gate} when a FAIL was overridden; omit otherwise
+  # Optional: decision_reason (required when decision != pass); override: {reason, gate} when a FAIL was overridden.
 ```
 
-Gate-level detail lives inside `subagents.evaluation_verbatim`. Do not re-serialize gate verdicts in the cycle_history entry; `evaluation_verdict` plus `blocking_failures` carry the enforceable summary.
+Gate-level detail lives inside `subagents.evaluation_verbatim`. Do not re-serialize gate verdicts in the cycle_history entry; `blocking_failures` (0 = PASS, >0 = FAIL) is the enforceable summary.
 
 `pcs_review` when set:
 
@@ -320,7 +299,7 @@ Agent(
 )
 ```
 
-Both outputs are preserved verbatim. The model parses exactly three values from the evaluation output: the `Verdict` line, the `Blocking defects` count, and the `Failed gates` count. `blocking_failures = blocking_defects + failed_gates`.
+Both outputs are preserved verbatim. The model parses two values from the evaluation output: the `Blocking defects` count and the `Failed gates` count. `blocking_failures = blocking_defects + failed_gates`; `blocking_failures == 0` means PASS.
 
 ### Step 4: Decision
 
@@ -356,18 +335,17 @@ Do not fabricate findings or force optimistic assessments to keep the process mo
 Append one entry to `cycle_history`. Required fields:
 
 - `cycle`, `iteration`
-- `checklist_complete` (bool)
+- `unanswered` (list of checklist IDs that could not be answered; empty list when all were answered)
 - `script_evidence` (the full JSON captured in Step 1)
-- `subagents.research_verbatim`, `subagents.evaluation_verbatim`, `subagents.evaluation_verdict`, `subagents.blocking_failures`
+- `subagents.research_verbatim`, `subagents.evaluation_verbatim`, `subagents.blocking_failures`
 - `decision`
 
 Write conditional fields only when they apply:
 
-- `unanswered`: list of checklist IDs that could not be answered. Required when `checklist_complete: false`.
 - `decision_reason`: required when `decision != pass`.
 - `override`: `{reason, gate}` only when a FAIL was overridden.
 
-Do not re-serialize gate verdicts. Gate-level detail lives in `evaluation_verbatim`; `evaluation_verdict` plus `blocking_failures` are the enforceable summary.
+Do not re-serialize gate verdicts. Gate-level detail lives in `evaluation_verbatim`; `blocking_failures` (0 = PASS, >0 = FAIL) is the enforceable summary.
 
 Update every canonical-YAML field named in a checklist item's `writes_to`, but only for fields this project actually populates. Leave non-applicable optional fields out entirely rather than setting them to null. Cycle-specific additions (`step4_additions`, `pcs_checkpoint`) are applied at this point if the cycle YAML defines them.
 
@@ -464,7 +442,7 @@ After the PCS review clears or the user overrides it:
    Next: Protocol - Project rules of the game
    ```
 
-5. Set `status.stage_locked: true` and `status.locked_at: {ISO timestamp}`. Re-parse the YAML to confirm validity.
+5. Set `status.locked_at: {ISO timestamp}`. Re-parse the YAML to confirm validity.
 
 6. Read `README.md` and quote the `## Formulate [COMPLETE]` block verbatim in the stage-close user message. If the block is not present or any field is empty, finalization is incomplete; return to step 4. Only then tell the user the formulate stage is complete.
 
@@ -473,6 +451,6 @@ After the PCS review clears or the user overrides it:
 If a downstream stage reopens `formulate`:
 
 - Preserve every entry in `cycle_history`. Append new iterations; do not edit old ones.
-- Unlock the stage: `status.stage_locked: false`, `status.locked_at: null`.
+- Unlock the stage: set `status.locked_at: null`.
 - Re-run the affected cycles and re-render the markdown at the end.
 - Downstream narrowing entries already written to `claim_boundary.narrowing_log` remain in place.

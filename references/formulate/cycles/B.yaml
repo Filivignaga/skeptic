@@ -3,8 +3,7 @@ focus: Data Understanding
 mandatory: true
 
 upstream:
-  - provenance.file_hashes
-  - provenance.encoding
+  - provenance.files
   - contract.audience
   - contract.decision_context
 

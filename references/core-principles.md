@@ -374,7 +374,7 @@ Later stages may force a return to earlier stages. Backtrack when any of the fol
 When backtracking:
 
 - Preserve the earlier record. `cycle_history` entries are append-only.
-- Unlock the stage (`status.stage_locked: false`) and re-run the affected cycles.
+- Unlock the stage (set `status.locked_at: null`) and re-run the affected cycles.
 - Re-render the markdown at the end of the reopen.
 - Never erase earlier work. Mark it superseded via the new iteration rather than editing past entries.
 

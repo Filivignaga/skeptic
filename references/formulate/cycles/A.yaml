@@ -21,7 +21,7 @@ checklist:
   - id: A00
     question: For each source data file, what is the detected character encoding?
     evidence_key: encoding                      # {filename: {detected, bom_present, confidence}}
-    writes_to: provenance.encoding
+    writes_to: provenance.files                 # updates filename.encoding
   - id: A01
     question: What is the shape, column list, and dtype of each loaded source?
     evidence_key: schema                        # {filename: {n_rows, n_cols, columns: [{name, dtype, nullable}]}}
@@ -50,7 +50,7 @@ checklist:
   - id: A07
     question: For each raw data file, what is its SHA-256 hash?
     evidence_key: sha256                        # {filename: hex_digest}
-    writes_to: provenance.file_hashes
+    writes_to: provenance.files                 # updates filename.sha256
   - id: A08
     question: Who is the intended audience for this question, and is the question interesting or useful to them?
     evidence_key: null
