@@ -13,52 +13,49 @@ setup_side_effects: []
 checklist:
   - id: E01
     question: How was the data collected, generated, sampled, or recorded?
-    skip_when: never
-    script_evidence_key: collection_process
+    evidence_key: collection_process            # {description, evidence_source, known_filters, generation_mechanism}
+    writes_to: protocol_handoff.data_usage_considerations
   - id: E02
     question: What is the time coverage, refresh cadence, and are there temporal gaps?
-    skip_when: never
-    script_evidence_key: temporal_profile
+    evidence_key: temporal_profile              # {start, end, cadence, gaps: [{from, to, reason_if_known}]}
+    writes_to: protocol_handoff.data_usage_considerations
   - id: E03
     question: Is there grouping, clustering, panel, hierarchy, or interference structure?
-    skip_when: never
-    script_evidence_key: structure_profile
+    evidence_key: structure_profile             # {grouping: bool, grouping_key, panels: bool, hierarchy: bool, interference_risk, evidence}
+    writes_to: protocol_handoff.data_usage_considerations
   - id: E04
     question: Is the data a one-off extract, a monitoring stream, or a partially refreshed process? Are leakage-relevant fields or structures present (future information, post-outcome fields, target proxies, delayed labels, timestamp lookahead)?
-    skip_when: never
-    script_evidence_key: leakage_scan
+    evidence_key: leakage_scan                  # {candidate_leak_fields: [{column, why_suspect}], timestamp_lookahead_risk, post_outcome_fields}
+    writes_to: [protocol_handoff.leakage_risks, protocol_handoff.forbidden_variable_candidates]
   - id: E05
     question: How representative is the data relative to the target population or deployment context?
-    skip_when: never
-    script_evidence_key: representativeness_evidence
+    evidence_key: representativeness_evidence   # {target_population_or_deployment, coverage_vs_target, skew_or_mismatch}
+    writes_to: protocol_handoff.generalizability_risks
   - id: E06
     question: Enumerate biases against a named taxonomy (ROBINS-I seven domains plus immortal-time, Berkson, and positivity-violation). For each domain state present/absent/uncertain, direction, severity, and current mitigation. For any row rated serious or critical, give a quantitative bound (E-value, Lash-style range, or direction-and-magnitude estimate) or an explicit deferral naming what data would allow bounding it.
-    skip_when: never
-    script_evidence_key: bias_taxonomy_table
+    evidence_key: bias_taxonomy_table           # list of {domain: one of [confounding, participant_selection, exposure_classification, protocol_departure, missing_data, outcome_measurement, reporting_selection, immortal_time, berkson, positivity_violation], presence: present|absent|uncertain, direction: toward_null|away|unknown, severity: critical|serious|moderate|low, current_mitigation, quantitative_bound_or_deferral}
+    writes_to: protocol_handoff.generalizability_risks
   - id: E07
     question: Is the question tied to a deployment context, a reporting frame, or a population-level claim, and what kinds of future validation may be needed at a high level?
-    skip_when: never
-    script_evidence_key: null
+    evidence_key: null
+    writes_to: [protocol_handoff.validation_needs, protocol_handoff.route_family_stability]
   - id: E08
     question: What unresolved questions must be passed to `protocol`?
-    skip_when: never
-    script_evidence_key: null
+    evidence_key: null
+    writes_to: protocol_handoff.open_questions
 
 gates:
-  - id: E-collection-understood
-    depends_on: [E01]
+  - id: E01-collection-understood
     condition: Data collection process is understood well enough to proceed
   - id: E-biases-assessed
     depends_on: [E05, E06]
     condition: Collection, selection, recall, measurement, and other relevant biases are assessed against the named taxonomy
-  - id: E-generalizability
-    depends_on: [E06]
+  - id: E06-generalizability
     condition: Generalizability risks relative to target population or deployment context are assessed
   - id: E-data-usage-facts
     depends_on: [E01, E02, E03, E04]
     condition: Facts needed by `protocol` to decide data-usage mode are surfaced
-  - id: E-open-protocol-questions
-    depends_on: [E08]
+  - id: E08-open-protocol-questions
     condition: Unresolved questions for `protocol` are explicitly listed
 
 research_questions:
@@ -67,28 +64,11 @@ research_questions:
   - How far do findings from this kind of data usually generalize?
   - What validation patterns are commonly needed for similar questions (refreshed data, external corroboration, group-aware checks, rolling validation, resampling, or something else)?
 
-script_contract:
-  evidence_keys:
-    - collection_process            # {description, evidence_source, known_filters, generation_mechanism}
-    - temporal_profile              # {start, end, cadence, gaps: [{from, to, reason_if_known}]}
-    - structure_profile             # {grouping: bool, grouping_key, panels: bool, hierarchy: bool, interference_risk, evidence}
-    - leakage_scan                  # {candidate_leak_fields: [{column, why_suspect}], timestamp_lookahead_risk, post_outcome_fields}
-    - representativeness_evidence   # {target_population_or_deployment, coverage_vs_target, skew_or_mismatch}
-    - bias_taxonomy_table           # list of {domain: one of [confounding, participant_selection, exposure_classification, protocol_departure, missing_data, outcome_measurement, reporting_selection, immortal_time, berkson, positivity_violation], presence: present|absent|uncertain, direction: toward_null|away|unknown, severity: critical|serious|moderate|low, current_mitigation, quantitative_bound_or_deferral}
-
-contract_writes:
-  - protocol_handoff.data_usage_considerations    # include collection purpose, sampling frame, upstream exclusions, structural notes (confounding / time-ordering / grouping / monitoring) as separate bullets
-  - protocol_handoff.leakage_risks
-  - protocol_handoff.forbidden_variable_candidates
-  - protocol_handoff.validation_needs
-  - protocol_handoff.route_family_stability
-  - protocol_handoff.generalizability_risks
-  - protocol_handoff.open_questions
-
 guidance:
   - Do not decide the final data-usage mode here. Surface the facts that `protocol` needs to decide those things.
   - Do not create splits, folds, frozen holdouts, or validation artifacts.
   - For any bias row rated serious or critical, require a quantitative bound or an explicit deferral. "Unknown" is only acceptable with a concrete deferral that names what would allow bounding.
+  - protocol_handoff.data_usage_considerations collects collection purpose, sampling frame, upstream exclusions, and structural notes (confounding / time-ordering / grouping / monitoring) as separate bullets when relevant.
 
 step4_additions:
   description: After the standard decision, produce a draft `protocol` handoff note that states each field listed below. The note populates protocol_handoff in the canonical YAML. This draft informs `protocol`. It does not replace `protocol`.

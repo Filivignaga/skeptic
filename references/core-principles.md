@@ -112,11 +112,9 @@ Each per-cycle YAML carries:
 
 - `upstream`: canonical-YAML fields that must be set before the cycle runs
 - `setup_side_effects`: one-time actions (typically for the first cycle only)
-- `checklist`: question IDs the cycle must answer
-- `gates`: verifiable conditions with `depends_on` checklist IDs
+- `checklist`: the items the cycle must answer. Each item carries `id`, `question`, `evidence_key` (script output key, or `null` if judgment-driven), `writes_to` (canonical-YAML field or list of fields, or `null`), and optionally `skip_when` (absent means "never skip")
+- `gates`: verifiable conditions. Single-dep gates encode the dep in the ID (e.g. `A01-loadable`); multi-dep gates use a short ID plus `depends_on`
 - `research_questions`: topics for the research subagent
-- `script_contract`: keys the script's JSON evidence must contain
-- `contract_writes`: canonical-YAML fields this cycle populates
 - `guidance`: short, cycle-specific judgment rules
 - `step4_additions`, `pcs_checkpoint`, `log_extension`: present only when the cycle adds a specific discipline
 
@@ -226,16 +224,16 @@ Two patterns every stage must follow.
 
 ### 1. Per-cycle Checklists and Gates
 
-Every cycle is specified by a cycle YAML under `references/{stage}/cycles/{cycle}.yaml`. That file defines the checklist, gates, research questions, script contract, and guidance for that cycle.
+Every cycle is specified by a cycle YAML under `references/{stage}/cycles/{cycle}.yaml`. That file defines the checklist, gates, research questions, and guidance for that cycle.
 
 Rules:
 
 - Checklist IDs use the format `{CycleLetter}{TwoDigitNumber}` (A01, A02, B01, ...).
 - Every checklist item must be answered before the cycle's gates can be evaluated. If an item cannot be answered, record why and what is missing inside the cycle-history entry.
-- Each checklist item has a `script_evidence_key` pointing at the JSON key in the script's evidence packet, or is marked judgment-driven (answered by the model using script evidence plus context).
-- Gates carry a `depends_on` list of checklist IDs. If any depended-on item was not answered, the gate auto-fails without judgment.
+- Each checklist item carries `evidence_key` (the JSON key the script must produce for this item, or `null` if judgment-driven) and `writes_to` (the canonical-YAML field or list of fields the answer populates, or `null` if the item only feeds gates).
+- Gates depend on one or more checklist items. Single-dep gates encode the dep in the gate ID (e.g. `A01-loadable` depends on A01). Multi-dep gates use a short ID plus an explicit `depends_on: [ID1, ID2, ...]` field. If any depended-on item was not answered, the gate auto-fails without judgment.
 - The evaluation subagent verifies all checklist items before evaluating gate conditions.
-- Items may not be skipped unless their `skip_when` condition is satisfied.
+- Items may not be skipped unless a `skip_when` condition is present and satisfied. Absent `skip_when` means "never skip."
 - Every gate is binary: PASS or FAIL. A FAIL contributes to `blocking_failures`. If a project needs to proceed with a bounded risk, use `override: {reason, gate}` rather than a soft-fail concept.
 
 ### 2. Decision Matrix

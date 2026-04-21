@@ -14,50 +14,50 @@ setup_side_effects:
   - Copy each raw data source into {data_dir_name}/ without modification
   - Copy any provided documentation (codebook, README, data dictionary, collection notes) into {data_dir_name}/
   - Create {readme_name} with project name, date, and data source names
-  - Initialize {docs_dir_name}/01_formulation.yaml with project, empty status/provenance/contract/claim_boundary/protocol_handoff scaffolding and empty cycle_history
+  - Initialize {docs_dir_name}/01_formulation.yaml with stage, schema_version, project (including project.started_at as ISO timestamp), and status.current_cycle: A
   - Create {scripts_dir_name}/01_formulation.py with the shape specified in the stage entry
 
 checklist:
   - id: A00
     question: For each source data file, what is the detected character encoding?
-    skip_when: never
-    script_evidence_key: encoding
+    evidence_key: encoding                      # {filename: {detected, bom_present, confidence}}
+    writes_to: provenance.encoding
   - id: A01
     question: What is the shape, column list, and dtype of each loaded source?
-    skip_when: never
-    script_evidence_key: schema
+    evidence_key: schema                        # {filename: {n_rows, n_cols, columns: [{name, dtype, nullable}]}}
+    writes_to: null
   - id: A02
     question: What do sample rows look like?
-    skip_when: never
-    script_evidence_key: sample_rows
+    evidence_key: sample_rows                   # {filename: first_5_rows_as_records}
+    writes_to: null
   - id: A03
     question: What are the basic statistics and missing-value counts per column?
-    skip_when: never
-    script_evidence_key: basic_stats_and_missing
+    evidence_key: basic_stats_and_missing       # {filename: {column: {stat_summary, n_missing, pct_missing}}}
+    writes_to: null
   - id: A04
     question: For low-cardinality categorical columns, what are the value distributions?
-    skip_when: never
-    script_evidence_key: low_cardinality_distributions
+    evidence_key: low_cardinality_distributions # {filename: {column: {unique_count, value_counts_top_20}}} for cols with unique_count <= 20
+    writes_to: null
   - id: A05
     question: If the question involves time, what is the date coverage and time grain? If grouping matters, what are group counts? If multiple tables, what is join-key overlap?
     skip_when: question has no temporal, grouping, or multi-table aspect
-    script_evidence_key: structural_coverage
+    evidence_key: structural_coverage           # {filename or pair: {temporal_coverage, group_counts, join_key_overlap}} only when applicable
+    writes_to: null
   - id: A06
     question: Is the question framed as a real stakeholder or scientific problem (not a method request), have at least two plausible framings been considered, is the approved framing useful, specific, not already sufficiently answered, and plausibly answerable with available evidence, AND does the approved framing name the stakeholder decision, the candidate actions, and how the answer changes the chosen action (or, if academic, the prior and the evidence threshold)?
-    skip_when: never
-    script_evidence_key: null
+    evidence_key: null
+    writes_to: contract.decision_context
   - id: A07
     question: For each raw data file, what is its SHA-256 hash?
-    skip_when: never
-    script_evidence_key: sha256
+    evidence_key: sha256                        # {filename: hex_digest}
+    writes_to: provenance.file_hashes
   - id: A08
     question: Who is the intended audience for this question, and is the question interesting or useful to them?
-    skip_when: never
-    script_evidence_key: null
+    evidence_key: null
+    writes_to: contract.audience
 
 gates:
-  - id: A-loadable
-    depends_on: [A01]
+  - id: A01-loadable
     condition: Data loadable and structurally sound
   - id: A-relevant
     depends_on: [A01, A02, A03]
@@ -65,12 +65,15 @@ gates:
   - id: A-question-fit
     depends_on: [A01, A02, A03, A06]
     condition: Question is framed as a real stakeholder or scientific problem; at least two plausible framings considered; approved framing is useful, specific, not already sufficiently answered, plausibly answerable with available evidence; names stakeholder decision, candidate actions, and how the answer changes the chosen action (or academic alt names prior and evidence threshold)
-  - id: A-audience-defined
-    depends_on: [A08]
+  - id: A08-audience-defined
     condition: Intended audience identified and question framed to be relevant to them
   - id: A-no-red-flags
     depends_on: [A03, A04, A05]
     condition: No immediate structural red flags likely to derail formulation
+
+format_aware_ingest:
+  reference: ../data-formats.md
+  rule: Identify each source file's format and apply the matching ingest checklist before loading. Record checklist results inside the relevant evidence.
 
 research_questions:
   - What domain context matters for understanding this dataset?
@@ -81,26 +84,6 @@ research_questions:
   - What are the main alternative framings of the same underlying problem, and how do they differ in audience, decision, or claim boundary?
   - Is the question already answered well enough that this project should narrow, reorder, or stop?
   - What makes this question concretely answerable with the data and resources that are actually available?
-
-script_contract:
-  evidence_keys:
-    - encoding                      # {filename: {detected, bom_present, confidence}}
-    - sha256                        # {filename: hex_digest}
-    - schema                        # {filename: {n_rows, n_cols, columns: [{name, dtype, nullable}]}}
-    - sample_rows                   # {filename: first_5_rows_as_records}
-    - basic_stats_and_missing       # {filename: {column: {stat_summary, n_missing, pct_missing}}}
-    - low_cardinality_distributions # {filename: {column: {unique_count, value_counts_top_20}}} for cols with unique_count <= 20
-    - structural_coverage           # {filename or pair: {temporal_coverage, group_counts, join_key_overlap}} only when applicable
-  format_aware_ingest:
-    reference: ../data-formats.md
-    rule: Identify each source file's format and apply the matching ingest checklist before loading. Record checklist results inside the relevant evidence key.
-
-contract_writes:
-  - project.started_at
-  - provenance.file_hashes
-  - provenance.encoding
-  - contract.audience
-  - contract.decision_context
 
 guidance:
   - Before loading any text-based source file, detect encoding. Try UTF-8 strict first; on failure, check for BOM, then try Latin-1 / Windows-1252. Record the detected encoding. All downstream reads must pass the detected encoding explicitly.

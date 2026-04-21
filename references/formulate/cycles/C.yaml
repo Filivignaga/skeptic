@@ -12,30 +12,28 @@ setup_side_effects: []
 checklist:
   - id: C01
     question: Based on the rough question and Cycle A-B findings, which of the six question types best fits (descriptive, exploratory, inferential, predictive, causal, mechanistic)?
-    skip_when: never
-    script_evidence_key: type_candidates
+    evidence_key: type_candidates               # {candidate_type: {fit_score, supporting_evidence, conflicting_evidence}} for each of the six types the model considers
+    writes_to: contract.question_type
   - id: C02
     question: Does the current data collection, design, and variable coverage support the proposed type? If not, what is the strongest defensible alternative?
-    skip_when: never
-    script_evidence_key: type_support_evidence
+    evidence_key: type_support_evidence         # {chosen_type: {design_support, variable_coverage_support, known_blockers}}
+    writes_to: null
   - id: C03
     question: What are the downstream consequences for `protocol`, route overlays, and later `analyze`?
-    skip_when: never
-    script_evidence_key: null
+    evidence_key: null
+    writes_to: [contract.route_candidates, protocol_handoff.data_usage_considerations, protocol_handoff.validation_needs]
   - id: C04
     question: If the data cannot support the preferred type, what would be required for the original?
     skip_when: data supports the preferred type
-    script_evidence_key: unmet_requirements
+    evidence_key: unmet_requirements            # list of {requirement, current_gap, hypothetical_fix} when the preferred type is not currently supported; else []
+    writes_to: null
 
 gates:
-  - id: C-type-classified
-    depends_on: [C01]
+  - id: C01-type-classified
     condition: Question classified into one of the six types
-  - id: C-type-supported
-    depends_on: [C02]
+  - id: C02-type-supported
     condition: Data collection and design plausibly support the classified type
-  - id: C-downstream-constraints-stated
-    depends_on: [C03]
+  - id: C03-downstream-constraints-stated
     condition: Consequences for `protocol`, route overlays, and later `analyze` are stated
 
 research_questions:
@@ -43,23 +41,12 @@ research_questions:
   - What methodological requirements typically apply to each plausible type in this domain?
   - Are there published examples where similar data was sufficient or insufficient for this type of question?
 
-script_contract:
-  evidence_keys:
-    - type_candidates               # {candidate_type: {fit_score, supporting_evidence, conflicting_evidence}} for each of the six types the model considers
-    - type_support_evidence         # {chosen_type: {design_support, variable_coverage_support, known_blockers}}
-    - unmet_requirements            # list of {requirement, current_gap, hypothetical_fix} when the preferred type is not currently supported; else []
-
-contract_writes:
-  - contract.question_type
-  - contract.route_candidates                # seed ordered list; refined further in Cycle D
-  - protocol_handoff.data_usage_considerations
-  - protocol_handoff.validation_needs
-
 guidance:
   - The six types are descriptive, exploratory, inferential, predictive, causal, mechanistic. See `../../core-principles.md` for admissible evidence and interpretation boundary per type.
   - Cycle C produces exactly two things. A locked primary question type, plus the set of "facts and recommended ranges" that `protocol` will use to make its own decisions. Do not pre-empt `protocol`.
   - Classification is not a model-selection shortcut. Classification or unsupervised methods do not become predictive by default just because they are machine-learning methods.
   - Inferential questions estimate quantities in a population or sampling frame. Predictive questions target unseen outcomes in a deployment context. Do not conflate.
+  - contract.route_candidates is seeded here and refined further in Cycle D.
 
 step4_additions: null
 pcs_checkpoint:

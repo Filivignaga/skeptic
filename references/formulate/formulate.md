@@ -173,13 +173,20 @@ Do not skip A through E. Do not collapse them into one pass.
 
 Before running cycle X, load only `cycles/{X}.yaml`. Each cycle YAML carries:
 
-- `upstream`: which canonical-YAML fields must be set before the cycle starts
-- `setup_side_effects`: one-time actions for Cycle A only
-- `checklist`: question IDs that the script evidence must answer
-- `gates`: verifiable conditions with `depends_on` checklist IDs
+- `upstream`: canonical-YAML fields that must be set before the cycle starts
+- `setup_side_effects`: one-time actions (typically Cycle A only)
+- `checklist`: the items the cycle must answer. Each item has:
+  - `id`: e.g. `A01`
+  - `question`: the question text
+  - `evidence_key`: the JSON key the script produces for this item (or `null` if judgment-driven)
+  - `writes_to`: the canonical-YAML field (or list of fields) this item populates (or `null` if the item only feeds gates)
+  - `skip_when`: only present when the item can be skipped under a specific condition; absent means "never skip"
+- `gates`: verifiable conditions. Each gate has:
+  - `id`: for a single-dep gate, the dep is encoded as a prefix (e.g. `A01-loadable` depends on A01); for a multi-dep gate, use a short name (e.g. `A-relevant`) and list `depends_on`
+  - `depends_on`: present only for multi-dep gates
+  - `condition`: what it verifies
 - `research_questions`: topics for the research subagent
-- `script_contract`: keys the script's JSON evidence must contain
-- `contract_writes`: which canonical-YAML fields this cycle populates
+- `format_aware_ingest` (Cycle A only): reference to `../data-formats.md` for per-format load checks
 - `guidance`: short, cycle-specific judgment rules
 - `step4_additions`, `pcs_checkpoint`, `log_extension`: present only when the cycle adds a specific discipline
 
@@ -199,7 +206,7 @@ This protocol applies to every cycle, mandatory or follow-up.
    - First cycle entered in a fresh session (not Cycle A), or first cycle after a backtrack reopens the stage: read `01_formulation.yaml` once to load the contract, claim boundary, protocol handoff, and prior `cycle_history`.
    - Every other case (continuing the same chat session): do not re-read `01_formulation.yaml`. The model just wrote it; its content is already in context.
 3. Cycle A only: create the project folder structure, copy raw data and documentation into the data directory, initialize `01_formulation.yaml` with `stage`, `schema_version`, `project`, and `status.current_cycle: A`, and create `01_formulation.py` with the shape specified below.
-4. Every cycle: extend `01_formulation.py` by writing or updating the cycle's function (`run_cycle_a`, `run_cycle_b`, ...). The function must produce the `script_contract.evidence_keys` listed in the cycle YAML.
+4. Every cycle: extend `01_formulation.py` by writing or updating the cycle's function (`run_cycle_a`, `run_cycle_b`, ...). The function must produce every non-null `evidence_key` named in the cycle's checklist.
 5. Run `python {scripts_dir_name}/01_formulation.py --cycle {cycle}`. Capture stdout.
 6. Parse stdout as JSON. That dictionary becomes the candidate `script_evidence` for this cycle iteration.
 7. Scan stderr and stdout for unhandled exceptions. Any unhandled exception is a blocking defect and must be fixed before continuing. Functions that intentionally demonstrate failure must be explicitly flagged with a `# expected_failure` comment.
@@ -362,7 +369,7 @@ Write conditional fields only when they apply:
 
 Do not re-serialize gate verdicts. Gate-level detail lives in `evaluation_verbatim`; `evaluation_verdict` plus `blocking_failures` are the enforceable summary.
 
-Update every canonical-YAML field listed in the cycle YAML's `contract_writes`, but only for fields this project actually populates. Leave non-applicable optional fields out entirely rather than setting them to null. Cycle-specific additions (`step4_additions`, `pcs_checkpoint`) are applied at this point if the cycle YAML defines them.
+Update every canonical-YAML field named in a checklist item's `writes_to`, but only for fields this project actually populates. Leave non-applicable optional fields out entirely rather than setting them to null. Cycle-specific additions (`step4_additions`, `pcs_checkpoint`) are applied at this point if the cycle YAML defines them.
 
 Set `status.current_cycle` to the next cycle letter (or keep for another iteration). Append the closed cycle letter to `status.completed_cycles` only when the cycle passes or is closed by override.
 

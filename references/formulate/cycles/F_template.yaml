@@ -23,30 +23,23 @@ setup_side_effects: []
 checklist:
   - id: F{n}01
     question: "{question derived from the specific follow-up topic}"
-    skip_when: never
-    script_evidence_key: "{key name or null if judgment-driven}"
+    evidence_key: "{key name, or null if judgment-driven}"
+    writes_to: "{canonical-YAML field, list of fields, or null}"
   # Add F{n}02, F{n}03, ... as required. Keep follow-ups narrow and purpose-built.
+  # Add `skip_when: <condition>` on any item that has a non-default skip condition.
+  # Examples of writes_to targets for follow-ups: claim_boundary.verbs_forbidden_added
+  # (append), claim_boundary.narrowing_log (append, only while formulate is still open),
+  # contract.operationalization[term].
 
 gates:
-  - id: F{n}-{short-name}
-    depends_on: [F{n}01]
+  - id: "F{n}01-{short-name}"
     condition: "{condition that closes the follow-up topic}"
+  # Single-dep gates encode the checklist ID in the gate ID (e.g. F{n}01-resolved).
+  # Multi-dep gates use id: "F{n}-{short-name}" and depends_on: [F{n}01, F{n}02, ...].
   # At least one gate is required so the cycle has an enforceable exit.
 
 research_questions:
   - "{at most a handful; narrow to the follow-up topic}"
-
-script_contract:
-  evidence_keys:
-    - "{evidence key 1}"
-    - "{evidence key 2}"
-
-contract_writes:
-  # Only the canonical-YAML fields that this follow-up is specifically resolving.
-  # Examples: claim_boundary.verbs_forbidden (append), claim_boundary.narrowing_log
-  # (append, only while formulate is still open), contract.operationalization[term].
-  - "{field 1}"
-  - "{field 2}"
 
 guidance:
   - Keep the follow-up narrow. One topic per cycle.
