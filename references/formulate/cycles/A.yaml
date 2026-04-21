@@ -15,7 +15,7 @@ setup_side_effects:
   - Copy any provided documentation (codebook, README, data dictionary, collection notes) into {data_dir_name}/
   - Create {readme_name} with project name, date, and data source names
   - Initialize {docs_dir_name}/01_formulation.yaml with project, empty status/provenance/contract/claim_boundary/protocol_handoff scaffolding and empty cycle_history
-  - Create {scripts_dir_name}/01_formulation.py with the skeleton from the stage entry
+  - Create {scripts_dir_name}/01_formulation.py with the shape specified in the stage entry
 
 checklist:
   - id: A00
@@ -46,7 +46,6 @@ checklist:
     question: Is the question framed as a real stakeholder or scientific problem (not a method request), have at least two plausible framings been considered, is the approved framing useful, specific, not already sufficiently answered, and plausibly answerable with available evidence, AND does the approved framing name the stakeholder decision, the candidate actions, and how the answer changes the chosen action (or, if academic, the prior and the evidence threshold)?
     skip_when: never
     script_evidence_key: null
-    note: Judgment-driven. The model records the approved framing into contract.decision_context; evidence lives in the YAML, not the script output.
   - id: A07
     question: For each raw data file, what is its SHA-256 hash?
     skip_when: never
@@ -55,7 +54,6 @@ checklist:
     question: Who is the intended audience for this question, and is the question interesting or useful to them?
     skip_when: never
     script_evidence_key: null
-    note: Judgment-driven. The model records the audience into contract.audience.
 
 gates:
   - id: A-loadable
@@ -101,10 +99,6 @@ script_contract:
   format_aware_ingest:
     reference: ../data-formats.md
     rule: Identify each source file's format and apply the matching ingest checklist before loading. Record checklist results inside the relevant evidence key.
-  forbidden:
-    - Writing to 01_formulation.yaml
-    - Emitting anything other than one JSON object to stdout
-    - Dumping full DataFrames; summarize to fixed-size records
 
 contract_writes:
   - project.started_at

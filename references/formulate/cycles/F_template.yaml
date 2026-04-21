@@ -41,10 +41,6 @@ script_contract:
   evidence_keys:
     - "{evidence key 1}"
     - "{evidence key 2}"
-  forbidden:
-    - Writing to 01_formulation.yaml
-    - Emitting anything other than one JSON object to stdout
-    - Dumping full DataFrames; summarize to fixed-size records
 
 contract_writes:
   # Only the canonical-YAML fields that this follow-up is specifically resolving.

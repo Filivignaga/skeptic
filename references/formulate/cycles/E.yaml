@@ -39,12 +39,10 @@ checklist:
     question: Is the question tied to a deployment context, a reporting frame, or a population-level claim, and what kinds of future validation may be needed at a high level?
     skip_when: never
     script_evidence_key: null
-    note: Judgment-driven. Recorded in protocol_handoff.validation_needs and protocol_handoff.route_family_stability.
   - id: E08
     question: What unresolved questions must be passed to `protocol`?
     skip_when: never
     script_evidence_key: null
-    note: Judgment-driven. Recorded in protocol_handoff.open_questions.
 
 gates:
   - id: E-collection-understood
@@ -86,11 +84,6 @@ script_contract:
     - leakage_scan                  # {candidate_leak_fields: [{column, why_suspect}], timestamp_lookahead_risk, post_outcome_fields}
     - representativeness_evidence   # {target_population_or_deployment, coverage_vs_target, skew_or_mismatch}
     - bias_taxonomy_table           # list of {domain: one of [confounding, participant_selection, exposure_classification, protocol_departure, missing_data, outcome_measurement, reporting_selection, immortal_time, berkson, positivity_violation], presence: present|absent|uncertain, direction: toward_null|away|unknown, severity: critical|serious|moderate|low, current_mitigation, quantitative_bound_or_deferral}
-  forbidden:
-    - Writing to 01_formulation.yaml
-    - Emitting anything other than one JSON object to stdout
-    - Dumping full DataFrames; summarize to fixed-size records
-    - Creating splits, folds, frozen holdouts, or validation artifacts (those belong to `protocol`)
 
 contract_writes:
   - provenance.collection_purpose

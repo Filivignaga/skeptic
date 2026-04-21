@@ -27,12 +27,10 @@ checklist:
     question: What is the target quantity or estimand the later analysis must estimate, summarize, predict, or explain?
     skip_when: never
     script_evidence_key: null
-    note: Judgment-driven. Recorded in contract.target_quantity.
   - id: D05
     question: What claim boundary is implied by the question type and data design?
     skip_when: never
     script_evidence_key: null
-    note: Judgment-driven. Recorded in claim_boundary (claim_type, scope, evidence_ceiling, generalization_limit).
   - id: D06
     question: What is the unit of analysis, and what is the target population or deployment context if it materially matters?
     skip_when: unit of analysis already fixed in Cycle B (for the unit portion only)
@@ -41,7 +39,6 @@ checklist:
     question: What are the ordered route candidates for later stages, and why is the top route best?
     skip_when: never
     script_evidence_key: null
-    note: Judgment-driven. Recorded in contract.route_candidates with rationale.
   - id: D08
     question: What related concepts, effect modifiers, confounders, or structural dependencies must later stages respect?
     skip_when: never
@@ -50,7 +47,6 @@ checklist:
     question: What key assumptions are required for the approved formulation to remain coherent?
     skip_when: never
     script_evidence_key: null
-    note: Judgment-driven. Recorded in contract.key_assumptions.
   - id: D10
     question: What is the baseline the project must beat?
     skip_when: never
@@ -59,17 +55,14 @@ checklist:
     question: What does each error type (false positive, false negative, over/underestimation, etc.) cost in the decision context? Which errors are unacceptable regardless of overall accuracy?
     skip_when: never
     script_evidence_key: null
-    note: Judgment-driven. Recorded in contract.error_costs with `unacceptable: true` flagged.
   - id: D12
     question: What minimum uplift over baseline would make this project worthwhile?
     skip_when: never
     script_evidence_key: null
-    note: Judgment-driven. Recorded in contract.minimum_uplift.
   - id: D13
     question: What prior art or analogous work changes the question framing, scope, assumptions, or project order?
     skip_when: never
     script_evidence_key: null
-    note: Judgment-driven. Sourced primarily from the research subagent output.
 
 gates:
   - id: D-terms-identified
@@ -161,10 +154,6 @@ script_contract:
     - structural_dependencies       # {effect_modifiers: [...], confounders: [...], hierarchies_or_panels: [...]}
     - unit_and_target_population_evidence  # {unit_description, target_population_or_deployment_context, evidence}
     - baseline_evidence             # {baseline_description, how_computed_from_data_or_prior_art, numeric_value_if_any}
-  forbidden:
-    - Writing to 01_formulation.yaml
-    - Emitting anything other than one JSON object to stdout
-    - Dumping full DataFrames; summarize to fixed-size records
 
 contract_writes:
   - contract.approved_question

@@ -22,7 +22,6 @@ checklist:
     question: What are the downstream consequences for `protocol`, route overlays, and later `analyze`?
     skip_when: never
     script_evidence_key: null
-    note: Judgment-driven. The model records consequences in contract.route_candidates, protocol_handoff.data_usage_considerations, and protocol_handoff.validation_needs.
   - id: C04
     question: If the data cannot support the preferred type, what would be required for the original?
     skip_when: data supports the preferred type
@@ -52,10 +51,6 @@ script_contract:
     - type_candidates               # {candidate_type: {fit_score, supporting_evidence, conflicting_evidence}} for each of the six types the model considers
     - type_support_evidence         # {chosen_type: {design_support, variable_coverage_support, known_blockers}}
     - unmet_requirements            # list of {requirement, current_gap, hypothetical_fix} when the preferred type is not currently supported; else []
-  forbidden:
-    - Writing to 01_formulation.yaml
-    - Emitting anything other than one JSON object to stdout
-    - Dumping full DataFrames; summarize to fixed-size records
 
 contract_writes:
   - contract.question_type

@@ -63,10 +63,6 @@ script_contract:
     - unit_of_analysis_evidence     # {per_file: {candidate_unit_keys, duplicate_key_rate, row_grain_description}}
     - interpretation_ambiguities    # list of {column_or_concept, candidate_interpretations, how_they_differ}
     - ideal_vs_actual_gap           # {ideal_fields, present_fields, missing_fields, proxies_if_any}
-  forbidden:
-    - Writing to 01_formulation.yaml
-    - Emitting anything other than one JSON object to stdout
-    - Dumping full DataFrames; summarize to fixed-size records
 
 contract_writes:
   - contract.unit_of_analysis

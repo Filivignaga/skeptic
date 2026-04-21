@@ -194,66 +194,7 @@ This protocol applies to every cycle, mandatory or follow-up.
 6. Parse stdout as JSON. That dictionary becomes the candidate `script_evidence` for this cycle iteration.
 7. Scan stderr and stdout for unhandled exceptions. Any unhandled exception is a blocking defect and must be fixed before continuing. Cells that intentionally demonstrate failure must be explicitly flagged in the function body with a `# expected_failure` comment.
 
-Script skeleton (Cycle A creates this on first run):
-
-```python
-"""01_formulation.py - Skeptic formulate stage analysis script.
-
-One function per cycle. Only the requested cycle runs.
-Each function returns a dict of structured evidence. main() prints that dict as JSON.
-"""
-
-from __future__ import annotations
-import argparse
-import json
-import sys
-from pathlib import Path
-
-PROJECT_DIR = Path(__file__).resolve().parent.parent
-# scripts_dir_name is a sibling of docs_dir_name and data_dir_name
-
-
-def load_state() -> dict:
-    """Read the canonical stage YAML to find data paths and prior decisions."""
-    # The model implements this using yaml or a simple parser.
-    ...
-
-
-def run_cycle_a(state: dict) -> dict:
-    """Cycle A: Setup + Data Overview."""
-    evidence: dict = {}
-    # Implement per cycles/A.yaml script_contract.
-    return evidence
-
-
-# Additional run_cycle_* functions are appended as each cycle begins.
-
-
-CYCLES = {
-    "A": run_cycle_a,
-    # "B": run_cycle_b, ...
-}
-
-
-def main() -> int:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--cycle", required=True)
-    args = parser.parse_args()
-
-    state = load_state()
-    fn = CYCLES.get(args.cycle)
-    if fn is None:
-        print(json.dumps({"error": f"cycle {args.cycle} not implemented"}))
-        return 2
-
-    evidence = fn(state)
-    print(json.dumps(evidence, indent=2, default=str))
-    return 0
-
-
-if __name__ == "__main__":
-    sys.exit(main())
-```
+Script shape: one `run_cycle_*` function per cycle, a `load_state()` helper that reads `01_formulation.yaml`, an `argparse --cycle X` CLI, and a `main()` that prints exactly one JSON object to stdout. Claude writes the file from scratch in Cycle A and extends it with a new function at the start of every subsequent cycle.
 
 Script rules:
 - The script prints exactly one JSON object to stdout. Nothing else on stdout.
@@ -531,11 +472,3 @@ If a downstream stage reopens `formulate`:
 - Unlock the stage: `status.stage_locked: false`, `status.locked_at: null`.
 - Re-run the affected cycles and re-render the markdown at the end.
 - Downstream narrowing entries already written to `claim_boundary.narrowing_log` remain in place.
-
-## Dependency Notes
-
-- `protocol` is the mandatory next stage.
-- `formulate` defines the question. `protocol` defines how that question may be answered.
-- Do not create `data/splits/`, `split_data.py`, or any other frozen partition artifacts here. Data visibility rules are decided in `protocol`.
-- Route candidates are chosen here. Final route lock and route-specific execution belong to `protocol` and `analyze`.
-- If question type, target quantity, or claim boundary changes later, reopen both `formulate` and `protocol`.
