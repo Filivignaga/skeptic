@@ -1,0 +1,173 @@
+cycle: B
+focus: Data-Usage Mode Decision
+mandatory: true
+
+upstream:
+  - route.active
+  - handoff_audit.confirmed
+  - handoff_audit.minimum_decisions
+
+setup_side_effects:
+  - When the chosen data-usage mode requires frozen artifacts (decided during the cycle), create them under {data_dir_name}/splits/ (or the path the approved mode requires). The script produces them deterministically; the model records paths in frozen_artifacts.artifacts and SHA-256 digests in provenance.files.
+
+mode_registry:
+  - mode: full_data
+    when_often_justified: descriptive, exploratory, some inferential, some causal, some mechanistic work where no restricted unseen-data check is needed and the claim boundary does not depend on held-out performance
+    when_often_wrong: when later claims depend on unseen-data performance, temporal generalization, group transfer, or restricted visibility
+    typical_frozen_artifacts: none
+  - mode: frozen_holdout_split
+    when_often_justified: predictive work or any project needing a final untouched partition for reality checks
+    when_often_wrong: when data is too small, temporal order dominates, groups must stay intact, or holdout logic would be performative rather than evidential
+    typical_frozen_artifacts: partition_index.csv, optionally materialized split files
+  - mode: temporal_split
+    when_often_justified: forecasting, monitoring, drift-sensitive prediction, any setting where future must stay future
+    when_often_wrong: when timestamps are not meaningful or later than the target by construction
+    typical_frozen_artifacts: temporal_cutoffs.json, partition_index.csv
+  - mode: group_split
+    when_often_justified: repeated measures, hierarchy, institution or subject transfer, panel or cluster dependence
+    when_often_wrong: when grouping does not constrain the claim or groups are too fragmented to support the split
+    typical_frozen_artifacts: group_partition_index.csv, group_split_rules.json
+  - mode: rolling_validation
+    when_often_justified: forecasting, repeated deployment checks, streaming or refreshed-data contexts
+    when_often_wrong: when the project is static and rolling windows add ceremony without evidential value
+    typical_frozen_artifacts: rolling_windows.json
+  - mode: external_validation
+    when_often_justified: a distinct external dataset is central to the allowed claim
+    when_often_wrong: when no truly external frame exists or harmonization is too weak to support the comparison
+    typical_frozen_artifacts: external_validation_manifest.md or machine-readable equivalent
+  - mode: resampling_only
+    when_often_justified: inferential, descriptive, exploratory, causal, or mechanistic work where stability and uncertainty come from resampling, not held-out partitions
+    when_often_wrong: when unseen-data deployment performance is central
+    typical_frozen_artifacts: none
+  - mode: cross_fitting_authorized
+    when_often_justified: only when later method families may require cross-fitting or sample-splitting to avoid overfitting nuisance components
+    when_often_wrong: when no plausible later method needs it
+    typical_frozen_artifacts: none by default; create concrete fold artifacts here only if they can be justified independently of the exact downstream analysis contract
+  - mode: hybrid
+    when_often_justified: more than one mode is genuinely required, such as temporal holdout plus within-training resampling
+    when_often_wrong: when hybridity is just a hedge against making a real protocol choice
+    typical_frozen_artifacts: artifacts for each approved component
+
+route_pressure:
+  - question_type: descriptive
+    protocol_pressure: define reporting frame, denominators, and measurement scope
+    validation_emphasis: coverage checks, denominator integrity, refreshed-extract comparison when relevant
+    common_non_default_outcome: no split may be correct
+  - question_type: exploratory
+    protocol_pressure: protect against overreading search results
+    validation_emphasis: perturbation stability, triangulation, explicit hypothesis-generating boundary
+    common_non_default_outcome: full-data plus resampling may be correct
+  - question_type: inferential
+    protocol_pressure: protect the population claim and dependence structure
+    validation_emphasis: sampling logic, uncertainty calibration, design-aware checks
+    common_non_default_outcome: resampling only may be correct
+  - question_type: predictive
+    protocol_pressure: protect unseen-data performance claims
+    validation_emphasis: holdout, temporal, group, rolling, or external validation as justified
+    common_non_default_outcome: frozen artifacts are often required
+  - question_type: causal
+    protocol_pressure: protect identification and treatment timing
+    validation_emphasis: design diagnostics, falsification, overlap, sensitivity, interference checks
+    common_non_default_outcome: no split may be correct even when validation is still strict
+  - question_type: mechanistic
+    protocol_pressure: protect structural assumptions and identifiability
+    validation_emphasis: simulation checks, calibration, boundary-condition checks, out-of-regime failure checks
+    common_non_default_outcome: external or simulation-based validation may matter more than holdout
+
+checklist:
+  - id: B01
+    question: Which data-usage modes are plausible candidates for this project, given the active route, question type, claim boundary, time structure, grouping structure, and deployment or reporting context?
+    evidence_key: plausible_modes                # list of {mode, plausible: bool, quick_reason} scored against mode_registry
+    writes_to: data_usage.mode_comparison
+  - id: B02
+    question: For each plausible mode, how does it score on match to question type, target quantity, claim boundary, time structure, grouping and hierarchy, deployment or reporting context, and main risk?
+    evidence_key: mode_scoring                   # list of {mode, fit_to_question_type, target_quantity_fit, claim_boundary_fit, time_structure_fit, grouping_fit, deployment_or_reporting_fit, main_risk}
+    writes_to: data_usage.mode_comparison
+  - id: B03
+    question: Is full-data analysis a serious candidate? When is it correct and when would it be a mistake for this project?
+    evidence_key: null
+    writes_to: data_usage.full_data_assessment
+  - id: B04
+    question: What is the chosen working data-usage mode (or justified hybrid)?
+    evidence_key: null
+    writes_to: data_usage.mode
+  - id: B04a
+    question: For each rejected plausible mode, was claim type and the top-ranked route verified unchanged, or does divergence force a narrowing entry (added verbs_forbidden or tightened generalization_limit) appended to 01_formulation.yaml:claim_boundary.narrowing_log while protocol is still open?
+    evidence_key: null
+    writes_to: data_usage.rejected_alternatives
+  - id: B05
+    question: Are frozen artifacts required? If yes, what are the exact output paths and visibility restrictions?
+    evidence_key: null
+    writes_to: [frozen_artifacts.required, frozen_artifacts.artifacts]
+  - id: B06
+    question: If frozen artifacts are created, what is the deterministic creation logic (seed, cutoffs, row or group identifier logic), restriction rules, access rules, and SHA-256 for each artifact?
+    skip_when: frozen_artifacts.required is false
+    evidence_key: frozen_artifact_manifest       # list of {path, deterministic_logic, seed, cutoffs, row_or_group_identifier_logic, restriction_rules, access_rules, sha256, n_rows_or_groups}
+    writes_to: [frozen_artifacts.artifacts, provenance.files]
+  - id: B07
+    question: If no frozen artifacts are required, what is the specific reason tied to the allowed claim and the chosen mode?
+    skip_when: frozen_artifacts.required is true
+    evidence_key: null
+    writes_to: frozen_artifacts.justification_if_none
+  - id: B08
+    question: Is exactly one active route resolved at protocol level without locking the final analysis contract (estimator, model family, or executable spec)?
+    evidence_key: null
+    writes_to: route.resolution_evidence
+
+gates:
+  - id: B-modes-compared
+    depends_on: [B01, B02]
+    condition: At least two plausible data-usage modes are compared against mode_registry factors; scoring is explicit, not implied
+  - id: B03-full-data-assessed
+    condition: Full-data analysis is explicitly evaluated as a serious option (accepted, rejected with reason, or declared not plausible with reason) rather than skipped by default
+  - id: B04-mode-chosen
+    condition: Exactly one working data-usage mode (or justified hybrid with per-component rationale) is chosen, with rationale grounded in the B02 scoring
+  - id: B-rejections-audited
+    depends_on: [B01, B02, B04a]
+    condition: For every rejected plausible mode, either the claim type and top route are verified unchanged, or a narrowing entry was appended to 01_formulation.yaml:claim_boundary.narrowing_log
+  - id: B-frozen-artifacts-resolved
+    depends_on: [B05, B06, B07]
+    condition: Frozen artifacts are either created now (with deterministic logic, seed, and SHA-256 recorded) or explicitly ruled unnecessary with a claim-tied reason
+  - id: B08-route-family-confirmed
+    condition: Exactly one active route is resolved at protocol level without choosing the final estimator, model family, or executable analysis contract
+
+research_questions:
+  - Which data-usage and validation patterns are standard for this question type and this data-generating process?
+  - When is full-data analysis the correct choice for similar projects, and what failure modes are typical when it is the wrong choice?
+  - When do temporal, group-based, external, or rolling validation schemes become necessary in this domain?
+  - When is cross-fitting worth authorizing now even though the final method family is not yet selected?
+  - What identifier strategies are standard when visibility has to be frozen by row, group, or time?
+
+guidance:
+  - Treat every mode in mode_registry as a live candidate when relevant. Do not default to splits. Do not default to full-data analysis. Decide.
+  - Frozen artifacts that belong to protocol must be created here, not deferred to clean.
+  - Split logic must not depend on downstream model performance.
+  - Partition logic must not use future information unless the approved mode requires future separation by construction.
+  - If identifiers are needed to freeze visibility, log the identifier strategy explicitly in data_usage.identifier_strategy.
+  - If a hybrid mode is chosen, each component must have a separate rationale under data_usage.hybrid_components.
+  - Protocol may authorize future cross-fitting without materializing fold files. Create cross-fit folds here only if they can be justified independently of the exact downstream analysis contract.
+  - Store splits as partition metadata (row indexes, group labels, temporal cutoffs) rather than duplicating the raw data. The raw source remains canonical.
+
+step4_additions:
+  description: After the standard decision, state each field below for the record.
+  items:
+    - active_route
+    - chosen_data_usage_mode
+    - hybrid_components_if_any
+    - frozen_artifacts_required
+    - exact_artifact_list_with_paths_and_sha256
+    - visibility_and_access_restrictions
+    - rejected_alternatives_with_claim_type_and_route_check
+    - narrowing_log_entries_appended_if_any
+    - identifier_strategy_if_any
+    - cross_fitting_authorized_if_any
+
+pcs_checkpoint:
+  before: Step 5
+  items:
+    - "P: Does the chosen data-usage mode match the real deployment or reporting context named in formulate?"
+    - "C: Could a different defensible mode change the allowed claim boundary? If yes, is the divergence either absorbed by the rejection audit in B04a or captured by a narrowing entry?"
+    - "S: Is the frozen-artifact creation logic reproducible deterministically from the documented seed and split rules?"
+  fail_action: On a Stability FAIL, reconsider the mode choice or append a narrowing entry to 01_formulation.yaml:claim_boundary.narrowing_log (via the canonical YAML, only while protocol is still open).
+
+log_extension: null

@@ -1,0 +1,78 @@
+cycle: C
+focus: Anomalies, Contradictions, and Support Gaps
+mandatory: true
+
+upstream:
+  - upstream.approved_question
+  - upstream.question_type
+  - upstream.active_route
+  - upstream.claim_boundary
+  - upstream.backtracking_triggers
+  - structure_profile
+  - relationships
+  - support_registry
+
+setup_side_effects: []
+
+checklist:
+  - id: C01
+    question: What anomalies, contradictions, sparse regions, extreme values, inconsistent signals, and measurement artifacts are visible in the cleaned artifacts, with artifact and evidence for each?
+    evidence_key: anomaly_inventory          # [{type: anomaly|contradiction|sparse_region|extreme|inconsistency|measurement_artifact, description, artifact, evidence}]
+    writes_to: anomalies_and_contradictions.inventory
+  - id: C02
+    question: Against the ROBINS-I seven domains (confounding, participant selection, exposure classification, protocol departure, missing data, outcome measurement, reporting selection) plus immortal-time, Berkson, and positivity-violation, which biases are present in the visible data; for each present or uncertain row, what is the direction, severity, whether it threatens the approved claim boundary, and what is the current mitigation or quantitative bound (with an explicit deferral naming what data would allow bounding, when a bound is not yet available)?
+    evidence_key: bias_taxonomy_table        # [{domain, presence: present|absent|uncertain, direction: toward_null|away|unknown, severity: critical|serious|moderate|low, threatens_claim_boundary: bool, mitigation_or_deferral}]
+    writes_to: anomalies_and_contradictions.bias_taxonomy
+  - id: C03
+    question: For each pattern from Cycles A-B that is likely to influence analyze-stage contract lock, does it survive reasonable examination perturbations (alternative binning, scales, subgroup definitions, aggregation windows, alternative visualizations), and which pattern is stable, conditionally informative, or fragile?
+    evidence_key: perturbation_results       # [{pattern, alternatives_tested, outcome: survives|weakens|collapses, verdict: stable|conditional|fragile, reasoning}]
+    writes_to: [anomalies_and_contradictions.perturbation_checks, anomalies_and_contradictions.stability_classification]
+  - id: C04
+    question: Can the visible data support the approved question and claim boundary as stated, and does the active route now look materially weaker or invalid?
+    evidence_key: null
+    writes_to: [anomalies_and_contradictions.support_gaps_against_claim_boundary, support_registry.weakly_supported, support_registry.unsupported, claim_boundary_narrowing]
+  - id: C05
+    question: Based on C01-C04, is backtracking required (reopen clean, protocol, or formulate plus protocol), and what is the specific trigger and target?
+    evidence_key: null
+    writes_to: anomalies_and_contradictions.backtracking_decision
+  - id: C06
+    question: Has examination reached a sensible stopping point, would a narrow follow-up cycle (Dn) materially change the support picture, or are further passes likely to be redundant?
+    evidence_key: null
+    writes_to: anomalies_and_contradictions.stop_rule_decision
+
+gates:
+  - id: C-fragility-classified
+    depends_on: [C03]
+    condition: Every pattern that could influence analyze-stage contract lock has an explicit stability verdict (stable, conditional, or fragile) backed by at least one perturbation in C03, and fragile patterns are demoted in the support registry or flagged for analyze.
+  - id: C-biases-bounded
+    depends_on: [C02]
+    condition: Every bias domain rated serious or critical in C02 carries either a quantitative bound (E-value, Lash-style range, or direction-and-magnitude estimate) or an explicit deferral naming the data that would allow bounding.
+  - id: C-claim-boundary-preserved
+    depends_on: [C02, C03, C04]
+    condition: Support gaps against the approved claim boundary are stated explicitly; any recommended narrowing appears in claim_boundary_narrowing with its source cycle; no finding in this cycle uses verbs beyond the claim boundary's effective allowed verbs.
+  - id: C-backtrack-and-stop-declared
+    depends_on: [C05, C06]
+    condition: The cycle resolves both the backtracking decision (including target when required) and the stop-rule decision (stop, continue, or open a narrow Dn follow-up) with stated reasons.
+
+research_questions:
+  - What domain explanations, collection artifacts, or measurement issues could explain the observed anomalies or contradictions?
+  - Which sparse regions or unstable subgroup patterns are likely substantive versus procedural?
+  - Do the observed tensions indicate the question is too broad, the protocol too permissive, or the cleaned artifacts too weak for the intended claim boundary?
+  - At what point do further plots, summaries, or subgroup slices stop adding material information?
+
+guidance:
+  - Report support failures directly. If the visible data cannot support the approved claim boundary, say so and set backtracking_decision accordingly.
+  - Any bias rated serious or critical must carry a bound or a named deferral. "Unknown" without a deferral fails C-biases-bounded.
+  - Recommended narrowing (added verbs_forbidden, tightened generalization_limit, narrower scope) belongs in claim_boundary_narrowing in the examine YAML; it becomes canonical only when formulate is reopened and adopts it.
+  - Opening a Dn follow-up requires that the narrow topic would materially change the support picture; Dn is reserved for a single well-scoped question, not for generic extra exploration.
+
+step4_additions: null
+pcs_checkpoint:
+  before: Step 5
+  items:
+    - "P: Does the support characterization reflect what the visible data shows, or did framing choices overread first-pass patterns? Cite the specific A02 or B02 evidence that grounds the claim."
+    - "C: Can another analyst reproduce each stability verdict in C03 from the canonical YAML and script alone?"
+    - "S: For every analysis-contract-relevant pattern, does at least one reasonable alternative confirm or weaken it (not just repeat it)?"
+  fail_action: On a Stability FAIL, demote the affected pattern to weakly_supported or unsupported, append the narrowing to claim_boundary_narrowing, or set backtracking_decision to the matching target.
+
+log_extension: null

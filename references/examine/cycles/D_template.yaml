@@ -1,0 +1,63 @@
+cycle: D{n}                          # D1, D2, D3, ... assigned in order opened
+focus: "{short description of the follow-up topic, e.g. 'Disentangle likely measurement artifact in variable X from substantive variation'}"
+mandatory: false
+
+# Follow-up cycles run under the exact same 5-step cycle protocol as the
+# mandatory cycles A, B, C, and E. They run after Cycle C and before Cycle E,
+# and are triggered when:
+#   1. Cycle C's stop_rule_decision opens a follow-up
+#   2. The evaluation subagent recommends one
+#   3. The user proposes one after reviewing a cycle's output
+# The user approves or skips each proposed follow-up in Step 4 of the cycle
+# that recommended it.
+#
+# The model does NOT create a new YAML file on disk for each follow-up.
+# Instead, it materializes the concrete Dn spec inline inside
+# 04_examination.yaml under a scratch area (for example status.active_followup_spec),
+# runs the cycle, then appends the closing cycle_history entry.
+#
+# Use this template as the shape for that inline spec.
+#
+# Typical Dn topics:
+#   - clarifying whether a subgroup pattern is real or support-driven
+#   - checking whether a dependence pattern survives a specific alternative view
+#   - resolving whether a support gap materially weakens one route candidate
+#   - disentangling a likely measurement artifact from a substantive structure
+#   - bounding a specific bias domain that Cycle C left at "uncertain"
+
+upstream:
+  - "{list which canonical-YAML fields must be set before the follow-up runs, drawn from structure_profile, relationships, anomalies_and_contradictions, support_registry, or fragility_review}"
+
+setup_side_effects: []
+
+checklist:
+  - id: D{n}01
+    question: "{question derived from the specific follow-up topic}"
+    evidence_key: "{key name, or null if judgment-driven}"
+    writes_to: "{canonical-YAML field, list of fields, or null}"
+  # Add D{n}02, D{n}03, ... as required. Keep follow-ups narrow and purpose-built.
+  # Add `skip_when: <condition>` on any item that has a non-default skip condition.
+  # Common writes_to targets for follow-ups:
+  #   - anomalies_and_contradictions.stability_classification (append or revise)
+  #   - support_registry.weakly_supported / support_registry.unsupported (revise)
+  #   - claim_boundary_narrowing (append, only while examine is still open)
+  #   - relationships.route_pressures (append)
+
+gates:
+  - id: "D{n}01-{short-name}"
+    condition: "{condition that closes the follow-up topic and is stricter than 'item was answered'}"
+  # Single-dep gates encode the checklist ID in the gate ID (e.g. D{n}01-resolved).
+  # Multi-dep gates use id: "D{n}-{short-name}" and depends_on: [D{n}01, D{n}02, ...].
+  # At least one gate is required so the cycle has an enforceable exit beyond "items answered".
+
+research_questions:
+  - "{at most a handful; narrow to the follow-up topic}"
+
+guidance:
+  - Keep the follow-up narrow. One topic per cycle.
+  - If the same topic recurs across follow-ups, escalate instead of looping.
+  - Close the follow-up with decision pass, acknowledge_gap, data_insufficient, reopen_clean, reopen_protocol, reopen_formulate_plus_protocol, or archive under the standard decision matrix.
+
+step4_additions: null
+pcs_checkpoint: null
+log_extension: null

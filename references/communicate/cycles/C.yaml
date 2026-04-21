@@ -1,0 +1,90 @@
+cycle: C
+focus: Claim Translation and Caveat Calibration
+mandatory: true
+
+upstream:
+  - upstream_snapshot.claim_survival_registry
+  - upstream_snapshot.claim_boundary
+  - audience.type
+  - delivery.scaffolding
+
+setup_side_effects: []
+
+checklist:
+  - id: C01
+    question: For each claim that survived (without caveats), what is the audience-appropriate translation using assertive language that stays within the claim boundary?
+    skip_when: zero survived claims without caveats
+    evidence_key: null
+    writes_to: translations
+  - id: C02
+    question: For each claim that survived with caveats, what is the audience-appropriate translation using conditional language that names each caveat explicitly (for example, "under conditions X, the data show Y")?
+    skip_when: zero survived-with-caveats claims
+    evidence_key: null
+    writes_to: translations
+  - id: C03
+    question: Are all mandatory caveats from survived-with-caveats claims integrated visibly and substantively, present next to the claim rather than buried in footnotes or appendices?
+    skip_when: zero survived-with-caveats claims
+    evidence_key: null
+    writes_to: null
+  - id: C04
+    question: For each claim that did not survive, how is it framed as an explicit limitation stating what the analysis could NOT establish, citing the reason from the evaluate claim survival registry?
+    skip_when: zero did-not-survive claims
+    evidence_key: null
+    writes_to: dead_claim_framings
+  - id: C05
+    question: What bounded recommendations are derived, and does each cite its specific parent claim while staying within the claim boundary (descriptive claims recommend investigation, not intervention; predictive claims recommend deployment conditions, not mechanism; causal claims recommend intervention within the identification boundary)?
+    evidence_key: null
+    writes_to: recommendations
+  - id: C06
+    question: Does every recommendation inherit the caveats of its parent claim, and for survived-with-caveats parents, are those caveats restated with the recommendation?
+    evidence_key: null
+    writes_to: null
+  - id: C07
+    question: Does the boundary scan confirm that no translated claim uses verbs outside the effective verbs_allowed set, no translated claim leaves scope, and no translated claim exceeds generalization_limit?
+    evidence_key: boundary_scan              # {per_claim: {claim_id, verbs_used, verbs_in_forbidden: [], scope_exceeded: bool, generalization_exceeded: bool}}
+    writes_to: boundary
+
+gates:
+  - id: C-claims-translated
+    depends_on: [C01, C02]
+    condition: Every surviving claim (with or without caveats) has a translation in audience-appropriate language
+  - id: C-language-calibrated
+    depends_on: [C01, C02]
+    condition: Language strength matches the evaluate verdict -- assertive for survived, conditional for survived-with-caveats -- with no claim reading stronger than its verdict
+  - id: C-caveats-integrated
+    depends_on: [C02, C03]
+    condition: Every mandatory caveat appears beside its claim, visibly and substantively, not relegated to a footnote or appendix
+  - id: C04-dead-claims-framed
+    condition: Every claim that did not survive appears only as an explicit limitation stating what the analysis could NOT establish; none implies the evidence was almost sufficient
+  - id: C-recommendations-bounded
+    depends_on: [C05, C06]
+    condition: Every recommendation cites its parent claim, stays within the claim boundary, and inherits the caveats of its parent
+  - id: C-no-upgrades
+    depends_on: [C01, C02, C05]
+    condition: No translated claim or recommendation upgrades its parent's evaluate verdict; the effective verbs_allowed set is never exceeded
+  - id: C07-boundary-verified
+    condition: boundary_scan shows zero forbidden verbs, zero scope violations, and zero generalization_limit violations across all translations and recommendations
+
+research_questions:
+  - What audience-appropriate language conventions exist for this domain and question type?
+  - What plain-language equivalents exist for the technical terms Skeptic produces (perturbation axes, stability verdicts, predictability checks, claim boundaries, holdout validation)?
+  - What recommendation framing conventions exist for this claim type and audience?
+  - What are common claim-inflation patterns in similar reports, and how do disciplined reports avoid them?
+
+guidance:
+  - PCS verdicts inform language strength but do not map to rigid verb templates. Survived claims support direct assertion. Survived-with-caveats claims require conditional framing that names the instability source, marginal predictability, or non-fatal validity threat.
+  - Use only verbs from the effective claim-boundary verb set (defaults implied by claim_type plus any verbs_forbidden_added overrides from evaluate).
+  - If a translation requires language that would exceed the claim boundary, narrow the claim by populating boundary.narrowing with from/to/reason/cycle. Widening is never allowed in communicate; widening forces reopen_formulate_protocol.
+  - Dead-claim framings must state the reason from the evaluate claim survival registry. Do not hedge it into a near-miss.
+
+step4_additions: null
+
+pcs_checkpoint:
+  before: Step 5
+  items:
+    - "P: Does translated language reflect the evaluate verdict strength exactly, or was assertive language applied to a survived-with-caveats claim?"
+    - "C: Would a second analyst translating the same claim reach the same language strength and caveat visibility?"
+    - "S: Can each translated claim be traced back to the specific evaluate registry row and verdict that authorizes it?"
+  fail_action: On a Stability FAIL, downgrade the language or surface the caveat more prominently; record the narrowing in boundary.narrowing if the downgrade tightens the boundary.
+
+log_extension: null

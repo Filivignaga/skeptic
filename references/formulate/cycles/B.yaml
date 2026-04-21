@@ -1,0 +1,54 @@
+cycle: B
+focus: Data Understanding
+mandatory: true
+
+upstream:
+  - provenance.files
+  - contract.audience
+  - contract.decision_context
+
+setup_side_effects: []
+
+checklist:
+  - id: B01
+    question: What do the relevant variables mean in domain context, including units and expected ranges?
+    evidence_key: variable_meaning              # {column: {dtype, range_observed, likely_unit, likely_meaning_from_schema_or_codebook}}
+    writes_to: contract.operationalization
+  - id: B02
+    question: What relationships exist between columns, and do derived columns already exist?
+    evidence_key: column_relationships          # {pairs: [{a, b, relationship: computed|derived|correlated|near-duplicate, evidence}]}
+    writes_to: null
+  - id: B03
+    question: What does each row represent (unit of analysis / observational unit)?
+    evidence_key: unit_of_analysis_evidence     # {per_file: {candidate_unit_keys, duplicate_key_rate, row_grain_description}}
+    writes_to: contract.unit_of_analysis
+  - id: B04
+    question: Where do materially different interpretations exist, and which interpretation does the user choose?
+    skip_when: no ambiguity surfaced in Cycle A
+    evidence_key: interpretation_ambiguities    # list of {column_or_concept, candidate_interpretations, how_they_differ}
+    writes_to: contract.operationalization
+  - id: B05
+    question: What would the ideal dataset for this question contain, and what is present versus missing?
+    evidence_key: ideal_vs_actual_gap           # {ideal_fields, present_fields, missing_fields, proxies_if_any}
+    writes_to: null
+
+gates:
+  - id: B-variables-understood
+    depends_on: [B01, B02]
+    condition: Relevant variables are understood well enough to reason about the question
+
+research_questions:
+  - What do the specific variables and measurements mean in domain context?
+  - What are standard units, scales, and expected ranges for these measurements?
+  - What variables would an ideal dataset include for answering this question, and which are present versus missing?
+  - What sampling or instrumentation details matter for interpreting these variables correctly?
+
+guidance:
+  - Where materially different interpretations exist, force the user to choose.
+  - Record the chosen interpretation in contract.operationalization with rationale, and list rejected interpretations in rejected_alternatives.
+  - The "ideal dataset" gap is not a failure signal by itself. Record it so `protocol` and later stages can reason about it.
+  - contract.key_assumptions may be appended from any checklist item when an assumption surfaces that later stages must respect.
+
+step4_additions: null
+pcs_checkpoint: null
+log_extension: null

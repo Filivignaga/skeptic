@@ -1,0 +1,76 @@
+cycle: E
+focus: Analysis Handoff Synthesis
+mandatory: true
+
+upstream:
+  - upstream.approved_question
+  - upstream.question_type
+  - upstream.active_route
+  - upstream.claim_boundary
+  - support_registry
+  - structure_profile
+  - relationships
+  - anomalies_and_contradictions
+  - fragility_review
+
+setup_side_effects: []
+
+checklist:
+  - id: E01
+    question: Consolidating the support registry, structure profile, relationships, anomalies, and fragility review, what aspects of the approved question are supported, weakly supported, and unsupported?
+    evidence_key: consolidated_support_matrix  # {supported: [{item, evidence_refs}], weakly_supported: [{item, why_weak, evidence_refs}], unsupported: [{item, why_unsupported, evidence_refs}]}
+    writes_to: [analysis_handoff.supported_aspects, analysis_handoff.weakly_supported_aspects, analysis_handoff.unsupported_aspects]
+  - id: E02
+    question: Relative to the active route, which parts of the analysis plan look stronger, weaker, unchanged, or no longer defensible after examination?
+    evidence_key: null
+    writes_to: analysis_handoff.route_strength_update
+  - id: E03
+    question: What concrete analysis constraints (support limitations, heterogeneity, dependence, temporal structure, anomaly pressures, fragility warnings, visibility and protocol constraints, required narrowing) must later analyze-stage contract lock honor?
+    evidence_key: null
+    writes_to: [analysis_handoff.analysis_constraints, analysis_handoff.unresolved_risks, analysis_handoff.tensions]
+  - id: E04
+    question: What unresolved issues and open questions must be handed to analyze rather than silently resolved in examine?
+    evidence_key: null
+    writes_to: analysis_handoff.open_issues_for_analyze
+  - id: E05
+    question: Does the handoff end with an explicit statement that the next stage is analyze and that examination patterns are observations, not confirmed findings, so analyze may not widen the claim boundary during contract lock?
+    evidence_key: null
+    writes_to: [analysis_handoff.next_stage, analysis_handoff.contract_selection_disclaimer]
+
+gates:
+  - id: E-handoff-complete
+    depends_on: [E01, E02, E03, E04]
+    condition: analysis_handoff contains non-empty supported/weakly/unsupported lists grounded in evidence refs, a route strength update, analysis constraints with evidence, unresolved risks, tensions, and open issues for analyze.
+  - id: E-no-contract-selection
+    depends_on: [E02, E03, E05]
+    condition: The handoff informs analyze through observations, constraints, and pressures without choosing the final route, estimator, or analysis contract; examination language stays inside the claim boundary's effective allowed verbs; analyze is explicitly named as the next stage and the disclaimer against widening the claim boundary is present.
+  - id: E-registry-consistency
+    depends_on: [E01]
+    condition: Every item in E01's consolidated support matrix has a counterpart in support_registry built across Cycles A-C (or a noted adjustment from fragility_review), and no registry entry is silently dropped.
+
+research_questions:
+  - Which observed structures, support limitations, or anomaly patterns require domain-aware caution in later analyze-stage contract lock?
+  - Which parts of the active route are most sensitive to the visible support limitations or structural tensions?
+  - What domain questions remain open that analyze must respect rather than silently resolve?
+
+guidance:
+  - Cycle E synthesizes; it does not choose the analysis contract. Keep language at the level of observations, pressures, and constraints.
+  - When a fragility_review verdict demotes a pattern, carry that demotion into the consolidated support matrix rather than using the original Cycle A-B wording.
+  - The handoff is the document analyze reads first; every constraint must be concrete enough to act on.
+
+step4_additions:
+  description: After the standard decision, state each of the following before closing the cycle. The items populate analysis_handoff in the canonical YAML and feed the rendered 04_examination.md.
+  items:
+    - supported_aspects_with_evidence_refs
+    - weakly_supported_aspects_with_reasons
+    - unsupported_aspects_with_reasons
+    - route_strength_update_stronger_weaker_unchanged_no_longer_defensible
+    - analysis_constraints_with_evidence
+    - unresolved_risks_and_tensions
+    - open_issues_for_analyze
+    - claim_boundary_narrowing_summary_if_any
+    - explicit_next_stage_is_analyze_and_no_contract_selection_here
+  user_approval: required
+
+pcs_checkpoint: null
+log_extension: null
