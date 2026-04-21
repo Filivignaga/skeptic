@@ -160,7 +160,7 @@ Each `cycle_history` entry:
   # Optional: user_observations (captured in Step 2 when ambiguities required user input); decision_reason (required when decision != pass); override: {reason, gate} when a FAIL was overridden.
 ```
 
-Do not store subagent prose anywhere -- not in the YAML, not on disk. The main model digests both subagent replies into the `subagents` fields above; only entries that materially shaped this iteration belong there. `blocking_failures` (0 = PASS, >0 = FAIL) is the enforceable integer summary. Per-gate reasoning enters `cycle_history` only through a `decisions[*]` or `rejected_alternatives[*]` entry that a specific gate produced, never as a gate-by-gate restatement. Never add ad-hoc keys to the subagents block; if a finding has no schema home, fold it into `open_risks` or omit it.
+The main model reads both subagent replies, distills them, and writes the result into the `subagents` fields above; the replies themselves stay in memory. Populate those fields with the entries that materially shaped this iteration. `blocking_failures` (0 = PASS, >0 = FAIL) is the enforceable integer summary. Route per-gate reasoning into `cycle_history` through the specific `decisions[*]` or `rejected_alternatives[*]` entry that a gate produced. Keep the subagents block to the schema fields above; route any finding without a schema home into `open_risks`, or leave it out.
 
 `pcs_review` when set:
 
@@ -377,7 +377,7 @@ Agent(
 
 When both subagents return, the model parses three counts from the evaluation output: `Unanswered items`, `Blocking defects`, `Failed gates`. `blocking_failures = unanswered + blocking_defects + failed_gates`; `blocking_failures == 0` means PASS. Every checklist item must be answered for the cycle to pass -- unanswered items feed the count directly so there is no need for a 1:1 gate per item.
 
-Digest the subagent replies into `cycle_history[*].subagents`. Do not store the verbatim prose anywhere -- not in the YAML, not on disk. Admit something to `subagents` only if a future reader needs it to reconstruct why this path was chosen.
+Digest the subagent replies into `cycle_history[*].subagents`; the replies themselves stay in memory. Admit something to `subagents` when a future reader needs it to reconstruct why this path was chosen.
 
 Include:
 - `research_sources`: URLs that actually tipped a call, each paired with a one-line claim. Drop sources that merely confirmed obvious baseline facts or rephrased what was already known.
@@ -391,7 +391,7 @@ Exclude:
 - Per-gate PASS notes when nothing interesting happened. Only gates whose reasoning belongs in the audit record.
 - Sources that confirmed baseline facts without changing behavior.
 
-Do not invent fields outside the schema. If something the subagent surfaced has no schema home, either fit it into `open_risks` or omit it; never add ad-hoc keys.
+Keep the schema as the authoritative field list. If something the subagent surfaced has no schema home, fit it into `open_risks` or leave it out.
 
 ### Step 4: Decision
 

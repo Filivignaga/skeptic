@@ -1,6 +1,6 @@
 # Skeptic Core Principles
 
-Use a question-first lifecycle. Do not start from a favorite method. Do not treat predictive workflows as the default template for every project.
+Use a question-first lifecycle: the question chooses the method. Treat every project as open to any of the six question types, with predictive workflows reserved for questions that target unseen-outcome forecasting.
 
 This file is the architecture contract for Skeptic. If any downstream stage file conflicts with this file, this file wins.
 
@@ -12,7 +12,7 @@ PCS applies across all question types.
 - Computability: make every material step executable, documented, and reproducible in code. Record parameters, random seeds, artifacts, and stage outputs. If the workflow cannot be rerun and audited, it does not count.
 - Stability: check whether conclusions survive reasonable perturbations to formulation, protocol, cleaning, examination, analysis-contract choices inside `analyze`, execution choices inside `analyze`, and presentation. If a claim fails under reasonable alternatives, downgrade the claim or return to the stage that created the fragility.
 - Documentation: record the rationale for each judgment call, the plausible alternatives, and the downstream consequences. Documentation lives inside the canonical stage YAML, not in side notes.
-- PCS is continuous. Do not treat it as an end-stage checklist.
+- PCS runs continuously across every stage, informing decisions at each one.
 
 ## Architecture Overview
 
@@ -147,7 +147,7 @@ Typical `protocol` outputs (written into `02_protocol.yaml`) include:
 
 `protocol` sets data-usage, evidence, and claim rules. It does not choose the exact analysis specification. That is locked at the start of `analyze`.
 
-Do not let `clean`, `examine`, or `analyze` silently invent these rules later.
+Freeze these rules in `protocol` so `clean`, `examine`, and `analyze` execute against a committed contract.
 
 ## Question Type Constraints
 
@@ -214,7 +214,7 @@ Every post-`formulate` stage follows the same runtime pattern:
    - `references/routes/{route}/analyze.md` when that stage file exists
 4. Keep the route context in memory across cycles in the same chat.
 5. If route context becomes ambiguous mid-stage, reread upstream YAMLs and the same route file before proceeding.
-6. If the active route cannot be resolved or the expected route file is missing, stop. Do not improvise around missing routing architecture.
+6. If the active route cannot be resolved or the expected route file is missing, stop and repair the routing architecture before continuing.
 
 Route files may narrow the stage-core. They may not override reproducibility rules or widen the claim boundary.
 
@@ -326,14 +326,14 @@ Rules:
 - Express every material transformation in code.
 - Record every judgment call with rationale and plausible alternatives in the canonical YAML.
 - Respect protocol-defined data visibility. If a partition or holdout is restricted, do not touch it outside the stages and purposes `protocol` allows.
-- Do not change question type or claim class midstream without reopening `formulate` and `protocol`.
+- Change question type or claim class only by reopening `formulate` and `protocol`.
 - Keep one canonical YAML plus one rendered markdown per completed stage in the configured documentation directory.
 - Re-run from raw data plus protocol-defined frozen artifacts, not from ad hoc saved intermediates.
 - Record random seeds when stochastic procedures matter.
-- Preserve an audit trail when backtracking. `cycle_history` is append-only; new iterations append to the list. Do not edit past entries.
-- Never add ad-hoc keys to `cycle_history` entries. The schema defined in the stage entry file is exhaustive. If a finding has no schema home, fold it into `subagents.open_risks`, attach it to an existing `subagents.decisions[*]` or `subagents.rejected_alternatives[*]` entry, or omit it. Never invent a new field.
-- Generated project documents must reference real project files. Do not leave stale references to deleted artifacts, placeholder scripts, or personal workspace paths.
-- README summaries must be derived from the actual project filesystem state and verified against artifacts on disk, not written from memory.
+- Preserve an audit trail when backtracking. `cycle_history` is append-only; new iterations append to the list and past entries remain as recorded.
+- Keep `cycle_history` entries to the schema defined in the stage entry file; that schema is exhaustive. Route findings without a schema home into `subagents.open_risks`, attach them to an existing `subagents.decisions[*]` or `subagents.rejected_alternatives[*]` entry, or leave them out.
+- Generated project documents must reference real project files. Every reference must point to a file that currently exists in the project.
+- Derive README summaries from the actual project filesystem state and verify them against artifacts on disk.
 
 ## Source Data Encoding
 
@@ -382,7 +382,7 @@ When backtracking:
 - Preserve the earlier record. `cycle_history` entries are append-only.
 - Unlock the stage (set `status.locked_at: null`) and re-run the affected cycles.
 - Re-render the markdown at the end of the reopen.
-- Never erase earlier work. Mark it superseded via the new iteration rather than editing past entries.
+- Preserve earlier work by marking it superseded in a new iteration; past entries stay as written.
 
 ## Auto Mode Preflight and State
 
