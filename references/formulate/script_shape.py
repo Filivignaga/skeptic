@@ -5,6 +5,8 @@ Copy this file into the project's scripts directory as the stage's script
 function per cycle. The rules enforced by this skeleton are:
 
 - Exactly one JSON object printed to stdout by `main()`. Nothing else.
+- `main()` also writes the same JSON to `stdout/cycle_{cycle}.json`
+  (sibling of the script). Overwritten on re-run; audit artifact only.
 - No writes to the canonical stage YAML. Only the model writes it.
 - Cycle-specific logic lives inside the cycle function. No generic
   helpers at module scope beyond what this skeleton already provides.
@@ -132,7 +134,16 @@ def main() -> int:
     state = load_state(state_path) if state_path.exists() else {}
 
     evidence = cycle_fn(state)
-    print(json.dumps(evidence, ensure_ascii=False, sort_keys=True))
+    output = json.dumps(evidence, ensure_ascii=False, sort_keys=True)
+
+    # Mirror stdout to an on-disk audit file (overwritten each run).
+    stdout_dir = Path(__file__).parent / "stdout"
+    stdout_dir.mkdir(parents=True, exist_ok=True)
+    (stdout_dir / f"cycle_{args.cycle.upper()}.json").write_text(
+        output, encoding="utf-8"
+    )
+
+    print(output)
     return 0
 
 

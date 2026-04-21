@@ -109,7 +109,6 @@ Each `cycle_history` entry:
   iteration:                        # 1-based per cycle letter
   unanswered: []                    # checklist IDs not answered; empty = all answered
   script_evidence: {}               # compact summary only: 4-8 one-line bullets, or one-line value per evidence_key. No full JSON, no DataFrames, no arrays, no per-column schema.
-  script_evidence_ref:              # relative path to {scripts_dir_name}/stdout/cycle_{cycle}_iter{iteration}.json holding the full stdout JSON
   subagents:
     research_sources: []            # [{url, claim}] -- only sources that materially shaped a decision this iteration
     decisions: []                   # [{what, why, pcs: P|C|S|null, source: int?}] -- operational choices where a reasonable alternative existed (distinct from the top-level `decision:` verdict below; `source` is an optional index into research_sources)
@@ -188,7 +187,7 @@ This protocol applies to every cycle, mandatory or follow-up.
 3. Cycle A only: execute the bootstrap sequence in `bootstrap.md`. It covers folder creation, raw-data and documentation copy, `README` init, canonical-YAML init (`stage`, `schema_version`, `project`, `status.current_cycle: A`), and the `script_shape.py` copy that produces `01_formulation.py`. One-time only; not rerun on backtrack.
 4. Every cycle: extend `01_formulation.py` by writing or updating the cycle's function (`run_cycle_a`, `run_cycle_b`, ...). The function must produce every non-null `evidence_key` named in the cycle's checklist.
 5. Run `python {scripts_dir_name}/01_formulation.py --cycle {cycle}`. Capture stdout.
-6. Parse stdout as JSON. Write the stdout verbatim to `{scripts_dir_name}/stdout/cycle_{cycle}_iter{iteration}.json` (create `{scripts_dir_name}/stdout/` on first use; `{iteration}` is the 1-based iteration number that will be written to `cycle_history` in Step 5). The parsed dictionary is the in-session candidate evidence driving Step 2 and Step 3. Only the compact summary derived from it is written into `cycle_history.script_evidence` in Step 5; the on-disk file is the full-JSON audit artifact referenced by `script_evidence_ref`.
+6. Parse stdout as JSON. Use the parsed dict as this cycle's candidate evidence for Step 2 and Step 3; Step 5 records a compact summary in `cycle_history[*].script_evidence`. The script has already mirrored the same JSON to `{scripts_dir_name}/stdout/cycle_{cycle}.json` for external inspection; do not copy it into the canonical YAML.
 7. Scan stderr and stdout for unhandled exceptions. Any unhandled exception is a blocking defect and must be fixed before continuing. Functions that intentionally demonstrate failure must be explicitly flagged with a `# expected_failure` comment.
 
 Script shape: start from `references/formulate/script_shape.py`. It provides the mandatory surface -- `sha256_of`, `detect_encoding`, `read_csv`, `load_state`, the `CYCLES` dispatch, and a `main()` that prints exactly one JSON object to stdout. Copy it into `01_formulation.py` at Cycle A, then add one `run_cycle_*` function per cycle at the start of every subsequent cycle. Do not introduce additional module-scope helpers; keep cycle-specific logic inside the cycle function.
@@ -197,7 +196,6 @@ Script rules:
 - The script prints exactly one JSON object to stdout. Nothing else on stdout.
 - The script does not write to `01_formulation.yaml`. Only the model writes the canonical YAML.
 - Heavy data (arrays, full DataFrames) is summarized, not dumped. Evidence packets stay compact.
-- Each cycle's stdout is written verbatim to `{scripts_dir_name}/stdout/cycle_{cycle}_iter{iteration}.json`. `cycle_history[*].script_evidence` stores only a compact summary plus `script_evidence_ref` pointing at that file. Do not dump the full JSON into the canonical YAML.
 - Per-file provenance (schema, encoding, sha256) is emitted only the first time a file is recorded -- typically Cycle A iter 1. After it lands in `provenance.files`, neither the stdout packet nor `cycle_history[*].script_evidence` re-emits those fields; downstream cycles reference those files by filename.
 - Seeds are set inside the function if any stochastic step runs.
 - No generic helpers at module scope beyond those named in the Script shape above. Any helper introduced for a cycle lives inside that cycle's function and is removed once the cycle passes.
@@ -362,7 +360,6 @@ Append one entry to `cycle_history`. Required fields:
 - `cycle`, `iteration`
 - `unanswered` (list of checklist IDs that could not be answered; empty list when all were answered)
 - `script_evidence` (compact summary only: 4-8 one-line bullets, or one-line value per `evidence_key` from the cycle YAML). Do not re-emit the full JSON, full DataFrames, or full arrays; after Cycle A iter 1, do not re-emit file schema, encoding, or sha256 -- those are immutable and live in `provenance.files`.
-- `script_evidence_ref` (relative path to the on-disk stdout file written in Step 1: `{scripts_dir_name}/stdout/cycle_{cycle}_iter{iteration}.json`)
 - `subagents.research_sources`, `subagents.decisions`, `subagents.rejected_alternatives`, `subagents.open_risks`, `subagents.blocking_failures` (populate each only with entries that materially shaped this iteration; empty lists are valid)
 - `decision`
 
