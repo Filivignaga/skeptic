@@ -114,7 +114,7 @@ Each `cycle_history` entry:
     evaluation_verbatim:            # preserved; contains per-gate reasoning
     blocking_failures:              # int (0 = PASS, >0 = FAIL)
   decision:                         # pass|iterate|acknowledge_gap|data_insufficient|reformulate|archive
-  # Optional: decision_reason (required when decision != pass); override: {reason, gate} when a FAIL was overridden.
+  # Optional: user_observations (captured in Step 2 when ambiguities required user input); decision_reason (required when decision != pass); override: {reason, gate} when a FAIL was overridden.
 ```
 
 Gate-level detail lives inside `subagents.evaluation_verbatim`. Do not re-serialize gate verdicts in the cycle_history entry; `blocking_failures` (0 = PASS, >0 = FAIL) is the enforceable summary.
@@ -198,8 +198,13 @@ Script rules:
 
 ### Step 2: Human Review
 
-- Interactive mode: present the script evidence inline, concisely. The user asks questions or raises concerns. Respond before proceeding.
-- Auto mode: apply the self-review loop from `../auto-mode.md`. Self-correct within the configured budget, then proceed unless an escalation trigger fires.
+Interactive mode:
+1. Present the script evidence inline, concisely.
+2. Scan the evidence for ambiguities, decision points the model cannot resolve alone, and research topics worth seeding into Step 3 beyond the cycle's default research_questions.
+3. If at least one such item exists, dispatch `AskUserQuestion` with 1-3 questions targeting them. Otherwise proceed directly to Step 3.
+4. When AskUserQuestion was dispatched, record the user's answers as `user_observations` in the pending cycle_history entry. Pass them into Step 3 subagent prompts via the `User observations:` field.
+
+Auto mode: apply the self-review loop from `../auto-mode.md`. Self-correct within the configured budget, then proceed unless an escalation trigger fires.
 
 ### Step 3: Subagent Review
 
@@ -218,7 +223,7 @@ Agent(
   Context: the project is about "{rough question}" using data with these characteristics:
   {compact summary of script_evidence for this cycle}
 
-  User observations: {user's questions or observations, if any}
+  User observations: {cycle_history entry's user_observations from Step 2, or "none"}
 
   Answer these research questions for Cycle {X} ({cycle focus}):
   {research_questions list from the cycle YAML}
@@ -247,7 +252,7 @@ Agent(
   Cycle focus: {cycle focus description}
   Cycle YAML for reference: {cycles/{X}.yaml full content}
   Script evidence produced this iteration: {the candidate script_evidence}
-  User observations: {user's questions or observations, if any}
+  User observations: {cycle_history entry's user_observations from Step 2, or "none"}
 
   Produce this structured output, in order, with these exact section headings:
 
@@ -337,6 +342,7 @@ Append one entry to `cycle_history`. Required fields:
 
 Write conditional fields only when they apply:
 
+- `user_observations`: captured in Step 2 when AskUserQuestion elicited user input.
 - `decision_reason`: required when `decision != pass`.
 - `override`: `{reason, gate}` only when a FAIL was overridden.
 
