@@ -170,7 +170,9 @@ So you know what stays:
 
 ---
 
-## Summary of impact if you accept everything
+## Summary of impact if you accept everything (project-side, clean stage only)
+
+These estimates are concrete to the clean-stage project example that motivated the proposal. They are not skill-wide size estimates, and they should not be read as guaranteed reductions for every stage.
 
 | Metric | Before | After |
 |---|---|---|
@@ -767,6 +769,8 @@ Each stage-entry `.md` Step 3 reads the flag rather than hard-coding "Dispatch t
 ---
 
 ### G. Protected surface (no-change zone)
+
+The abstract protection rules below are grounded in the original clean-stage no-change list from Section 1. Treat that original list as the practical regression checklist for the motivating implementation slice, and treat this section as the skill-wide generalization of the same constraint.
 
 #### G1. Abstract names for the project-specific protection list
 
