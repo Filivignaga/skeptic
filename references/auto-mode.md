@@ -2,7 +2,7 @@
 
 This file defines the autonomous runtime for `/skeptic:auto`.
 
-`core-principles.md` remains the architecture contract. This file only changes control flow. It does not weaken checklist coverage, gate evaluation, route discipline, PCS review, scorecards, backtracking, or logging.
+`core-principles.md` remains the architecture contract. This file only changes control flow. It does not weaken required-evidence coverage, acceptance-criteria evaluation, route discipline, PCS review, scorecards, backtracking, or logging.
 
 ## Activation and Precedence
 
@@ -181,7 +181,7 @@ State schema validation and read-back verification:
   - `backtrack_count`: integer
   - `stage_attempts`: object keyed by stage name with integer counts
   - `pending_escalation`: `null` or object
-- After every write, run this verification checklist before continuing:
+- After every write, run these verification checks before continuing:
   1. Reread the file from disk.
   2. Parse it as JSON. If parsing fails, stop and repair.
   3. Verify zero duplicate keys. The write procedure must construct the object in memory and serialize it, never concatenate JSON strings.
@@ -208,22 +208,22 @@ After notebook execution and before subagents:
 1. inspect outputs for:
    - execution errors
    - empty or clearly malformed outputs
-   - unanswered checklist items
+   - missing required evidence
    - artifact mismatches
    - obvious route or claim-boundary violations
 2. if issues are found, write corrective cells and re-execute
 3. allow at most 2 self-correction rounds
 4. if issues remain after 2 rounds, log them and continue to subagent review
 
-Self-review is not a substitute for gate evaluation. It is only a fast sanity pass.
+Self-review is not a substitute for acceptance-criteria evaluation. It is only a fast sanity pass.
 
 ### Step 4 Replacement: Autonomous Decision
 
 When the subagents return:
 
-1. verify each subagent result is non-empty and contains the expected output structure. The evaluation subagent must include DEFECT SCAN, GATE ASSESSMENTS, and VERDICT sections. The research subagent must include organized findings. If a subagent returned empty, errored out, or produced output missing its required structure, escalate to the user. Do not synthesize from partial results without flagging the gap.
+1. verify each subagent result is non-empty and contains the expected output structure. The evaluation subagent must include DEFECT SCAN, ACCEPTANCE CRITERIA ASSESSMENT, and FINAL COUNTS sections. The research subagent must include organized findings. If a subagent returned empty, errored out, or produced output missing its required structure, escalate to the user. Do not synthesize from partial results without flagging the gap.
 2. synthesize the cycle assessment
-3. count `blocking_failures = blocking_defects + failed_gates`
+3. count `blocking_failures = blocking_defects + failed_acceptance_criteria`
 4. apply the stage decision matrix
 
 Decision rules:
@@ -286,7 +286,7 @@ Rules:
 
 - the evaluation subagent may recommend a follow-up topic
 - Claude may auto-approve it only if it is issue-specific and inside the active stage boundary
-- every follow-up must define its own checklist and success condition
+- every follow-up must define its own required evidence and success condition
 - if the same topic keeps recurring, escalate instead of looping
 
 Follow-ups must appear in:

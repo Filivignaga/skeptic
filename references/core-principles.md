@@ -111,7 +111,7 @@ Each stage-entry file carries:
 Each per-cycle YAML carries:
 
 - `upstream`: canonical-YAML fields that must be set before the cycle runs
-- `setup_side_effects`: one-time actions (typically for the first cycle only)
+- `setup_side_effects`: one-time actions (typically for the first cycle only); omit when empty
 - `required_evidence`: the evidence keys the script or model must produce for the cycle
 - `acceptance_criteria`: 3-5 verifiable conditions that must hold for the cycle to close
 - `writes`: mapping from evidence or judgment outputs to canonical-YAML fields
@@ -119,7 +119,7 @@ Each per-cycle YAML carries:
 - `guidance`: short, cycle-specific judgment rules
 - `pcs_focus` or `log_extension`: present only when the cycle adds a specific discipline
 
-Legacy cycle files may still use `checklist` and `gates`. Treat each non-null `evidence_key` as `required_evidence`, each `writes_to` as `writes`, and collapse gates into `acceptance_criteria`. Do not perform a second criterion-by-criterion proof when a checklist answer already satisfies the acceptance criterion.
+Each cycle that makes a judgment must identify the plausible alternative most likely to change a downstream decision. Record whether it would change the route, claim boundary, data-usage rule, cleaning policy, analysis contract, evaluation verdict, or communication framing. Store this only in the relevant destination field, `rejected_alternatives`, `open_risks`, or `material_findings`; do not create a separate process log.
 
 ### Load Pattern
 
@@ -235,7 +235,6 @@ Rules:
 - Acceptance criteria are the enforceable cycle bar. Keep them few enough to reason about directly; 3-5 criteria is the default target.
 - A missing required evidence key or failed acceptance criterion is a blocking failure.
 - Skip rules must be explicit. If a required evidence key has no skip rule, absence is blocking.
-- Legacy `gates` are still valid but should be interpreted as acceptance criteria. Do not require a separate 1:1 gate for every checklist item.
 - If a project needs to proceed with a bounded risk, use `override: {reason, criterion}` rather than a soft-fail concept.
 
 ### 2. Decision Matrix

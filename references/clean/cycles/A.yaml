@@ -1,99 +1,136 @@
 cycle: A
 focus: Structural Audit
 mandatory: true
-
 upstream:
-  - project.name
-  - contract.approved_question
-  - contract.question_type
-  - contract.claim_boundary
-  - contract.operationalization
-  - protocol.route
-  - protocol.data_usage_mode
-  - protocol.visibility_rules
-  - protocol.clean_prohibitions
-  - protocol.forbidden_variable_classes
-  - protocol.leakage_rules
-  - protocol.validation_logic_reserved
-  - protocol.required_artifacts
-
+- project.name
+- contract.approved_question
+- contract.question_type
+- contract.claim_boundary
+- contract.operationalization
+- protocol.route
+- protocol.data_usage_mode
+- protocol.visibility_rules
+- protocol.clean_prohibitions
+- protocol.forbidden_variable_classes
+- protocol.leakage_rules
+- protocol.validation_logic_reserved
+- protocol.required_artifacts
 setup_side_effects:
-  - Resolve the active route from 01_formulation.yaml and 02_protocol.yaml; reopen protocol on contradiction
-  - Load references/routes/{route}/clean.md once and keep it in memory for the stage
-  - Verify 01_formulation.yaml, 02_protocol.yaml, {readme_name}, at least one raw file, and every protocol-required artifact exist
-  - Recompute SHA-256 for each raw file and compare to provenance.files.{filename}.sha256 recorded in 01_formulation.yaml
-  - Derive the active visibility set (visible raw files, visible protocol artifacts, restricted artifacts, access levels)
-  - Initialize {docs_dir_name}/03_cleaning.yaml with stage, schema_version, project (including project.started_at), status.current_cycle A, route, upstream_snapshot, precondition_check, and visibility
-  - Seed question_critical_variables from contract.operationalization in 01_formulation.yaml
-  - Create {scripts_dir_name}/03_cleaning.py with the shape specified in the stage entry
-
-checklist:
-  - id: A00
-    question: Do formulation and protocol outputs exist with every required field, does the readme exist, does at least one raw file exist, do protocol-required artifacts exist, and do recomputed raw-file SHA-256 hashes match the values recorded in 01_formulation.yaml?
-    evidence_key: precondition_check            # {formulation_fields_present, protocol_fields_present, readme_present, raw_file_count, required_artifacts: {artifact: present|missing_reason}, hash_verification: {filename: {expected, observed, match}}}
-    writes_to: precondition_check
-  - id: A01
-    question: Which artifacts did this stage load, what are their dimensions, and which are restricted from inspection under the derived visibility set?
-    evidence_key: visibility_snapshot           # {visible_raw_files: [{path, n_rows, n_cols}], visible_protocol_artifacts: [{path, role}], restricted_artifacts: [{path, restriction_reason}], access_levels: {artifact: allowed_operations}}
-    writes_to: visibility
-  - id: A02
-    question: For each visible artifact, what are the column dtypes, and do any columns carry a type that contradicts their apparent meaning?
-    evidence_key: schema_and_type_issues        # {filename: {columns: [{name, dtype, apparent_meaning, type_meaning_mismatch: bool, notes}]}}
-    writes_to: null
-  - id: A03
-    question: For each visible artifact, what does each row represent, is there a unique identifier, and is observational-unit consistency confirmed against the unit of analysis locked in formulate?
-    evidence_key: row_grain                     # {filename: {row_description, candidate_key_columns, duplicate_key_rate, consistency_with_unit_of_analysis: bool, notes}}
-    writes_to: null
-  - id: A04
-    question: Across multiple visible artifacts, what are the candidate join keys and do they align on type, cardinality, and referential coverage?
-    skip_when: only one visible artifact exists in visibility.visible_raw_files and visibility.visible_protocol_artifacts combined
-    evidence_key: join_key_alignment            # {pairs: [{left_artifact, right_artifact, join_keys, left_coverage, right_coverage, type_match, notes}]}
-    writes_to: null
-  - id: A05
-    question: For each question-critical or high-risk field, what is its meaning, unit, expected range, source of that meaning (codebook, schema, domain knowledge, inferred), and any unresolved ambiguity?
-    evidence_key: field_semantics               # list of {column_or_term, meaning, unit, expected_range, source: codebook|schema|domain|inferred, unresolved_ambiguity}
-    writes_to: data_contract.codebook_contents
-  - id: A06
-    question: Do planned cleaning, preprocessing, and derived-variable actions stay within the approved question type, the protocol contract (visibility rules, leakage rules, forbidden variable classes, clean prohibitions, validation logic), and the active route-file restrictions?
-    evidence_key: scope_respected               # {question_type_respected: yes|no|uncertain, protocol_contract_respected: yes|no|uncertain, route_file_respected: yes|no|uncertain, violations: [{category, description, planned_action}]}
-    writes_to: null
-  - id: A07
-    question: What is the explicit data contract (raw artifacts, cleaned artifacts, tidy-data rules, codebook location and required contents, missing-vs-censored rule, raw-to-clean recipe)?
-    evidence_key: null
-    writes_to: [data_contract.raw_artifacts, data_contract.cleaned_artifacts, data_contract.tidy_rules, data_contract.codebook_location, data_contract.codebook_contents, data_contract.missing_vs_censored_rule, data_contract.raw_to_clean_recipe]
-  - id: A08
-    question: Are structural conventions (column naming, merged fields, identifier rules, unit handling) explicit, internally consistent, and compatible with the tidy-data rules above?
-    evidence_key: structural_conventions_audit  # {conventions: [{name, description, applied_to, internally_consistent: bool, tidy_compatible: bool, notes}]}
-    writes_to: data_contract.structural_conventions
-
-gates:
-  - id: A00-preconditions-verified
-    condition: Every required formulation and protocol field is present; the readme exists; at least one raw file exists; every protocol-required artifact exists; recomputed raw-file SHA-256 hashes match the values recorded in 01_formulation.yaml
-  - id: A01-visibility-confirmed
-    condition: Visible raw files, visible protocol artifacts, restricted artifacts, and access levels are explicitly recorded for this stage
-  - id: A-structure-audited
-    depends_on: [A02, A03]
-    condition: Dtype-meaning mismatches are resolved or flagged with a concrete follow-up; row grain and identifiers align to the unit of analysis locked in formulate
-  - id: A04-joins-aligned
-    condition: Candidate join keys align on type, cardinality, and coverage; the skip_when path is taken only when a single artifact is visible
-  - id: A05-semantics-aligned
-    condition: Every question-critical and high-risk field has a meaning, unit, and expected range with a named source; unresolved ambiguity is logged rather than silently filled
-  - id: A06-scope-respected
-    condition: Planned actions respect the question type, the protocol contract, and the active route-file restrictions; all three respect fields are yes with no violations
-  - id: A07-data-contract-defined
-    condition: Raw artifacts, cleaned artifacts, tidy-data rules, codebook location and contents, missing-vs-censored rule, and raw-to-clean recipe are all populated
-  - id: A08-conventions-consistent
-    condition: Structural conventions are internally consistent and compatible with the tidy-data rules
-
+- Resolve the active route from 01_formulation.yaml and 02_protocol.yaml; reopen protocol on contradiction
+- Load references/routes/{route}/clean.md once and keep it in memory for the stage
+- Verify 01_formulation.yaml, 02_protocol.yaml, {readme_name}, at least one raw file, and every protocol-required artifact
+  exist
+- Recompute SHA-256 for each raw file and compare to provenance.files.{filename}.sha256 recorded in 01_formulation.yaml
+- Derive the active visibility set (visible raw files, visible protocol artifacts, restricted artifacts, access levels)
+- Initialize {docs_dir_name}/03_cleaning.yaml with stage, schema_version, project (including project.started_at), status.current_cycle
+  A, route, upstream_snapshot, precondition_check, and visibility
+- Seed question_critical_variables from contract.operationalization in 01_formulation.yaml
+- Create {scripts_dir_name}/03_cleaning.py with the shape specified in the stage entry
 research_questions:
-  - What domain or source documentation clarifies the meaning, units, codes, or timestamp semantics of the visible fields?
-  - What structural expectations are normal for these artifacts?
-  - Are there domain-specific conventions that change how duplicates, identifiers, or row units should be interpreted?
-  - What tidy-data and codebook conventions are required for these artifacts?
-  - Which values are typically missing, structurally missing, or censored for this kind of source?
-  - Does any unresolved semantic ambiguity threaten protocol compliance or the approved question?
-
+- What domain or source documentation clarifies the meaning, units, codes, or timestamp semantics of the visible fields?
+- What structural expectations are normal for these artifacts?
+- Are there domain-specific conventions that change how duplicates, identifiers, or row units should be interpreted?
+- What tidy-data and codebook conventions are required for these artifacts?
+- Which values are typically missing, structurally missing, or censored for this kind of source?
+- Does any unresolved semantic ambiguity threaten protocol compliance or the approved question?
 guidance:
-  - Default tidy-data rules (narrow with formulate, protocol, or the route file only): one variable per column, one observation per row, one observational unit per row unless a multi-row representation is explicitly documented, explicit keys for joins and repeated measurements, categorical meaning stored in values, column names consistent and mechanically readable, merged fields split when components have distinct meanings, unit conversions documented and verified, label-switching or contradictory joins treated as semantic issues rather than value-cleaning issues.
-  - If a needed semantic contract is missing and cannot be resolved from available documentation, stop and surface the exact ambiguity rather than guessing.
-  - Route files may narrow or prohibit actions; they may not widen this stage-core or the protocol contract.
+- Default tidy-data rules (narrow with formulate, protocol, or the route file only): one variable per column, one observation
+    per row, one observational unit per row unless a multi-row representation is explicitly documented, explicit keys for
+    joins and repeated measurements, categorical meaning stored in values, column names consistent and mechanically readable,
+    merged fields split when components have distinct meanings, unit conversions documented and verified, label-switching
+    or contradictory joins treated as semantic issues rather than value-cleaning issues.
+- If a needed semantic contract is missing and cannot be resolved from available documentation, stop and surface the exact
+  ambiguity rather than guessing.
+- Route files may narrow or prohibit actions; they may not widen this stage-core or the protocol contract.
+required_evidence:
+- id: A00
+  question: Do formulation and protocol outputs exist with every required field, does the readme exist, does at least one
+    raw file exist, do protocol-required artifacts exist, and do recomputed raw-file SHA-256 hashes match the values recorded
+    in 01_formulation.yaml?
+  evidence_key: precondition_check
+  evidence_shape: '{formulation_fields_present, protocol_fields_present, readme_present, raw_file_count, required_artifacts:
+    {artifact: present|missing_reason}, hash_verification: {filename: {expected, observed, match}}}'
+- id: A01
+  question: Which artifacts did this stage load, what are their dimensions, and which are restricted from inspection under
+    the derived visibility set?
+  evidence_key: visibility_snapshot
+  evidence_shape: '{visible_raw_files: [{path, n_rows, n_cols}], visible_protocol_artifacts: [{path, role}], restricted_artifacts:
+    [{path, restriction_reason}], access_levels: {artifact: allowed_operations}}'
+- id: A02
+  question: For each visible artifact, what are the column dtypes, and do any columns carry a type that contradicts their
+    apparent meaning?
+  evidence_key: schema_and_type_issues
+  evidence_shape: '{filename: {columns: [{name, dtype, apparent_meaning, type_meaning_mismatch: bool, notes}]}}'
+- id: A03
+  question: For each visible artifact, what does each row represent, is there a unique identifier, and is observational-unit
+    consistency confirmed against the unit of analysis locked in formulate?
+  evidence_key: row_grain
+  evidence_shape: '{filename: {row_description, candidate_key_columns, duplicate_key_rate, consistency_with_unit_of_analysis:
+    bool, notes}}'
+- id: A04
+  question: Across multiple visible artifacts, what are the candidate join keys and do they align on type, cardinality, and
+    referential coverage?
+  evidence_key: join_key_alignment
+  evidence_shape: '{pairs: [{left_artifact, right_artifact, join_keys, left_coverage, right_coverage, type_match, notes}]}'
+  skip_when: only one visible artifact exists in visibility.visible_raw_files and visibility.visible_protocol_artifacts combined
+- id: A05
+  question: For each question-critical or high-risk field, what is its meaning, unit, expected range, source of that meaning
+    (codebook, schema, domain knowledge, inferred), and any unresolved ambiguity?
+  evidence_key: field_semantics
+  evidence_shape: 'list of {column_or_term, meaning, unit, expected_range, source: codebook|schema|domain|inferred, unresolved_ambiguity}'
+- id: A06
+  question: Do planned cleaning, preprocessing, and derived-variable actions stay within the approved question type, the protocol
+    contract (visibility rules, leakage rules, forbidden variable classes, clean prohibitions, validation logic), and the
+    active route-file restrictions?
+  evidence_key: scope_respected
+  evidence_shape: '{question_type_respected: yes|no|uncertain, protocol_contract_respected: yes|no|uncertain, route_file_respected:
+    yes|no|uncertain, violations: [{category, description, planned_action}]}'
+- id: A07
+  question: What is the explicit data contract (raw artifacts, cleaned artifacts, tidy-data rules, codebook location and required
+    contents, missing-vs-censored rule, raw-to-clean recipe)?
+  evidence_key: null
+- id: A08
+  question: Are structural conventions (column naming, merged fields, identifier rules, unit handling) explicit, internally
+    consistent, and compatible with the tidy-data rules above?
+  evidence_key: structural_conventions_audit
+  evidence_shape: '{conventions: [{name, description, applied_to, internally_consistent: bool, tidy_compatible: bool, notes}]}'
+writes:
+  A00: precondition_check
+  A01: visibility
+  A05: data_contract.codebook_contents
+  A07:
+  - data_contract.raw_artifacts
+  - data_contract.cleaned_artifacts
+  - data_contract.tidy_rules
+  - data_contract.codebook_location
+  - data_contract.codebook_contents
+  - data_contract.missing_vs_censored_rule
+  - data_contract.raw_to_clean_recipe
+  A08: data_contract.structural_conventions
+acceptance_criteria:
+- id: A00-preconditions-verified
+  condition: Every required formulation and protocol field is present; the readme exists; at least one raw file exists; every
+    protocol-required artifact exists; recomputed raw-file SHA-256 hashes match the values recorded in 01_formulation.yaml
+- id: A01-visibility-confirmed
+  condition: Visible raw files, visible protocol artifacts, restricted artifacts, and access levels are explicitly recorded
+    for this stage
+- id: A-structure-audited
+  depends_on:
+  - A02
+  - A03
+  condition: Dtype-meaning mismatches are resolved or flagged with a concrete follow-up; row grain and identifiers align to
+    the unit of analysis locked in formulate
+- id: A04-joins-aligned
+  condition: Candidate join keys align on type, cardinality, and coverage; the skip_when path is taken only when a single
+    artifact is visible
+- id: A05-semantics-aligned
+  condition: Every question-critical and high-risk field has a meaning, unit, and expected range with a named source; unresolved
+    ambiguity is logged rather than silently filled
+- id: A06-scope-respected
+  condition: Planned actions respect the question type, the protocol contract, and the active route-file restrictions; all
+    three respect fields are yes with no violations
+- id: A07-data-contract-defined
+  condition: Raw artifacts, cleaned artifacts, tidy-data rules, codebook location and contents, missing-vs-censored rule,
+    and raw-to-clean recipe are all populated
+- id: A08-conventions-consistent
+  condition: Structural conventions are internally consistent and compatible with the tidy-data rules

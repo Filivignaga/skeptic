@@ -1,73 +1,86 @@
 cycle: B
 focus: Integrity Diagnostics
 mandatory: true
-
 upstream:
-  - data_contract.raw_artifacts
-  - data_contract.codebook_contents
-  - data_contract.missing_vs_censored_rule
-  - visibility.visible_raw_files
-  - visibility.visible_protocol_artifacts
-  - visibility.restricted_artifacts
-  - question_critical_variables
-
-setup_side_effects: []
-
-checklist:
-  - id: B01
-    question: For each visible artifact, what sentinel values, invalid formats, impossible values, or suspicious codes exist per column, and how frequent is each?
-    evidence_key: value_issues                  # {filename: {column: {sentinel_values: [{value, count, note}], invalid_formats: [{pattern, count}], impossible_values: [{value, count, reason}], suspicious_codes: [{value, count, hypothesis}]}}}
-    writes_to: null
-  - id: B02
-    question: For numeric, date, text, and categorical columns in question-critical or high-risk fields, what domain-plausibility violations exist?
-    evidence_key: plausibility_violations       # list of {column, kind: numeric|date|text|categorical, violation, count, example_rows, domain_source}
-    writes_to: null
-  - id: B03
-    question: For each question-critical or high-risk field, what is the extent, concentration, and co-missingness of missing values, and does missingness itself carry meaning?
-    evidence_key: missingness_profile           # {column: {missing_rate, concentration: {axis, description}, comissingness_with: [{other_column, rate}], meaning_hypotheses: [{hypothesis, evidence}]}}
-    writes_to: null
-  - id: B04
-    question: What duplicate-like patterns exist across rows, and how is each classified (exact duplicate, repeated measurement, conflicting, near-duplicate, valid repeated observational unit)?
-    evidence_key: duplicate_classification      # {filename: {patterns: [{keys, row_count, classification, example_rows, notes}]}}
-    writes_to: null
-  - id: B05
-    question: What cross-variable consistency violations exist (paired fields, derived-from relationships, temporal ordering, numeric constraints)?
-    evidence_key: cross_variable_violations     # list of {rule, columns_involved, violation_count, example_rows, domain_source: documented_rule|convention|inferred}
-    writes_to: null
-  - id: B06
-    question: Were any restricted artifacts accessed, and if so, was that access inside a protocol-approved operation?
-    skip_when: visibility.restricted_artifacts is empty
-    evidence_key: restricted_artifact_audit     # {accessed: [{artifact, operation, protocol_approved: bool, evidence}], leakage_risk: none|low|medium|high, notes}
-    writes_to: null
-  - id: B07
-    question: For each question-critical or high-risk field, are missing, structurally missing, and censored values distinguished according to the codebook and source rules?
-    evidence_key: missing_vs_censored_audit     # {column: {missing_rule_applied, structurally_missing_rule_applied, censored_rule_applied, codebook_source, ambiguity}}
-    writes_to: data_contract.missing_vs_censored_rule
-
-gates:
-  - id: B01-values-profiled
-    condition: Sentinel values, invalid formats, impossible values, and suspicious codes are inventoried with counts per column for every visible artifact
-  - id: B02-plausibility-checked
-    condition: Domain-plausibility violations are identified for question-critical and high-risk columns, with a domain source per violation, or explicitly marked none after inspection
-  - id: B03-missingness-assessed
-    condition: Missingness extent, concentration, co-missingness, and meaning hypotheses are recorded for every question-critical and high-risk field
-  - id: B04-duplicates-classified
-    condition: Duplicate-like patterns are classified before any cleaning action is chosen
-  - id: B05-cross-variable-checked
-    condition: Cross-variable consistency rules are drawn from documented domain sources or conventions, not invented for convenience
-  - id: B06-restricted-artifacts-respected
-    condition: No restricted artifact was accessed outside a protocol-approved operation; the skip_when path is taken only when visibility.restricted_artifacts is empty
-  - id: B07-missing-censored-separated
-    condition: Missing, structurally missing, and censored values are distinguished according to codebook and source rules for every question-critical and high-risk field
-
+- data_contract.raw_artifacts
+- data_contract.codebook_contents
+- data_contract.missing_vs_censored_rule
+- visibility.visible_raw_files
+- visibility.visible_protocol_artifacts
+- visibility.restricted_artifacts
+- question_critical_variables
 research_questions:
-  - Which flagged values, codes, ranges, or patterns are domain-plausible versus true integrity defects?
-  - What do common sentinel values or missing codes mean for this source type?
-  - When do apparent duplicates represent real repeated observational units rather than defects?
-  - Which cross-variable constraints are real measurement rules rather than arbitrary convenience rules?
-  - Which values need a missing-vs-censored distinction before cleaning can proceed?
-
+- Which flagged values, codes, ranges, or patterns are domain-plausible versus true integrity defects?
+- What do common sentinel values or missing codes mean for this source type?
+- When do apparent duplicates represent real repeated observational units rather than defects?
+- Which cross-variable constraints are real measurement rules rather than arbitrary convenience rules?
+- Which values need a missing-vs-censored distinction before cleaning can proceed?
 guidance:
-  - The goal of this cycle is diagnosis, not premature resolution. Catalog every pattern with counts and example rows so Cycle C has a concrete basis for policy choices.
-  - If an integrity issue is actually a protocol or formulation mismatch, flag it and plan to route upstream; masking it with a cleaning policy in Cycle C is a defect.
-  - Missingness that carries meaning (indicator of a real event, structural zero, deliberate censoring) must be recorded as a meaning hypothesis, not quietly imputed in Cycle C.
+- The goal of this cycle is diagnosis, not premature resolution. Catalog every pattern with counts and example rows so Cycle
+  C has a concrete basis for policy choices.
+- If an integrity issue is actually a protocol or formulation mismatch, flag it and plan to route upstream; masking it with
+  a cleaning policy in Cycle C is a defect.
+- Missingness that carries meaning (indicator of a real event, structural zero, deliberate censoring) must be recorded as
+  a meaning hypothesis, not quietly imputed in Cycle C.
+required_evidence:
+- id: B01
+  question: For each visible artifact, what sentinel values, invalid formats, impossible values, or suspicious codes exist
+    per column, and how frequent is each?
+  evidence_key: value_issues
+  evidence_shape: '{filename: {column: {sentinel_values: [{value, count, note}], invalid_formats: [{pattern, count}], impossible_values:
+    [{value, count, reason}], suspicious_codes: [{value, count, hypothesis}]}}}'
+- id: B02
+  question: For numeric, date, text, and categorical columns in question-critical or high-risk fields, what domain-plausibility
+    violations exist?
+  evidence_key: plausibility_violations
+  evidence_shape: 'list of {column, kind: numeric|date|text|categorical, violation, count, example_rows, domain_source}'
+- id: B03
+  question: For each question-critical or high-risk field, what is the extent, concentration, and co-missingness of missing
+    values, and does missingness itself carry meaning?
+  evidence_key: missingness_profile
+  evidence_shape: '{column: {missing_rate, concentration: {axis, description}, comissingness_with: [{other_column, rate}],
+    meaning_hypotheses: [{hypothesis, evidence}]}}'
+- id: B04
+  question: What duplicate-like patterns exist across rows, and how is each classified (exact duplicate, repeated measurement,
+    conflicting, near-duplicate, valid repeated observational unit)?
+  evidence_key: duplicate_classification
+  evidence_shape: '{filename: {patterns: [{keys, row_count, classification, example_rows, notes}]}}'
+- id: B05
+  question: What cross-variable consistency violations exist (paired fields, derived-from relationships, temporal ordering,
+    numeric constraints)?
+  evidence_key: cross_variable_violations
+  evidence_shape: 'list of {rule, columns_involved, violation_count, example_rows, domain_source: documented_rule|convention|inferred}'
+- id: B06
+  question: Were any restricted artifacts accessed, and if so, was that access inside a protocol-approved operation?
+  evidence_key: restricted_artifact_audit
+  evidence_shape: '{accessed: [{artifact, operation, protocol_approved: bool, evidence}], leakage_risk: none|low|medium|high,
+    notes}'
+  skip_when: visibility.restricted_artifacts is empty
+- id: B07
+  question: For each question-critical or high-risk field, are missing, structurally missing, and censored values distinguished
+    according to the codebook and source rules?
+  evidence_key: missing_vs_censored_audit
+  evidence_shape: '{column: {missing_rule_applied, structurally_missing_rule_applied, censored_rule_applied, codebook_source,
+    ambiguity}}'
+writes:
+  B07: data_contract.missing_vs_censored_rule
+acceptance_criteria:
+- id: B01-values-profiled
+  condition: Sentinel values, invalid formats, impossible values, and suspicious codes are inventoried with counts per column
+    for every visible artifact
+- id: B02-plausibility-checked
+  condition: Domain-plausibility violations are identified for question-critical and high-risk columns, with a domain source
+    per violation, or explicitly marked none after inspection
+- id: B03-missingness-assessed
+  condition: Missingness extent, concentration, co-missingness, and meaning hypotheses are recorded for every question-critical
+    and high-risk field
+- id: B04-duplicates-classified
+  condition: Duplicate-like patterns are classified before any cleaning action is chosen
+- id: B05-cross-variable-checked
+  condition: Cross-variable consistency rules are drawn from documented domain sources or conventions, not invented for convenience
+- id: B06-restricted-artifacts-respected
+  condition: No restricted artifact was accessed outside a protocol-approved operation; the skip_when path is taken only when
+    visibility.restricted_artifacts is empty
+- id: B07-missing-censored-separated
+  condition: Missing, structurally missing, and censored values are distinguished according to codebook and source rules for
+    every question-critical and high-risk field

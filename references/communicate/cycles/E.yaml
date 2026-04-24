@@ -1,78 +1,93 @@
 cycle: E
 focus: Visualization and Representation Integrity
 mandatory: true
-
 upstream:
-  - translations
-  - uncertainty.depth_tier
-  - audience.technical_level
-  - plan.null_result_mode
-
-setup_side_effects: []
-
-checklist:
-  - id: E01
-    question: For each key surviving claim with quantitative content, what primary and at least one alternative display format were designed and rendered?
-    skip_when: zero surviving claims with quantitative content
-    evidence_key: figure_register            # [{claim_id, primary_format, alternative_formats: [], artifact_paths: []}]
-    writes_to: visualizations
-  - id: E02
-    question: For each claim with multiple display formats, does the qualitative takeaway remain stable across formats, and which format most honestly represents the finding?
-    skip_when: zero surviving claims with quantitative content
-    evidence_key: null
-    writes_to: visualizations
-  - id: E03
-    question: Is uncertainty visually present for every quantitative claim (error bars, confidence bands, prediction intervals, perturbation ranges, or frequency framing)?
-    skip_when: zero surviving claims with quantitative content
-    evidence_key: null
-    writes_to: visualizations
-  - id: E04
-    question: Do any visualizations use non-zero baselines, inconsistent scaling, cherry-picked ranges, misleading color scales, suppressed baselines, dual axes without labels, or obscured axis labels?
-    skip_when: zero surviving claims with quantitative content
-    evidence_key: integrity_scan             # [{figure_id, violations: []}]
-    writes_to: visualizations
-  - id: E05
-    question: Are all figures self-contained with titles, axis labels, legends, and annotations readable without additional explanation?
-    skip_when: zero surviving claims with quantitative content
-    evidence_key: null
-    writes_to: visualizations
-  - id: E06
-    question: Is the visualization effort proportional to the project complexity (a small descriptive report does not need the same visualization volume as a multi-claim predictive output)?
-    evidence_key: null
-    writes_to: null
-  - id: E07
-    question: If the deliverable will include companion data files with point estimates (scores, probabilities, predictions), does each row include at least one uncertainty measure (confidence interval, prediction interval, stability flag, or perturbation range)? If the upstream pipeline did not produce per-row uncertainty, is the absence disclosed as a limitation and a qualitative indicator added from existing stability evidence?
-    skip_when: no companion data files with point estimates planned
-    evidence_key: per_row_uncertainty_scan   # {file: {rows: n, rows_with_uncertainty: n, missing_rows: [], qualitative_indicator_added: bool}}
-    writes_to: deliverable.companion_files
-
-gates:
-  - id: E01-figures-designed
-    condition: Every key surviving claim with quantitative content has at least one primary figure rendered
-  - id: E02-stability-tested
-    condition: Every key surviving claim with a figure has been rendered in at least two reasonable display formats and the qualitative takeaway was compared across them
-  - id: E04-no-misleading
-    condition: integrity_scan reports zero violations across truncated axes, inconsistent scales, cherry-picked ranges, misleading color scales, suppressed baselines, and obscured labels
-  - id: E03-uncertainty-visible
-    condition: Every quantitative claim has a visual uncertainty encoding appropriate for the audience tier
-  - id: E-format-honest
-    depends_on: [E02, E05]
-    condition: The chosen display format for each claim is the one that most honestly represents the finding (not the strongest-looking), and every figure is self-contained
-  - id: E06-proportional
-    condition: Visualization effort is proportional to the project's complexity and claim count
-  - id: E07-data-uncertainty
-    condition: Every companion data file row with a point estimate carries at least one uncertainty measure, or the absence is disclosed as a limitation with a qualitative indicator added
-
+- translations
+- uncertainty.depth_tier
+- audience.technical_level
+- plan.null_result_mode
 research_questions:
-  - What visualization standards are conventional for this data type and audience?
-  - What display formats are standard for the specific chart types being used?
-  - What known misleading visualization patterns exist for this type of data?
-  - What uncertainty visualization methods are most effective for this audience tier?
-
+- What visualization standards are conventional for this data type and audience?
+- What display formats are standard for the specific chart types being used?
+- What known misleading visualization patterns exist for this type of data?
+- What uncertainty visualization methods are most effective for this audience tier?
 guidance:
-  - Choose the display format that most honestly represents the finding, not the one that makes it look strongest.
-  - When the takeaway shifts meaningfully across reasonable formats, treat that as a stability signal: record it, then choose the format that survives both reads.
-  - Uncertainty must be visually present for every quantitative claim, not only the headline one.
-  - Visualization effort scales with project complexity. A simple descriptive report with two claims needs less visualization than a predictive output with twelve.
-  - Companion data files must include per-row uncertainty. If the upstream pipeline did not produce per-row uncertainty, disclose the absence as a limitation and add a qualitative indicator derived from existing stability evidence.
-  - When plan.null_result_mode is true, E01-E05 are formally skipped for quantitative claims; E06 and E07 still apply where companion data files exist.
+- Choose the display format that most honestly represents the finding, not the one that makes it look strongest.
+- When the takeaway shifts meaningfully across reasonable formats, treat that as a stability signal: record it, then choose
+    the format that survives both reads.
+- Uncertainty must be visually present for every quantitative claim, not only the headline one.
+- Visualization effort scales with project complexity. A simple descriptive report with two claims needs less visualization
+  than a predictive output with twelve.
+- Companion data files must include per-row uncertainty. If the upstream pipeline did not produce per-row uncertainty, disclose
+  the absence as a limitation and add a qualitative indicator derived from existing stability evidence.
+- When plan.null_result_mode is true, E01-E05 are formally skipped for quantitative claims; E06 and E07 still apply where
+  companion data files exist.
+required_evidence:
+- id: E01
+  question: For each key surviving claim with quantitative content, what primary and at least one alternative display format
+    were designed and rendered?
+  evidence_key: figure_register
+  evidence_shape: '[{claim_id, primary_format, alternative_formats: [], artifact_paths: []}]'
+  skip_when: zero surviving claims with quantitative content
+- id: E02
+  question: For each claim with multiple display formats, does the qualitative takeaway remain stable across formats, and
+    which format most honestly represents the finding?
+  evidence_key: null
+  skip_when: zero surviving claims with quantitative content
+- id: E03
+  question: Is uncertainty visually present for every quantitative claim (error bars, confidence bands, prediction intervals,
+    perturbation ranges, or frequency framing)?
+  evidence_key: null
+  skip_when: zero surviving claims with quantitative content
+- id: E04
+  question: Do any visualizations use non-zero baselines, inconsistent scaling, cherry-picked ranges, misleading color scales,
+    suppressed baselines, dual axes without labels, or obscured axis labels?
+  evidence_key: integrity_scan
+  evidence_shape: '[{figure_id, violations: []}]'
+  skip_when: zero surviving claims with quantitative content
+- id: E05
+  question: Are all figures self-contained with titles, axis labels, legends, and annotations readable without additional
+    explanation?
+  evidence_key: null
+  skip_when: zero surviving claims with quantitative content
+- id: E06
+  question: Is the visualization effort proportional to the project complexity (a small descriptive report does not need the
+    same visualization volume as a multi-claim predictive output)?
+  evidence_key: null
+- id: E07
+  question: If the deliverable will include companion data files with point estimates (scores, probabilities, predictions),
+    does each row include at least one uncertainty measure (confidence interval, prediction interval, stability flag, or perturbation
+    range)? If the upstream pipeline did not produce per-row uncertainty, is the absence disclosed as a limitation and a qualitative
+    indicator added from existing stability evidence?
+  evidence_key: per_row_uncertainty_scan
+  evidence_shape: '{file: {rows: n, rows_with_uncertainty: n, missing_rows: [], qualitative_indicator_added: bool}}'
+  skip_when: no companion data files with point estimates planned
+writes:
+  E01: visualizations
+  E02: visualizations
+  E03: visualizations
+  E04: visualizations
+  E05: visualizations
+  E07: deliverable.companion_files
+acceptance_criteria:
+- id: E01-figures-designed
+  condition: Every key surviving claim with quantitative content has at least one primary figure rendered
+- id: E02-stability-tested
+  condition: Every key surviving claim with a figure has been rendered in at least two reasonable display formats and the
+    qualitative takeaway was compared across them
+- id: E04-no-misleading
+  condition: integrity_scan reports zero violations across truncated axes, inconsistent scales, cherry-picked ranges, misleading
+    color scales, suppressed baselines, and obscured labels
+- id: E03-uncertainty-visible
+  condition: Every quantitative claim has a visual uncertainty encoding appropriate for the audience tier
+- id: E-format-honest
+  depends_on:
+  - E02
+  - E05
+  condition: The chosen display format for each claim is the one that most honestly represents the finding (not the strongest-looking),
+    and every figure is self-contained
+- id: E06-proportional
+  condition: Visualization effort is proportional to the project's complexity and claim count
+- id: E07-data-uncertainty
+  condition: Every companion data file row with a point estimate carries at least one uncertainty measure, or the absence
+    is disclosed as a limitation with a qualitative indicator added

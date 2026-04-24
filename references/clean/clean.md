@@ -170,7 +170,11 @@ Analytical findings belong in their destination fields. The decision ledger reco
 
 ```yaml
 pcs_review:
-  verbatim:
+  overall:                          # PASS|FAIL, satisfied|valid_concern|disagree_override, or route-specific terminal verdict
+  blocking_findings: []             # compact list of failed checks or blocking concerns
+  material_risks: []                # compact list of non-blocking risks worth carrying forward
+  material_findings: []             # compact list of review findings that changed a decision or disposition
+  full_review_pointer:              # optional; use only when a FAIL or override requires retaining full text outside the canonical YAML
   disposition:                      # satisfied|valid_concern|disagree_override
   disposition_reason:
 ```
@@ -203,18 +207,18 @@ Cycle F runs only when derived variables or similarly downstream-safe transforma
 Before running cycle X, load only `cycles/{X}.yaml`. Each cycle YAML carries:
 
 - `upstream`: canonical-YAML fields that must be set before the cycle starts
-- `setup_side_effects`: one-time actions the cycle performs in Step 1 (Cycle A initializes the stage; Cycle R and S extend the script with helpers)
+- `setup_side_effects`: one-time actions the cycle performs in Step 1 (Cycle A initializes the stage; Cycle R and S extend the script with helpers); omit when empty
 - `required_evidence`: evidence keys or judgment outputs the cycle must produce
 - `acceptance_criteria`: 3-5 verifiable conditions for cycle closure
 - `writes`: mapping from evidence or judgment outputs to canonical-YAML fields
-- Legacy cycle files may still spell these as `checklist`, `gates`, and `writes_to`; interpret them through the collapsed evidence/criteria model.
 - `research_questions`: topics for the research subagent
 - `guidance`: short, cycle-specific judgment rules
+- decision-relevance check: for material judgments, name the plausible alternative most likely to change a downstream decision and store it in the relevant analytical field, not a new log
 - `step4_additions`, `pcs_focus`, `log_extension`: present only when the cycle adds a specific discipline. `pcs_focus` holds cycle-specific PCS questions injected into the evaluation subagent prompt; it has no separate Step 5 application.
 
 The stage entry (this file) is read once at stage start. Per-cycle files are loaded one at a time as each cycle runs.
 
-Follow-up cycles use `cycles/D_template.yaml` (cleaning follow-ups) or `cycles/G_template.yaml` (preprocessing and derived-variable follow-ups) as a starting shape. Materialize the concrete Dn or Gn spec inside the canonical YAML (not as a new file on disk) when a follow-up is opened. Every follow-up must define at least one checklist item and one gate with the enforceable exit condition.
+Follow-up cycles use `cycles/D_template.yaml` (cleaning follow-ups) or `cycles/G_template.yaml` (preprocessing and derived-variable follow-ups) as a starting shape. Materialize the concrete Dn or Gn spec inside the canonical YAML (not as a new file on disk) when a follow-up is opened. Every follow-up must define at least one required evidence item and one acceptance criterion with the enforceable exit condition.
 
 ## Cycle Protocol
 
@@ -398,7 +402,7 @@ Include:
 
 Exclude:
 - Prose summaries, meta-commentary, or "the subagent reviewed and confirmed" filler.
-- Restatements of checklist questions, acceptance-criteria definitions, `research_questions`, or `script_evidence` already on file.
+- Restatements of required-evidence questions, acceptance-criteria definitions, `research_questions`, or `script_evidence` already on file.
 - Per-criterion PASS notes when nothing interesting happened. Only failed or non-obvious criteria whose reasoning belongs in the audit record.
 - Sources that confirmed baseline facts without changing behavior.
 
@@ -456,7 +460,7 @@ Write conditional fields only when they apply:
 
 `blocking_failures` (0 = PASS, >0 = FAIL) is the enforceable integer summary. Record only material failed criteria, rejected alternatives, or source-backed decisions; do not store Per-criterion PASS notes or full subagent output.
 
-Update every canonical-YAML field named by the cycle spec `writes` or legacy `writes_to`, but only for fields this project actually populates. Append to list-valued fields (`cleaning_decisions`, `preprocessing_decisions`, `derived_variables`, `dataset_fitness_reviews`, `claim_boundary_updates.narrowing_log`) rather than overwriting. Leave non-applicable optional fields out entirely rather than setting them to null. Cycle-specific `step4_additions` are applied at this point if the cycle YAML defines them. `pcs_focus` is consumed by the Step 3 evaluation subagent prompt and produces no separate Step 5 entry.
+Update every canonical-YAML field named by the cycle spec `writes`, but only for fields this project actually populates. Append to list-valued fields (`cleaning_decisions`, `preprocessing_decisions`, `derived_variables`, `dataset_fitness_reviews`, `claim_boundary_updates.narrowing_log`) rather than overwriting. Leave non-applicable optional fields out entirely rather than setting them to null. Cycle-specific `step4_additions` are applied at this point if the cycle YAML defines them. `pcs_focus` is consumed by the Step 3 evaluation subagent prompt and produces no separate Step 5 entry.
 
 Set `status.current_cycle` to the next cycle letter (or keep for another iteration). Append the closed cycle letter to `status.completed_cycles` only when the cycle passes or is closed by override. When a conditional cycle is skipped with a logged reason, record it under `status.skipped_cycles`.
 
@@ -522,7 +526,7 @@ Agent(
 )
 ```
 
-Store the full output in `pcs_review.verbatim`.
+Digest the review into `pcs_review`: record `overall`, `blocking_findings`, `material_risks`, `material_findings`, `disposition`, and `disposition_reason`. Do not store the full review text unless a FAIL or override makes verbatim audit text necessary; if retained, store only a pointer in `full_review_pointer`.
 
 - Interactive mode: present via `AskUserQuestion` with options `satisfied`, `valid_concern`, `disagree_override`. Wait for the user's answer before invoking any other tool.
 - Auto mode: apply `../auto-mode.md` stage-close rules.
@@ -537,7 +541,7 @@ After the PCS review clears or the user overrides it:
 
 1. Parse `03_cleaning.yaml` with a standard YAML loader. Repair if parsing fails.
 
-2. Render `03_cleaning.md` from the canonical YAML. Keep the report compact: one `##` section per populated top-level YAML key (`Data Contract`, `Question-Critical Variables`, `Visibility`, `Cleaning Decisions`, `Preprocessing Decisions`, `Derived Variables`, `Row Count Reconciliation`, `Dataset Fitness Reviews`, `Reproducibility`, `Robustness`, `Claim Boundary Updates`, `Decision Summary` with one line per cycle, `PCS Assessment`). Omit sections whose YAML keys are empty or absent. Reference the subagent verbatims through the YAML; the markdown is a rendered summary.
+2. Render `03_cleaning.md` from the canonical YAML. Keep the report compact: one `##` section per populated top-level YAML key (`Data Contract`, `Question-Critical Variables`, `Visibility`, `Cleaning Decisions`, `Preprocessing Decisions`, `Derived Variables`, `Row Count Reconciliation`, `Dataset Fitness Reviews`, `Reproducibility`, `Robustness`, `Claim Boundary Updates`, `Decision Summary` with one line per cycle, `PCS Assessment`). Omit sections whose YAML keys are empty or absent. Reference the compact `pcs_review` fields through the YAML; the markdown is a rendered summary.
 
 3. Append a Cleaning Scorecard block to `03_cleaning.md`:
 
@@ -560,7 +564,7 @@ After the PCS review clears or the user overrides it:
    | Judgment calls total | {n} | cleaning_decisions + preprocessing_decisions |
    | Judgment calls stable under perturbation | {n}/{tested} | robustness.layer1_perturbations |
    | Transfer diagnostics | {pass / flagged / skipped: {reason}} | robustness.transfer_diagnostics_status |
-   | PCS verdict | {verbatim summary} | pcs_review.verbatim |
+   | PCS verdict | {overall plus material findings} | pcs_review |
    | PCS user decision | {satisfied / valid_concern / disagree_override: {reason}} | pcs_review.disposition |
    ```
 

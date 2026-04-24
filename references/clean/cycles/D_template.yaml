@@ -1,49 +1,24 @@
-cycle: D{n}                          # D1, D2, D3, ... assigned in order opened
-focus: "{short description of the unresolved cleaning topic, e.g. 'Resolve duplicate-classification conflict for customer-event rows'}"
+cycle: D{n}
+focus: '{short description of the unresolved cleaning topic, e.g. ''Resolve duplicate-classification conflict for customer-event
+  rows''}'
 mandatory: false
-
-# D-series follow-ups run under the same 5-step cycle protocol as the mandatory
-# cycles A through C. They are triggered when:
-#   1. Cycle C closes with an unresolved cleaning issue the user agrees to reopen
-#   2. The evaluation subagent for a later cycle (E, F, G-series, R, S) recommends
-#      routing a discovered issue back to cleaning
-#   3. The user requests one
-#
-# The model does NOT create a new YAML file on disk for each D{n} follow-up.
-# It materializes the concrete Dn spec inline inside 03_cleaning.yaml under a
-# scratch area (e.g., status.active_followup_spec), runs the cycle, then appends
-# the closing decision_ledger entry.
-#
-# Use this template as the shape for that inline spec.
-
 upstream:
-  - "{list canonical-YAML fields that must be set before the follow-up runs, e.g. cleaning_decisions, row_count_reconciliation, dataset_fitness_reviews}"
-
-setup_side_effects: []
-
-checklist:
-  - id: D{n}01
-    question: "{question derived from the specific unresolved cleaning issue}"
-    evidence_key: "{key name, or null if judgment-driven}"
-    writes_to: "{canonical-YAML field, list of fields, or null}"
-  # Add D{n}02, D{n}03, ... as required. Keep follow-ups narrow and purpose-built.
-  # Add skip_when on any item that has a non-default skip condition.
-  # Examples of writes_to targets for follow-ups: cleaning_decisions (append),
-  # claim_boundary_updates.narrowing_log (append, only while clean is still open),
-  # data_contract.missing_vs_censored_rule, row_count_reconciliation,
-  # dataset_fitness_reviews (append).
-
-gates:
-  - id: "D{n}01-{short-name}"
-    condition: "{condition that closes the unresolved cleaning topic}"
-  # Legacy gates are interpreted as acceptance criteria.
-  # At least one acceptance criterion is required so the follow-up has an enforceable exit.
-
+- '{list canonical-YAML fields that must be set before the follow-up runs, e.g. cleaning_decisions, row_count_reconciliation,
+  dataset_fitness_reviews}'
 research_questions:
-  - "{at most a handful; narrow to the unresolved cleaning topic}"
-
+- '{at most a handful; narrow to the unresolved cleaning topic}'
 guidance:
-  - Keep the follow-up narrow. One cleaning topic per cycle.
-  - If the topic recurs across follow-ups, escalate instead of looping.
-  - If the issue is actually a protocol or formulation mismatch, stop and reopen upstream rather than forcing a D-series resolution.
-  - Close the follow-up as pass, acknowledge_gap, data_insufficient, reopen_protocol, reopen_formulate, or archive under the standard decision matrix.
+- Keep the follow-up narrow. One cleaning topic per cycle.
+- If the topic recurs across follow-ups, escalate instead of looping.
+- If the issue is actually a protocol or formulation mismatch, stop and reopen upstream rather than forcing a D-series resolution.
+- Close the follow-up as pass, acknowledge_gap, data_insufficient, reopen_protocol, reopen_formulate, or archive under the
+  standard decision matrix.
+required_evidence:
+- id: D{n}01
+  question: '{question derived from the specific unresolved cleaning issue}'
+  evidence_key: '{key name, or null if judgment-driven}'
+writes:
+  D{n}01: '{canonical-YAML field, list of fields, or null}'
+acceptance_criteria:
+- id: D{n}01-{short-name}
+  condition: '{condition that closes the unresolved cleaning topic}'

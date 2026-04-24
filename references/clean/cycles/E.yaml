@@ -1,70 +1,85 @@
 cycle: E
 focus: Preprocessing
 mandatory: true
-
 upstream:
-  - data_contract.cleaned_artifacts
-  - cleaning_decisions
-  - visibility.visible_raw_files
-  - visibility.visible_protocol_artifacts
-  - visibility.restricted_artifacts
-  - question_critical_variables
-  - upstream_snapshot.forbidden_variable_classes
-  - upstream_snapshot.leakage_rules
-  - upstream_snapshot.validation_logic_reserved
-
-setup_side_effects: []
-
-checklist:
-  - id: E01
-    question: Does each proposed preprocessing step stay within the approved question, protocol mode, visibility rules, forbidden variable classes, and leakage rules?
-    evidence_key: preprocessing_scope_check     # list of {step, question_respected: bool, protocol_respected: bool, visibility_respected: bool, forbidden_classes_respected: bool, leakage_rules_respected: bool, notes}
-    writes_to: null
-  - id: E02
-    question: For category representation, what inconsistent labels, rare levels, or grouping decisions exist, and is each proposed consolidation or rewrite meaning-preserving for the approved question?
-    evidence_key: category_representation       # list of {column, issue: inconsistent_labels|rare_levels|grouping, proposed_action, meaning_preserving: yes|no|uncertain, evidence}
-    writes_to: preprocessing_decisions
-  - id: E03
-    question: For numeric, date, and time representation, what normalization, parsing, standardization, or monotonic transforms are proposed, and do they preserve meaning for the approved question?
-    evidence_key: numeric_date_representation   # list of {column, transform, kind: parse|normalize|standardize|monotonic|other, meaning_preserved: yes|no|uncertain, evidence}
-    writes_to: preprocessing_decisions
-  - id: E04
-    question: Which transformations are deferred to the route file or the analyze stage rather than applied in clean, and why?
-    evidence_key: deferred_transforms           # list of {transform, deferred_to: route_file|analyze, reason}
-    writes_to: null
-  - id: E05
-    question: If a transform must be fit from data for later use, is its fitting scope limited to protocol-allowed visible artifacts (not reserved validation, future, or restricted artifacts)?
-    evidence_key: fit_scope_audit               # list of {transform, fit_from: [artifact_list], protocol_allowed: bool, evidence}
-    writes_to: preprocessing_decisions           # records fit_scope per decision
-  - id: E06
-    question: If categorical expansion is used (dummies, one-hot, target encoding, ordinal), are omitted-category conventions, reference levels, and downstream dummy-variable dependencies documented?
-    skip_when: no categorical expansion is applied in this stage
-    evidence_key: categorical_expansion_audit   # list of {column, expansion_kind, reference_level_or_omitted, downstream_dependencies, documented: bool}
-    writes_to: preprocessing_decisions
-
-gates:
-  - id: E01-protocol-safe
-    condition: Every preprocessing step respects the question, protocol mode, visibility rules, forbidden variable classes, and leakage rules
-  - id: E-low-regret-only
-    depends_on: [E02, E03]
-    condition: Category, numeric, date, and time transforms are meaning-preserving for the approved question; uncertain cases are deferred or routed back to a D-series follow-up rather than silently applied
-  - id: E04-deferrals-justified
-    condition: Transformations deferred to the route file or analyze stage are named with a reason that ties back to question type, protocol, or route scope
-  - id: E05-fit-scope-clean
-    condition: Every fit-from-data transform uses only protocol-allowed visible artifacts; no reserved validation, future, or restricted artifact is used
-  - id: E06-expansion-documented
-    condition: Reference levels, omitted-category conventions, and downstream dummy-variable dependencies are documented; the skip_when path is taken only when no categorical expansion is applied
-
+- data_contract.cleaned_artifacts
+- cleaning_decisions
+- visibility.visible_raw_files
+- visibility.visible_protocol_artifacts
+- visibility.restricted_artifacts
+- question_critical_variables
+- upstream_snapshot.forbidden_variable_classes
+- upstream_snapshot.leakage_rules
+- upstream_snapshot.validation_logic_reserved
 research_questions:
-  - Which transformations preserve meaning across plausible later uses allowed by the protocol?
-  - When do rare levels, date encodings, or monotonic transforms clarify representation versus erase structure?
-  - Which candidate transformations are broadly defensible versus tightly tied to a later route or model family?
-  - Does any proposed preprocessing action signal an unresolved cleaning problem that should go back to a D-series follow-up?
-  - If categorical expansion is used, what reference-level or omitted-level convention keeps later use honest?
-
+- Which transformations preserve meaning across plausible later uses allowed by the protocol?
+- When do rare levels, date encodings, or monotonic transforms clarify representation versus erase structure?
+- Which candidate transformations are broadly defensible versus tightly tied to a later route or model family?
+- Does any proposed preprocessing action signal an unresolved cleaning problem that should go back to a D-series follow-up?
+- If categorical expansion is used, what reference-level or omitted-level convention keeps later use honest?
 guidance:
-  - Preprocessing changes representation, not the underlying question. If a step looks like it is compensating for unresolved data quality, route it back to a D-series follow-up.
-  - Standardization and normalization are representation choices, not model choices.
-  - Monotonic transforms such as logs are allowed only when they preserve meaning for the approved question.
-  - One-hot encoding is allowed only when the category split is meaning-preserving and the downstream representation stays honest.
-  - Any transform that must be fit from data for later use must respect protocol-defined visibility rules and must not use reserved validation, future, or restricted artifacts.
+- Preprocessing changes representation, not the underlying question. If a step looks like it is compensating for unresolved
+  data quality, route it back to a D-series follow-up.
+- Standardization and normalization are representation choices, not model choices.
+- Monotonic transforms such as logs are allowed only when they preserve meaning for the approved question.
+- One-hot encoding is allowed only when the category split is meaning-preserving and the downstream representation stays honest.
+- Any transform that must be fit from data for later use must respect protocol-defined visibility rules and must not use reserved
+  validation, future, or restricted artifacts.
+required_evidence:
+- id: E01
+  question: Does each proposed preprocessing step stay within the approved question, protocol mode, visibility rules, forbidden
+    variable classes, and leakage rules?
+  evidence_key: preprocessing_scope_check
+  evidence_shape: 'list of {step, question_respected: bool, protocol_respected: bool, visibility_respected: bool, forbidden_classes_respected:
+    bool, leakage_rules_respected: bool, notes}'
+- id: E02
+  question: For category representation, what inconsistent labels, rare levels, or grouping decisions exist, and is each proposed
+    consolidation or rewrite meaning-preserving for the approved question?
+  evidence_key: category_representation
+  evidence_shape: 'list of {column, issue: inconsistent_labels|rare_levels|grouping, proposed_action, meaning_preserving:
+    yes|no|uncertain, evidence}'
+- id: E03
+  question: For numeric, date, and time representation, what normalization, parsing, standardization, or monotonic transforms
+    are proposed, and do they preserve meaning for the approved question?
+  evidence_key: numeric_date_representation
+  evidence_shape: 'list of {column, transform, kind: parse|normalize|standardize|monotonic|other, meaning_preserved: yes|no|uncertain,
+    evidence}'
+- id: E04
+  question: Which transformations are deferred to the route file or the analyze stage rather than applied in clean, and why?
+  evidence_key: deferred_transforms
+  evidence_shape: 'list of {transform, deferred_to: route_file|analyze, reason}'
+- id: E05
+  question: If a transform must be fit from data for later use, is its fitting scope limited to protocol-allowed visible artifacts
+    (not reserved validation, future, or restricted artifacts)?
+  evidence_key: fit_scope_audit
+  evidence_shape: 'list of {transform, fit_from: [artifact_list], protocol_allowed: bool, evidence}'
+- id: E06
+  question: If categorical expansion is used (dummies, one-hot, target encoding, ordinal), are omitted-category conventions,
+    reference levels, and downstream dummy-variable dependencies documented?
+  evidence_key: categorical_expansion_audit
+  evidence_shape: 'list of {column, expansion_kind, reference_level_or_omitted, downstream_dependencies, documented: bool}'
+  skip_when: no categorical expansion is applied in this stage
+writes:
+  E02: preprocessing_decisions
+  E03: preprocessing_decisions
+  E05: preprocessing_decisions
+  E06: preprocessing_decisions
+acceptance_criteria:
+- id: E01-protocol-safe
+  condition: Every preprocessing step respects the question, protocol mode, visibility rules, forbidden variable classes,
+    and leakage rules
+- id: E-low-regret-only
+  depends_on:
+  - E02
+  - E03
+  condition: Category, numeric, date, and time transforms are meaning-preserving for the approved question; uncertain cases
+    are deferred or routed back to a D-series follow-up rather than silently applied
+- id: E04-deferrals-justified
+  condition: Transformations deferred to the route file or analyze stage are named with a reason that ties back to question
+    type, protocol, or route scope
+- id: E05-fit-scope-clean
+  condition: Every fit-from-data transform uses only protocol-allowed visible artifacts; no reserved validation, future, or
+    restricted artifact is used
+- id: E06-expansion-documented
+  condition: Reference levels, omitted-category conventions, and downstream dummy-variable dependencies are documented; the
+    skip_when path is taken only when no categorical expansion is applied

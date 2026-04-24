@@ -1,78 +1,108 @@
 cycle: A
 focus: Handoff Audit from Formulate
 mandatory: true
-
 upstream:
-  - project.name
-
+- project.name
 setup_side_effects:
-  - Read {docs_dir_name}/01_formulation.yaml to pull contract, claim_boundary, protocol_handoff, and provenance
-  - Resolve the active route from contract.question_type (descriptive|exploratory|inferential|predictive|causal|mechanistic); stop and route back to /skeptic:formulate if missing or ambiguous
-  - Load ../routes/{route}/protocol.md once and keep it in memory for the rest of the stage
-  - Initialize {docs_dir_name}/02_protocol.yaml with stage, schema_version, project.name, project.started_at (ISO timestamp), status.current_cycle A, route.active, and route.resolution_evidence
-  - Create {scripts_dir_name}/02_protocol.py with the shape specified in the stage entry
-
-checklist:
-  - id: A01
-    question: Are all required formulate canonical-YAML sections present (stage, project, contract, claim_boundary, protocol_handoff, provenance, status.locked_at set)?
-    evidence_key: formulate_sections            # {section_name: true|false} for every required top-level key
-    writes_to: handoff_audit.sections_present
-  - id: A02
-    question: Are all required fields extractable from 01_formulation.yaml (contract.approved_question, contract.question_type, contract.target_quantity, contract.route_candidates, contract.unit_of_analysis, contract.target_population when applicable, contract.key_assumptions, contract.intended_uses, contract.prohibited_uses, claim_boundary.claim_type, claim_boundary.scope, claim_boundary.evidence_ceiling, claim_boundary.generalization_limit, protocol_handoff.data_usage_considerations, protocol_handoff.leakage_risks, protocol_handoff.forbidden_variable_candidates, protocol_handoff.validation_needs, protocol_handoff.route_family_stability, protocol_handoff.generalizability_risks, protocol_handoff.open_questions, and status.locked_at)?
-    evidence_key: extracted_fields              # {field_path: {value, extractable: bool}} for every required field
-    writes_to: handoff_audit.confirmed
-  - id: A03
-    question: Are there contradictions between the approved question, question_type, claim_boundary, and protocol_handoff (for example a causal question_type with a descriptive claim_boundary, or a protocol_handoff recommending holdout validation against a claim_boundary that already rules out unseen-data claims)?
-    evidence_key: contradictions                # list of {issue, locations, severity}
-    writes_to: handoff_audit.contradictions
-  - id: A04
-    question: For each required field, is it present, partial (populated but missing required sub-fields), or missing?
-    evidence_key: required_fields_state         # {field_path: present|partial|missing with short evidence note}
-    writes_to: handoff_audit.required_fields
-  - id: A05
-    question: For each unresolved item in protocol_handoff.open_questions and for each partial or missing required field, classify it as protocol_safe (protocol can proceed), protocol_blocking (cannot proceed without repair), or formulate_contradiction (requires reopening formulate)?
-    evidence_key: null
-    writes_to: handoff_audit.ambiguities
-  - id: A06
-    question: What is the minimum set of decisions this stage must produce before clean can start (data-usage mode, frozen artifacts yes/no and which ones, leakage rules, confounding/identification centrality, structure relevance, validation logic, uncertainty framing, clean/examine/analyze prohibitions, backtracking triggers)?
-    evidence_key: null
-    writes_to: handoff_audit.minimum_decisions
-
-gates:
-  - id: A-formulate-complete
-    depends_on: [A01, A02]
-    condition: Required formulate sections and required fields are present and extractable
-  - id: A-extract-complete
-    depends_on: [A02, A03]
-    condition: Every required protocol-relevant field is extracted, and no contradiction between Summary-equivalent contract fields and the protocol handoff is unresolved
-  - id: A-boundary-clear
-    depends_on: [A03, A04]
-    condition: Question type, target quantity, and claim boundary are coherent enough for protocol work (no blocking contradictions; all boundary fields present)
-  - id: A-prematurity-assessed
-    depends_on: [A05, A06]
-    condition: Every unresolved ambiguity is classified, and the minimum decisions this stage must produce are named; any protocol_blocking ambiguity is reported with a concrete repair path
-
+- Read {docs_dir_name}/01_formulation.yaml to pull contract, claim_boundary, protocol_handoff, and provenance
+- Resolve the active route from contract.question_type (descriptive|exploratory|inferential|predictive|causal|mechanistic);
+  stop and route back to /skeptic:formulate if missing or ambiguous
+- Load ../routes/{route}/protocol.md once and keep it in memory for the rest of the stage
+- Initialize {docs_dir_name}/02_protocol.yaml with stage, schema_version, project.name, project.started_at (ISO timestamp),
+  status.current_cycle A, route.active, and route.resolution_evidence
+- Create {scripts_dir_name}/02_protocol.py with the shape specified in the stage entry
 research_questions:
-  - For this question type and data context, what upstream ambiguities would usually make protocol premature?
-  - What study-design or evidence constraints are commonly decisive before cleaning begins for similar projects?
-  - Are there domain facts that would change whether held-out validation, temporal restrictions, or identification logic matter?
-  - What prior art already constrains the admissible claim boundary for similar questions, and does that tighten what protocol must lock?
-
+- For this question type and data context, what upstream ambiguities would usually make protocol premature?
+- What study-design or evidence constraints are commonly decisive before cleaning begins for similar projects?
+- Are there domain facts that would change whether held-out validation, temporal restrictions, or identification logic matter?
+- What prior art already constrains the admissible claim boundary for similar questions, and does that tighten what protocol
+  must lock?
 guidance:
-  - The script's job in Cycle A is mechanical verification. It loads 01_formulation.yaml, reports which sections and fields are present, and lists concrete contradictions. The model turns that mechanical evidence into the classification in A05 and the decision list in A06.
-  - Contradictions under A03 are only contradictions between upstream fields (inside 01_formulation.yaml). Do not record downstream aspirations as contradictions.
-  - A protocol_blocking classification in A05 must route back to /skeptic:formulate. Do not start Cycle B while a protocol_blocking ambiguity remains.
-  - The minimum_decisions list under A06 is the charter for the rest of the stage. Every later cycle must close at least one item from this list.
-
+- The script's job in Cycle A is mechanical verification. It loads 01_formulation.yaml, reports which sections and fields
+  are present, and lists concrete contradictions. The model turns that mechanical evidence into the classification in A05
+  and the decision list in A06.
+- Contradictions under A03 are only contradictions between upstream fields (inside 01_formulation.yaml). Do not record downstream
+  aspirations as contradictions.
+- A protocol_blocking classification in A05 must route back to /skeptic:formulate. Do not start Cycle B while a protocol_blocking
+  ambiguity remains.
+- The minimum_decisions list under A06 is the charter for the rest of the stage. Every later cycle must close at least one
+  item from this list.
 step4_additions:
-  description: After the standard decision, produce an intake summary that restates these fields verbatim from 01_formulation.yaml (via handoff_audit.confirmed) and lists what protocol must lock before clean can start.
+  description: After the standard decision, produce an intake summary that restates these fields verbatim from 01_formulation.yaml
+    (via handoff_audit.confirmed) and lists what protocol must lock before clean can start.
   items:
-    - confirmed_approved_question
-    - confirmed_question_type
-    - confirmed_target_quantity
-    - confirmed_claim_boundary
-    - current_route_candidates
-    - protocol_blockers
-    - protocol_safe_unresolved_risks
-    - minimum_decisions_for_this_stage
+  - confirmed_approved_question
+  - confirmed_question_type
+  - confirmed_target_quantity
+  - confirmed_claim_boundary
+  - current_route_candidates
+  - protocol_blockers
+  - protocol_safe_unresolved_risks
+  - minimum_decisions_for_this_stage
   user_approval: required_if_protocol_blockers_present
+required_evidence:
+- id: A01
+  question: Are all required formulate canonical-YAML sections present (stage, project, contract, claim_boundary, protocol_handoff,
+    provenance, status.locked_at set)?
+  evidence_key: formulate_sections
+  evidence_shape: '{section_name: true|false} for every required top-level key'
+- id: A02
+  question: Are all required fields extractable from 01_formulation.yaml (contract.approved_question, contract.question_type,
+    contract.target_quantity, contract.route_candidates, contract.unit_of_analysis, contract.target_population when applicable,
+    contract.key_assumptions, contract.intended_uses, contract.prohibited_uses, claim_boundary.claim_type, claim_boundary.scope,
+    claim_boundary.evidence_ceiling, claim_boundary.generalization_limit, protocol_handoff.data_usage_considerations, protocol_handoff.leakage_risks,
+    protocol_handoff.forbidden_variable_candidates, protocol_handoff.validation_needs, protocol_handoff.route_family_stability,
+    protocol_handoff.generalizability_risks, protocol_handoff.open_questions, and status.locked_at)?
+  evidence_key: extracted_fields
+  evidence_shape: '{field_path: {value, extractable: bool}} for every required field'
+- id: A03
+  question: Are there contradictions between the approved question, question_type, claim_boundary, and protocol_handoff (for
+    example a causal question_type with a descriptive claim_boundary, or a protocol_handoff recommending holdout validation
+    against a claim_boundary that already rules out unseen-data claims)?
+  evidence_key: contradictions
+  evidence_shape: list of {issue, locations, severity}
+- id: A04
+  question: For each required field, is it present, partial (populated but missing required sub-fields), or missing?
+  evidence_key: required_fields_state
+  evidence_shape: '{field_path: present|partial|missing with short evidence note}'
+- id: A05
+  question: For each unresolved item in protocol_handoff.open_questions and for each partial or missing required field, classify
+    it as protocol_safe (protocol can proceed), protocol_blocking (cannot proceed without repair), or formulate_contradiction
+    (requires reopening formulate)?
+  evidence_key: null
+- id: A06
+  question: What is the minimum set of decisions this stage must produce before clean can start (data-usage mode, frozen artifacts
+    yes/no and which ones, leakage rules, confounding/identification centrality, structure relevance, validation logic, uncertainty
+    framing, clean/examine/analyze prohibitions, backtracking triggers)?
+  evidence_key: null
+writes:
+  A01: handoff_audit.sections_present
+  A02: handoff_audit.confirmed
+  A03: handoff_audit.contradictions
+  A04: handoff_audit.required_fields
+  A05: handoff_audit.ambiguities
+  A06: handoff_audit.minimum_decisions
+acceptance_criteria:
+- id: A-formulate-complete
+  depends_on:
+  - A01
+  - A02
+  condition: Required formulate sections and required fields are present and extractable
+- id: A-extract-complete
+  depends_on:
+  - A02
+  - A03
+  condition: Every required protocol-relevant field is extracted, and no contradiction between Summary-equivalent contract
+    fields and the protocol handoff is unresolved
+- id: A-boundary-clear
+  depends_on:
+  - A03
+  - A04
+  condition: Question type, target quantity, and claim boundary are coherent enough for protocol work (no blocking contradictions;
+    all boundary fields present)
+- id: A-prematurity-assessed
+  depends_on:
+  - A05
+  - A06
+  condition: Every unresolved ambiguity is classified, and the minimum decisions this stage must produce are named; any protocol_blocking
+    ambiguity is reported with a concrete repair path

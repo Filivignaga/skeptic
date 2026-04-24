@@ -5,7 +5,7 @@ description: "Skeptic Auto Mode - run the full 7-stage pipeline with stage-bound
 Read and follow `~/.claude/skills/skeptic/references/auto-mode.md`.
 Also read and follow `~/.claude/skills/skeptic/references/core-principles.md`.
 
-When `auto-mode.md` and a stage file disagree about runtime control flow, `auto-mode.md` wins. Stage files still define the stage-specific question, checklist, gate, route, PCS, and logging requirements.
+When `auto-mode.md` and a stage file disagree about runtime control flow, `auto-mode.md` wins. Stage files still define the stage-specific question, required evidence, acceptance criteria, route, PCS, and logging requirements.
 
 Run the full pipeline in order:
 1. `formulate`

@@ -1,59 +1,22 @@
-cycle: F{n}                          # F1, F2, F3, ... assigned in order opened
-focus: "{short description of the follow-up topic, e.g. 'Resolve whether external validation frame is real or nominal'}"
+cycle: F{n}
+focus: '{short description of the follow-up topic, e.g. ''Resolve whether external validation frame is real or nominal''}'
 mandatory: false
-
-# Follow-up cycles run under the exact same 5-step cycle protocol as the
-# mandatory cycles A through D. They are triggered when:
-#   1. Claude proposes one based on accumulated findings across A-D
-#   2. The evaluation subagent recommends one
-#   3. The user requests one
-# The user approves or skips each proposed follow-up.
-#
-# The model does NOT create a new YAML file on disk for each follow-up.
-# Instead, it materializes the concrete Fn spec inline inside
-# 02_protocol.yaml under a scratch area (e.g., status.active_followup_spec),
-# runs the cycle, then appends the closing decision_ledger entry.
-#
-# Use this template as the shape for that inline spec.
-#
-# Typical protocol follow-up topics:
-# - resolving whether full-data or resampling-only logic is enough
-# - clarifying whether an external validation frame is real or nominal
-# - resolving whether confounding is central or just a secondary caution
-# - clarifying a disputed leakage definition
-# - resolving whether group structure requires restricted visibility
-# - confirming a cross-fitting authorization before fold materialization
-
 upstream:
-  - "{list which canonical-YAML fields must be set before the follow-up runs, e.g. data_usage.mode, evidence_rules.leakage.relevance}"
-
-setup_side_effects: []
-
-checklist:
-  - id: F{n}01
-    question: "{question derived from the specific follow-up topic}"
-    evidence_key: "{key name, or null if judgment-driven}"
-    writes_to: "{canonical-YAML field, list of fields, or null}"
-  # Add F{n}02, F{n}03, ... as required. Keep follow-ups narrow and purpose-built.
-  # Add `skip_when: <condition>` on any item that has a non-default skip condition.
-  # Examples of writes_to targets for follow-ups:
-  #   - evidence_rules.leakage.project_specific_vectors (append)
-  #   - evidence_rules.validation_logic.required_checks (append)
-  #   - backtracking_triggers (append)
-  #   - frozen_artifacts.artifacts (append, only while protocol is still open)
-  #   - 01_formulation.yaml:claim_boundary.narrowing_log (append, only while protocol is still open)
-
-gates:
-  - id: "F{n}01-{short-name}"
-    condition: "{condition that closes the follow-up topic}"
-  # Legacy gates are interpreted as acceptance criteria.
-  # At least one acceptance criterion is required so the follow-up has an enforceable exit.
-
+- '{list which canonical-YAML fields must be set before the follow-up runs, e.g. data_usage.mode, evidence_rules.leakage.relevance}'
 research_questions:
-  - "{at most a handful; narrow to the follow-up topic}"
-
+- '{at most a handful; narrow to the follow-up topic}'
 guidance:
-  - Keep the follow-up narrow. One topic per cycle.
-  - If the same topic recurs across follow-ups, escalate instead of looping.
-  - Close the follow-up as pass, acknowledge_gap, data_insufficient, reformulate, or archive under the standard decision matrix.
-  - Never defer a decision that belongs to protocol (data-usage mode, frozen artifacts, leakage rules, validation logic, prohibitions, backtracking triggers) into a follow-up without closing it here.
+- Keep the follow-up narrow. One topic per cycle.
+- If the same topic recurs across follow-ups, escalate instead of looping.
+- Close the follow-up as pass, acknowledge_gap, data_insufficient, reformulate, or archive under the standard decision matrix.
+- Never defer a decision that belongs to protocol (data-usage mode, frozen artifacts, leakage rules, validation logic, prohibitions,
+  backtracking triggers) into a follow-up without closing it here.
+required_evidence:
+- id: F{n}01
+  question: '{question derived from the specific follow-up topic}'
+  evidence_key: '{key name, or null if judgment-driven}'
+writes:
+  F{n}01: '{canonical-YAML field, list of fields, or null}'
+acceptance_criteria:
+- id: F{n}01-{short-name}
+  condition: '{condition that closes the follow-up topic}'

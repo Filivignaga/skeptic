@@ -1,71 +1,91 @@
 cycle: C
 focus: Primary Execution
 mandatory: true
-
 upstream:
-  - contract
-  - assumptions.policy_applied
-  - contract_amendments            # post-Cycle-B amendments, when any
-  - provenance.visibility_set
-
-setup_side_effects: []
-
-checklist:
-  - id: C01
-    question: What is the exact contract being executed -- method, specification, parameters, visible artifacts -- as-locked or as-amended after Cycle B?
-    evidence_key: contract_executed_snapshot   # {method_family, primary_specification, parameters, visible_artifacts, amendments_applied: [ids]}
-    writes_to: primary_execution.contract_executed
-  - id: C02
-    question: Was execution performed on the approved visible data only, with no restricted or forbidden artifact touched?
-    evidence_key: artifact_access_log          # {artifacts_read: [], artifacts_written: [], any_access_to_restricted: bool, restricted_attempts: []}
-    writes_to: null
-  - id: C03
-    question: What primary outputs does the method produce -- point estimates, intervals, predictions, classifications, model parameters, or route-specific outputs -- and are all of them recorded?
-    evidence_key: primary_outputs              # {point_estimates, intervals, predictions, classifications, model_parameters, route_specific_outputs}
-    writes_to: primary_execution.outputs
-  - id: C04
-    question: What computational diagnostics were recorded -- convergence status, runtime, numerical warnings, memory usage -- for this execution?
-    evidence_key: computational_diagnostics    # {convergence_status, runtime_seconds, numerical_warnings: [], peak_memory_mb, other_route_specific_diagnostics}
-    writes_to: primary_execution.computational_diagnostics
-  - id: C05
-    question: What random seeds and complete parameter set are recorded for exact reproduction of this execution?
-    evidence_key: seeds_and_parameters         # {seeds: {}, parameters: {}, library_versions: {}}
-    writes_to: primary_execution.random_seeds
-  - id: C06
-    question: If execution failed (convergence failure, degenerate output, computational infeasibility), is the failure documented as an execution-viability problem, and was an E-prefixed follow-up opened or an upstream reopen triggered?
-    skip_when: execution completed without failure
-    evidence_key: execution_failure_record     # {failure_mode, evidence, route_specific_classification, follow_up_opened: En|none, reopen_triggered: stage|none}
-    writes_to: [primary_execution.status, primary_execution.failure_details]
-  - id: C07
-    question: If execution succeeded, is the primary output inventory confirmed complete and handed to Cycle D without interpretation of result quality in this cycle?
-    skip_when: execution failed
-    evidence_key: null
-    writes_to: primary_execution.status
-
-gates:
-  - id: C02-no-restricted
-    condition: The artifact access log shows zero reads or writes against restricted artifacts (any_access_to_restricted is false, restricted_attempts is empty)
-  - id: C-contract-followed
-    depends_on: [C01, C03]
-    condition: Executed method, specification, parameters, and visible artifacts match the locked contract or the post-Cycle-B amended contract exactly; no undocumented drift
-  - id: C04-diagnostics-complete
-    condition: Computational diagnostics record convergence status, runtime, numerical warnings, and (where relevant) memory usage; absent categories are justified by the method family not producing them
-  - id: C05-reproducible
-    condition: Random seeds and the full parameter set are recorded; unseeded stochastic steps are absent or explicitly justified
-  - id: C06-handled
-    condition: When execution failed, the failure is classified as an execution-viability problem (not a result-quality judgment) and either an E-prefixed follow-up was opened or an upstream reopen was triggered with a documented reason
-  - id: C-no-interpretation
-    depends_on: [C03, C07]
-    condition: Cycle C records execution outputs only; result-quality judgments, sensitivity interpretation, and claim-scope assertions do not appear in this cycle's evidence or log
-
+- contract
+- assumptions.policy_applied
+- contract_amendments
+- provenance.visibility_set
 research_questions:
-  - What execution diagnostics are standard for this method family, and which ones distinguish completed execution from numerical or implementation failure?
-  - What failure modes are known for this method under conditions matching the cleaned data profile, and what are the canonical resolutions?
-  - Are the recorded computational diagnostics sufficient for an independent run to confirm completed execution?
-
+- What execution diagnostics are standard for this method family, and which ones distinguish completed execution from numerical
+  or implementation failure?
+- What failure modes are known for this method under conditions matching the cleaned data profile, and what are the canonical
+  resolutions?
+- Are the recorded computational diagnostics sufficient for an independent run to confirm completed execution?
 guidance:
-  - Cycle C executes and records. It does not interpret results or revise the contract.
-  - If execution fails, classify the failure as execution-viability (convergence, degeneracy, infeasibility) and open an En follow-up or trigger an upstream reopen. Do not label a result "bad" in Cycle C.
-  - If the script or execution environment accesses a restricted artifact -- even read-only -- treat it as a blocking defect and reopen protocol.
-  - Artifact-access logging is mandatory. The script must enumerate every read and write and confirm it against provenance.visibility_set.
-  - Library versions and implementation details that affect numerical output (for example, BLAS backend or optimizer defaults) should be captured alongside seeds when they could change results materially.
+- Cycle C executes and records. It does not interpret results or revise the contract.
+- If execution fails, classify the failure as execution-viability (convergence, degeneracy, infeasibility) and open an En
+  follow-up or trigger an upstream reopen. Do not label a result "bad" in Cycle C.
+- If the script or execution environment accesses a restricted artifact -- even read-only -- treat it as a blocking defect
+  and reopen protocol.
+- Artifact-access logging is mandatory. The script must enumerate every read and write and confirm it against provenance.visibility_set.
+- Library versions and implementation details that affect numerical output (for example, BLAS backend or optimizer defaults)
+  should be captured alongside seeds when they could change results materially.
+required_evidence:
+- id: C01
+  question: What is the exact contract being executed -- method, specification, parameters, visible artifacts -- as-locked
+    or as-amended after Cycle B?
+  evidence_key: contract_executed_snapshot
+  evidence_shape: '{method_family, primary_specification, parameters, visible_artifacts, amendments_applied: [ids]}'
+- id: C02
+  question: Was execution performed on the approved visible data only, with no restricted or forbidden artifact touched?
+  evidence_key: artifact_access_log
+  evidence_shape: '{artifacts_read: [], artifacts_written: [], any_access_to_restricted: bool, restricted_attempts: []}'
+- id: C03
+  question: What primary outputs does the method produce -- point estimates, intervals, predictions, classifications, model
+    parameters, or route-specific outputs -- and are all of them recorded?
+  evidence_key: primary_outputs
+  evidence_shape: '{point_estimates, intervals, predictions, classifications, model_parameters, route_specific_outputs}'
+- id: C04
+  question: What computational diagnostics were recorded -- convergence status, runtime, numerical warnings, memory usage
+    -- for this execution?
+  evidence_key: computational_diagnostics
+  evidence_shape: '{convergence_status, runtime_seconds, numerical_warnings: [], peak_memory_mb, other_route_specific_diagnostics}'
+- id: C05
+  question: What random seeds and complete parameter set are recorded for exact reproduction of this execution?
+  evidence_key: seeds_and_parameters
+  evidence_shape: '{seeds: {}, parameters: {}, library_versions: {}}'
+- id: C06
+  question: If execution failed (convergence failure, degenerate output, computational infeasibility), is the failure documented
+    as an execution-viability problem, and was an E-prefixed follow-up opened or an upstream reopen triggered?
+  evidence_key: execution_failure_record
+  evidence_shape: '{failure_mode, evidence, route_specific_classification, follow_up_opened: En|none, reopen_triggered: stage|none}'
+  skip_when: execution completed without failure
+- id: C07
+  question: If execution succeeded, is the primary output inventory confirmed complete and handed to Cycle D without interpretation
+    of result quality in this cycle?
+  evidence_key: null
+  skip_when: execution failed
+writes:
+  C01: primary_execution.contract_executed
+  C03: primary_execution.outputs
+  C04: primary_execution.computational_diagnostics
+  C05: primary_execution.random_seeds
+  C06:
+  - primary_execution.status
+  - primary_execution.failure_details
+  C07: primary_execution.status
+acceptance_criteria:
+- id: C02-no-restricted
+  condition: The artifact access log shows zero reads or writes against restricted artifacts (any_access_to_restricted is
+    false, restricted_attempts is empty)
+- id: C-contract-followed
+  depends_on:
+  - C01
+  - C03
+  condition: Executed method, specification, parameters, and visible artifacts match the locked contract or the post-Cycle-B
+    amended contract exactly; no undocumented drift
+- id: C04-diagnostics-complete
+  condition: Computational diagnostics record convergence status, runtime, numerical warnings, and (where relevant) memory
+    usage; absent categories are justified by the method family not producing them
+- id: C05-reproducible
+  condition: Random seeds and the full parameter set are recorded; unseeded stochastic steps are absent or explicitly justified
+- id: C06-handled
+  condition: When execution failed, the failure is classified as an execution-viability problem (not a result-quality judgment)
+    and either an E-prefixed follow-up was opened or an upstream reopen was triggered with a documented reason
+- id: C-no-interpretation
+  depends_on:
+  - C03
+  - C07
+  condition: Cycle C records execution outputs only; result-quality judgments, sensitivity interpretation, and claim-scope
+    assertions do not appear in this cycle's evidence or log

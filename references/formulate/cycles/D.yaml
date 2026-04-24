@@ -1,111 +1,126 @@
 cycle: D
 focus: Operationalization
 mandatory: true
-
 upstream:
-  - contract.question_type
-  - contract.unit_of_analysis
-  - contract.route_candidates
-  - protocol_handoff.data_usage_considerations
-
-setup_side_effects: []
-
-checklist:
-  - id: D01
-    question: Which terms in the question are vague, contested, or not directly mapped to a column?
-    evidence_key: vague_terms                   # list of {term, why_vague}
-    writes_to: null
-  - id: D02
-    question: For each such term, what are the candidate columns or derived metrics, and what are the tradeoffs between them?
-    evidence_key: candidate_operationalizations # {term: [{candidate, kind: direct|derived|proxy, tradeoffs}]}
-    writes_to: contract.operationalization
-  - id: D03
-    question: For each candidate operationalization, what is the practical availability (granularity, missingness, support, value distribution, direct measure vs. proxy)?
-    evidence_key: availability_per_candidate    # {term: {candidate: {granularity, missingness_pct, support, value_distribution_summary, measure_kind: direct|proxy}}}
-    writes_to: contract.derived_metrics         # only when the chosen operationalization introduces a derived metric
-  - id: D04
-    question: What is the target quantity or estimand the later analysis must estimate, summarize, predict, or explain?
-    evidence_key: null
-    writes_to: [contract.target_quantity, contract.approved_question, contract.hypothesis, contract.intended_uses, contract.prohibited_uses]
-  - id: D05
-    question: What claim boundary is implied by the question type and data design?
-    evidence_key: null
-    writes_to: [claim_boundary.claim_type, claim_boundary.scope, claim_boundary.evidence_ceiling, claim_boundary.generalization_limit]
-  - id: D06
-    question: What is the unit of analysis, and what is the target population or deployment context if it materially matters?
-    skip_when: unit of analysis already fixed in Cycle B (for the unit portion only)
-    evidence_key: unit_and_target_population_evidence  # {unit_description, target_population_or_deployment_context, evidence}
-    writes_to: [contract.unit_of_analysis, contract.target_population]
-  - id: D07
-    question: What are the ordered route candidates for later stages, and why is the top route best?
-    evidence_key: null
-    writes_to: contract.route_candidates
-  - id: D08
-    question: What related concepts, effect modifiers, confounders, or structural dependencies must later stages respect?
-    evidence_key: structural_dependencies       # {effect_modifiers: [...], confounders: [...], hierarchies_or_panels: [...]}
-    writes_to: null
-  - id: D09
-    question: What key assumptions are required for the approved formulation to remain coherent?
-    evidence_key: null
-    writes_to: contract.key_assumptions
-  - id: D10
-    question: What is the baseline the project must beat?
-    evidence_key: baseline_evidence             # {baseline_description, how_computed_from_data_or_prior_art, numeric_value_if_any}
-    writes_to: contract.baseline
-  - id: D11
-    question: What does each error type (false positive, false negative, over/underestimation, etc.) cost in the decision context? Which errors are unacceptable regardless of overall accuracy?
-    evidence_key: null
-    writes_to: contract.error_costs
-  - id: D12
-    question: What minimum uplift over baseline would make this project worthwhile?
-    evidence_key: null
-    writes_to: contract.minimum_uplift
-  - id: D13
-    question: What prior art or analogous work changes the question framing, scope, assumptions, or project order?
-    evidence_key: null
-    writes_to: null
-
-gates:
-  - id: D02-terms-operationalized
-    condition: Each key term is mapped to a column, metric, or derived metric
-  - id: D02-competing-defs
-    condition: For each critical operationalization, one alternative is instantiated and shown to yield the same claim_type and same top-ranked route; divergence forces a narrowing entry (added verbs_forbidden or tightened generalization_limit) in claim_boundary
-  - id: D-unfeasible-flagged
-    depends_on: [D01, D02]
-    condition: Un-operationalizable terms are flagged with a recommended action
-
+- contract.question_type
+- contract.unit_of_analysis
+- contract.route_candidates
+- protocol_handoff.data_usage_considerations
 research_questions:
-  - For each abstract term, what are the standard and competing operationalizations in credible literature or domain practice?
-  - What validated measures, indices, or proxies exist?
-  - What known confounders, effect modifiers, or structural dependencies matter for this kind of question?
-  - When direct measures are unavailable, which proxies are accepted and what do they fail to capture?
-  - What prior art or analogous analyses already constrain the interpretation of the question or its target quantity?
-  - What baseline or success criteria are used in similar work, and do they change the practical framing here?
-
+- For each abstract term, what are the standard and competing operationalizations in credible literature or domain practice?
+- What validated measures, indices, or proxies exist?
+- What known confounders, effect modifiers, or structural dependencies matter for this kind of question?
+- When direct measures are unavailable, which proxies are accepted and what do they fail to capture?
+- What prior art or analogous analyses already constrain the interpretation of the question or its target quantity?
+- What baseline or success criteria are used in similar work, and do they change the practical framing here?
 guidance:
-  - If no viable operationalization exists for a key term, flag it and force the user decision in Step 4.
-  - The approved question wording must include operationalized definitions inline.
-  - If the question is inferential or causal, `contract.hypothesis` must be populated (null, alt, treatment, outcome). For other types, omit `contract.hypothesis`.
-
+- If no viable operationalization exists for a key term, flag it and force the user decision in Step 4.
+- The approved question wording must include operationalized definitions inline.
+- If the question is inferential or causal, `contract.hypothesis` must be populated (null, alt, treatment, outcome). For other
+  types, omit `contract.hypothesis`.
 step4_additions:
-  description: After the standard decision, propose a refined question with operationalized definitions inline. State all of the following before closing the cycle.
+  description: After the standard decision, propose a refined question with operationalized definitions inline. State all
+    of the following before closing the cycle.
   items:
-    - approved_question_wording
-    - question_type
-    - target_quantity_or_estimand
-    - claim_boundary
-    - ordered_route_candidates
-    - unit_of_analysis
-    - target_population_or_deployment_context_if_relevant
-    - key_assumptions
-    - baseline_error_costs_and_minimum_uplift
-    - prior_art_implications_for_scope_or_order
-    - hypothesis_structure_if_inferential_or_causal
-    - intended_and_prohibited_uses
+  - approved_question_wording
+  - question_type
+  - target_quantity_or_estimand
+  - claim_boundary
+  - ordered_route_candidates
+  - unit_of_analysis
+  - target_population_or_deployment_context_if_relevant
+  - key_assumptions
+  - baseline_error_costs_and_minimum_uplift
+  - prior_art_implications_for_scope_or_order
+  - hypothesis_structure_if_inferential_or_causal
+  - intended_and_prohibited_uses
   user_approval: required
-
 pcs_focus:
   items:
-    - "P: Does the chosen operationalization estimate the same quantity the validated literature measure does? Cite the source."
-    - "C: Can another analyst reconstruct target_quantity, claim_boundary, and top route from the script evidence and canonical YAML alone?"
-    - "S: Does the nearest alternative for the top critical term change claim_type or the top route?"
+  - 'P: Does the chosen operationalization estimate the same quantity the validated literature measure does? Cite the source.'
+  - 'C: Can another analyst reconstruct target_quantity, claim_boundary, and top route from the script evidence and canonical
+    YAML alone?'
+  - 'S: Does the nearest alternative for the top critical term change claim_type or the top route?'
+required_evidence:
+- id: D01
+  question: Which terms in the question are vague, contested, or not directly mapped to a column?
+  evidence_key: vague_terms
+  evidence_shape: list of {term, why_vague}
+- id: D02
+  question: For each such term, what are the candidate columns or derived metrics, and what are the tradeoffs between them?
+  evidence_key: candidate_operationalizations
+  evidence_shape: '{term: [{candidate, kind: direct|derived|proxy, tradeoffs}]}'
+- id: D03
+  question: For each candidate operationalization, what is the practical availability (granularity, missingness, support,
+    value distribution, direct measure vs. proxy)?
+  evidence_key: availability_per_candidate
+  evidence_shape: '{term: {candidate: {granularity, missingness_pct, support, value_distribution_summary, measure_kind: direct|proxy}}}'
+- id: D04
+  question: What is the target quantity or estimand the later analysis must estimate, summarize, predict, or explain?
+  evidence_key: null
+- id: D05
+  question: What claim boundary is implied by the question type and data design?
+  evidence_key: null
+- id: D06
+  question: What is the unit of analysis, and what is the target population or deployment context if it materially matters?
+  evidence_key: unit_and_target_population_evidence
+  evidence_shape: '{unit_description, target_population_or_deployment_context, evidence}'
+  skip_when: unit of analysis already fixed in Cycle B (for the unit portion only)
+- id: D07
+  question: What are the ordered route candidates for later stages, and why is the top route best?
+  evidence_key: null
+- id: D08
+  question: What related concepts, effect modifiers, confounders, or structural dependencies must later stages respect?
+  evidence_key: structural_dependencies
+  evidence_shape: '{effect_modifiers: [...], confounders: [...], hierarchies_or_panels: [...]}'
+- id: D09
+  question: What key assumptions are required for the approved formulation to remain coherent?
+  evidence_key: null
+- id: D10
+  question: What is the baseline the project must beat?
+  evidence_key: baseline_evidence
+  evidence_shape: '{baseline_description, how_computed_from_data_or_prior_art, numeric_value_if_any}'
+- id: D11
+  question: What does each error type (false positive, false negative, over/underestimation, etc.) cost in the decision context?
+    Which errors are unacceptable regardless of overall accuracy?
+  evidence_key: null
+- id: D12
+  question: What minimum uplift over baseline would make this project worthwhile?
+  evidence_key: null
+- id: D13
+  question: What prior art or analogous work changes the question framing, scope, assumptions, or project order?
+  evidence_key: null
+writes:
+  D02: contract.operationalization
+  D03: contract.derived_metrics
+  D04:
+  - contract.target_quantity
+  - contract.approved_question
+  - contract.hypothesis
+  - contract.intended_uses
+  - contract.prohibited_uses
+  D05:
+  - claim_boundary.claim_type
+  - claim_boundary.scope
+  - claim_boundary.evidence_ceiling
+  - claim_boundary.generalization_limit
+  D06:
+  - contract.unit_of_analysis
+  - contract.target_population
+  D07: contract.route_candidates
+  D09: contract.key_assumptions
+  D10: contract.baseline
+  D11: contract.error_costs
+  D12: contract.minimum_uplift
+acceptance_criteria:
+- id: D02-terms-operationalized
+  condition: Each key term is mapped to a column, metric, or derived metric
+- id: D02-competing-defs
+  condition: For each critical operationalization, one alternative is instantiated and shown to yield the same claim_type
+    and same top-ranked route; divergence forces a narrowing entry (added verbs_forbidden or tightened generalization_limit)
+    in claim_boundary
+- id: D-unfeasible-flagged
+  depends_on:
+  - D01
+  - D02
+  condition: Un-operationalizable terms are flagged with a recommended action

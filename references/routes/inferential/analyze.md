@@ -20,7 +20,7 @@ description: Stage-specific route file for the Skeptic analyze stage for inferen
 - Self-revision based on result quality: a nonsignificant or unexpected result is not grounds for contract amendment.
 - Silent reweighting or re-stratification during execution.
 - Selective reporting of perturbation results.
-- Treating model diagnostics as pass/fail gates for result acceptability. Assumption checks in Cycle B gate the contract's viability, not the desirability of results.
+- Treating model diagnostics as pass/fail criteria for result acceptability. Assumption checks in Cycle B govern the contract's viability, not the desirability of results.
 - Choosing the test family, smoothing rule, or interpretation scale after seeing the estimate.
 - Treating a tiny p-value as evidence of practical importance by itself.
 
@@ -92,7 +92,7 @@ Conditional checks:
 - State the smoothing choice explicitly: window, span, spline, loess, or none.
 - Do not smooth just to make a noisy pattern look cleaner.
 
-### Confounder-control checklist
+### Confounder-Control Checks
 - List candidate confounders before interpreting associations.
 - State why each variable is included, excluded, or left as a design restriction.
 - Separate design-stage control from model-stage control.
@@ -139,6 +139,6 @@ Cycle C (Primary Execution) follows this order:
 4. Compute point estimates and intervals using the locked variance procedure. Record standard errors, confidence or credible intervals, test statistics, p-values if applicable.
 5. Apply multiplicity correction if multiple estimands or subgroups are pre-specified.
 6. Record the null-model reference, the test family, and the interpretation scale used for the estimate.
-7. Run model diagnostics: residual plots, influence measures, goodness-of-fit statistics. These are execution completeness checks, not result-quality gates.
+7. Run model diagnostics: residual plots, influence measures, goodness-of-fit statistics. These are execution completeness checks, not result-quality criteria.
 8. Record computational diagnostics: convergence status, iteration count, runtime, numerical warnings, effective sample size, effective number of parameters.
 9. Record seeds and full parameter state for exact reproduction.
