@@ -65,7 +65,7 @@ guidance:
   - The minimum_decisions list under A06 is the charter for the rest of the stage. Every later cycle must close at least one item from this list.
 
 step4_additions:
-  description: After the standard decision, produce an intake summary that restates these fields verbatim from 01_formulation.yaml (via handoff_audit.confirmed) and lists what protocol must lock before clean can start.
+  description: After the standard decision, produce an intake summary that references the required 01_formulation.yaml fields through handoff_audit.confirmed refs and lists what protocol must lock before clean can start.
   items:
     - confirmed_approved_question
     - confirmed_question_type

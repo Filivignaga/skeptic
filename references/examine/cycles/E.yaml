@@ -3,10 +3,10 @@ focus: Analysis Handoff Synthesis
 mandatory: true
 
 upstream:
-  - upstream.approved_question
-  - upstream.question_type
-  - upstream.active_route
-  - upstream.claim_boundary
+  - upstream_contract.approved_question_ref
+  - upstream_contract.question_type_ref
+  - upstream_contract.active_route
+  - upstream_contract.claim_boundary_ref
   - support_registry
   - structure_profile
   - relationships

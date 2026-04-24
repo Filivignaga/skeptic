@@ -3,11 +3,11 @@ focus: Anomalies, Contradictions, and Support Gaps
 mandatory: true
 
 upstream:
-  - upstream.approved_question
-  - upstream.question_type
-  - upstream.active_route
-  - upstream.claim_boundary
-  - upstream.backtracking_triggers
+  - upstream_contract.approved_question_ref
+  - upstream_contract.question_type_ref
+  - upstream_contract.active_route
+  - upstream_contract.claim_boundary_ref
+  - upstream_refs
   - structure_profile
   - relationships
   - support_registry

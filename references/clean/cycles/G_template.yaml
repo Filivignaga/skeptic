@@ -4,7 +4,7 @@ mandatory: false
 
 # G-series follow-ups run under the same 5-step cycle protocol as the mandatory
 # cycles. They are triggered when:
-#   1. Cycle E or F closes with an unresolved representation topic the user
+#   1. Cycle C closeout or F closes with an unresolved representation topic the user
 #      agrees to reopen
 #   2. The evaluation subagent for R or S recommends routing a discovered
 #      representation issue back to preprocessing or derived-variable work

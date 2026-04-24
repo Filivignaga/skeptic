@@ -5,8 +5,8 @@ mandatory: true
 upstream:
   - audience.technical_level
   - translations
-  - upstream_snapshot.mandatory_limitations
-  - upstream_snapshot.unresolved_risks
+  - upstream_contract.mandatory_limitations
+  - upstream_contract.unresolved_risks
 
 setup_side_effects: []
 

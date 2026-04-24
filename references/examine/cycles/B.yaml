@@ -3,11 +3,11 @@ focus: Structural Relationships and Heterogeneity
 mandatory: true
 
 upstream:
-  - upstream.approved_question
-  - upstream.question_type
-  - upstream.active_route
-  - upstream.claim_boundary
-  - visibility.visible_cleaned_artifacts
+  - upstream_contract.approved_question_ref
+  - upstream_contract.question_type_ref
+  - upstream_contract.active_route
+  - upstream_contract.claim_boundary_ref
+  - visibility_ref.visible_cleaned_artifacts
   - structure_profile.distributions_and_coverage
   - structure_profile.subgroup_presence
   - support_registry

@@ -7,15 +7,15 @@ upstream:
   - preprocessing_decisions
   - derived_variables
   - data_contract.cleaned_artifacts
-  - visibility.visible_raw_files
-  - visibility.visible_protocol_artifacts
+  - visibility_ref.visible_raw_files
+  - visibility_ref.visible_protocol_artifacts
 
 setup_side_effects:
   - Extend {scripts_dir_name}/03_cleaning.py with clean_data(visible_inputs, **judgment_call_params) covering every cleaning transform recorded in cleaning_decisions (Cycles A through C and any D-series follow-ups)
-  - Extend {scripts_dir_name}/03_cleaning.py with preprocess_data(clean_outputs, **judgment_call_params, fit_params=None) covering every preprocessing and derived-variable transform recorded in preprocessing_decisions and derived_variables (Cycles E, F, and any G-series follow-ups); declare the helper as no-op with an explicit reason when Cycles E and F contributed no distinct transforms
+  - Extend {scripts_dir_name}/03_cleaning.py with preprocess_data(clean_outputs, **judgment_call_params, fit_params=None) covering every preprocessing and derived-variable transform recorded in preprocessing_decisions and derived_variables (Cycle C closeout, Cycle F, and any G-series follow-ups); declare the helper as no-op with an explicit reason when Cycle C closeout and F contributed no distinct transforms
   - Extend run_cycle_r to rerun both helpers against the protocol-visible inputs and compare against the stage-produced cleaned and preprocessed outputs under a deterministic equality rule
   - Emit {scripts_dir_name}/clean_constraints.json with declared and derived constraints per ../constraint-spec.md
-  - Emit {scripts_dir_name}/preprocess_constraints.json, or an explicit no-additional-constraints file with a reason when Cycles E and F produced nothing new
+  - Emit {scripts_dir_name}/preprocess_constraints.json, or an explicit no-additional-constraints file with a reason when Cycle C closeout and F produced nothing new
 
 checklist:
   - id: R01
@@ -37,7 +37,7 @@ checklist:
 
 gates:
   - id: R01-signatures-stable
-    condition: clean_data and preprocess_data have stable documented signatures covering every recorded cleaning, preprocessing, and derived-variable transform; preprocess_data is explicitly declared no-op with a reason when Cycles E and F contributed no distinct transforms
+    condition: clean_data and preprocess_data have stable documented signatures covering every recorded cleaning, preprocessing, and derived-variable transform; preprocess_data is explicitly declared no-op with a reason when Cycle C closeout and F contributed no distinct transforms
   - id: R02-rerun-matches
     condition: Rerun outputs match the stage-produced cleaned (and preprocessed, when applicable) outputs under the declared equality rule; a mismatch is a blocking defect until the helpers or the cleaned outputs are fixed
   - id: R03-declared-errors-pass

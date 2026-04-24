@@ -20,7 +20,7 @@ The active route is whatever `02_protocol` confirmed. Route candidates in `01_fo
 | Path | Role |
 |------|------|
 | `{scripts_dir_name}/04_examination.py` | Single Python file containing one function per cycle (`run_cycle_a`, `run_cycle_b`, `run_cycle_c`, `run_cycle_e`, and any opened follow-up `run_cycle_d1`, `run_cycle_d2`, ...). Invoked one cycle at a time. Returns a JSON evidence packet on stdout. |
-| `{docs_dir_name}/04_examination.yaml` | Canonical stage memory. Holds the upstream snapshot, visibility set, support registry, structure and relationship findings, anomaly and bias inventory, fragility review, analysis handoff, cycle history, and PCS review. Created at stage start, updated at the end of every cycle. |
+| `{docs_dir_name}/04_examination.yaml` | Canonical stage memory. Holds upstream references, visibility reference, support registry, structure and relationship findings, anomaly and bias inventory, fragility review, analysis handoff, cycle history, and PCS review. Created at stage start, updated at the end of every cycle. |
 | `{docs_dir_name}/04_examination.md` | Human-readable report. Rendered once at finalization from the canonical YAML. |
 | `{readme_name}` | Short `## Examine [COMPLETE]` block added at finalization. |
 
@@ -63,27 +63,29 @@ status:
   completed_cycles: []
   locked_at: null                   # set at stage close; presence = locked
 
-upstream:                           # snapshot copied once at Cycle A setup
-  formulation_yaml:                 # relative path
-  protocol_yaml:
-  cleaning_yaml:
-  approved_question:
-  question_type:
-  target_quantity:
-  claim_boundary:                   # {claim_type, scope, evidence_ceiling, generalization_limit, verbs_allowed_effective, verbs_forbidden_effective}
-  active_route:                     # descriptive|exploratory|inferential|predictive|causal|mechanistic
-  route_file:                       # references/routes/{route}/examine.md
-  protocol_mode:
-  visibility_rules_summary:
-  cleaned_artifact_list: []
-  protocol_created_artifact_list: []
-  leakage_rules_summary:
-  examine_prohibitions: []
-  backtracking_triggers: []
-  carried_assumptions: []
-  carried_open_questions: []
+upstream_refs:
+  - file: skeptic_documentation/01_formulation.yaml
+    sections: [approved_question, question_type, target_quantity, claim_boundary, key_assumptions]
+    sha256:
+  - file: skeptic_documentation/02_protocol.yaml
+    sections: [active_route, data_usage, visibility_rules, leakage, prohibitions, backtracking_triggers]
+    sha256:
+  - file: skeptic_documentation/03_cleaning.yaml
+    sections: [data_contract, question_critical_variables, row_count_reconciliation, dataset_fitness_reviews, claim_boundary_updates]
+    sha256:
 
-visibility:                         # derived once at Cycle A setup; reused across cycles
+upstream_contract:                  # compact examination-specific interpretation; not a copied upstream block
+  active_route:
+  route_file:                       # references/routes/{route}/examine.md
+  claim_boundary_ref:
+  protocol_mode_ref:
+  cleaned_artifact_list_ref:
+  carried_assumptions_ref:
+  carried_open_questions_ref:
+
+visibility_ref:                     # derived once from protocol; reused across cycles
+  source: skeptic_documentation/02_protocol.yaml
+  sections: [visibility_rules, data_usage, frozen_artifacts]
   visible_cleaned_artifacts: []     # [{name, access_level, notes}]
   visible_protocol_artifacts: []    # [{name, access_level, notes}]
   restricted_artifacts: []          # named artifacts that are out of bounds for examine
@@ -150,7 +152,7 @@ Each `cycle_history` entry:
   unanswered: []                    # checklist IDs not answered; empty = all answered
   script_evidence: {}               # compact summary only: 4-8 one-line bullets, or one-line value per evidence_key. No full JSON, no DataFrames, no arrays, no per-column schema.
   subagents:
-    research_sources: []            # [{url, claim}] -- only sources that materially shaped a decision this iteration
+    research_sources: []            # [{ref, claim}] -- research_log#n pointers that materially shaped a decision this iteration
     decisions: []                   # [{what, why, pcs: P|C|S|null, source: int?}] -- operational choices where a reasonable alternative existed (distinct from the top-level `decision:` verdict below; `source` is an optional index into research_sources)
     rejected_alternatives: []       # [{option, reason, pcs: P|C|S|null}] -- paths considered and dropped (the PCS Stability counterfactual record)
     open_risks: []                  # [str] -- unresolved concerns downstream stages must carry forward
@@ -165,7 +167,12 @@ The main model reads both subagent replies, distills them, and writes the result
 
 ```yaml
 pcs_review:
-  verbatim:
+  verdicts:
+    predictability:
+    computability:
+    stability:
+  open_conditions: []
+  transcript_ref:
   disposition:                      # satisfied|valid_concern|disagree_override
   disposition_reason:
 ```
@@ -222,10 +229,10 @@ This protocol applies to every cycle, mandatory or follow-up.
 1. Read `cycles/{cycle}.yaml`.
 2. Resolve the route and upstream snapshot:
    - Cycle A: read `01_formulation.yaml`, `02_protocol.yaml`, `03_cleaning.yaml`, and `README.md`. Resolve exactly one active route from `02_protocol.yaml` (must match the confirmed question type in `01_formulation.yaml`). Load `references/routes/{route}/examine.md` once and keep it in context for the rest of the stage. If the route cannot be resolved or the expected route file is missing, stop and reopen `protocol`.
-   - First cycle entered in a fresh session (not Cycle A), or first cycle after a backtrack reopens the stage: read `04_examination.yaml` once to load the upstream snapshot, visibility, prior findings, and prior `cycle_history`; reload the route file named in `upstream.route_file`.
+   - First cycle entered in a fresh session (not Cycle A), or first cycle after a backtrack reopens the stage: read `04_examination.yaml` once to load upstream_refs, upstream_contract, visibility_ref, prior findings, and prior `cycle_history`; reload the route file named in `upstream_contract.route_file`.
    - Every other case (continuing the same chat session): skip the re-reads; the canonical YAML and route context are already in context from the cycle that just wrote it. If route context becomes ambiguous mid-stage, reread `01_formulation.yaml`, `02_protocol.yaml`, `03_cleaning.yaml`, and the route file before proceeding.
 3. Cycle A only: create `04_examination.yaml` with `stage`, `schema_version`, `project`, the full `upstream` snapshot copied from the three upstream YAMLs, the derived `visibility` set (which cleaned artifacts and protocol-created artifacts `examine` may inspect, which are restricted, and what access level applies to each), and `status.current_cycle: A`. Create `04_examination.py` with the shape specified below.
-4. Every cycle: extend `04_examination.py` by writing or updating the cycle's function (`run_cycle_a`, `run_cycle_b`, ...). The function must produce every non-null `evidence_key` named in the cycle's checklist. Operate only on artifacts in `visibility.visible_cleaned_artifacts` and `visibility.visible_protocol_artifacts`.
+4. Every cycle: extend `04_examination.py` by writing or updating the cycle's function (`run_cycle_a`, `run_cycle_b`, ...). The function must produce every non-null `evidence_key` named in the cycle's checklist. Operate only on artifacts in `visibility_ref.visible_cleaned_artifacts` and `visibility_ref.visible_protocol_artifacts`.
 5. Run `python {scripts_dir_name}/04_examination.py --cycle {cycle}`. Capture stdout.
 6. Parse stdout as JSON. Use the parsed dict as this cycle's candidate evidence for Step 2 and Step 3; Step 5 records a compact summary in `cycle_history[*].script_evidence`. The script has already mirrored the same JSON to `{scripts_dir_name}/stdout/cycle_{cycle}.json` for external inspection; do not copy it into the canonical YAML.
 7. Scan stderr and stdout for unhandled exceptions. Any unhandled exception is a blocking defect and must be fixed before continuing. Functions that intentionally demonstrate failure must be explicitly flagged with a `# expected_failure` comment.
@@ -235,11 +242,11 @@ Script shape: one `run_cycle_*` function per cycle, a `load_state()` helper that
 Script rules:
 - The script prints exactly one JSON object to stdout. Nothing else on stdout.
 - The script does not write to `04_examination.yaml`. Only the model writes the canonical YAML.
-- The script reads only artifacts named in `visibility.visible_cleaned_artifacts` and `visibility.visible_protocol_artifacts`. Touching a restricted artifact is a blocking defect.
+- The script reads only artifacts named in `visibility_ref.visible_cleaned_artifacts` and `visibility_ref.visible_protocol_artifacts`. Touching a restricted artifact is a blocking defect.
 - Heavy data (arrays, full DataFrames) is summarized, not dumped. Evidence packets stay compact.
 - Per-file provenance (schema, encoding, sha256) is emitted only the first time a file is recorded -- typically Cycle A iter 1. After it lands in `provenance.files`, neither the stdout packet nor `cycle_history[*].script_evidence` re-emits those fields; downstream cycles reference those files by filename.
 - Seeds are set inside the function if any stochastic step runs (representative subsampling, resampled perturbations).
-- No generic helpers at module scope beyond those named in the Script shape above. Any helper introduced for a cycle lives inside that cycle's function and is removed once the cycle passes.
+- Shared module-scope helpers are allowed when they prevent repeated file loading, preserve dtype or encoding consistency, validate constraints, or make cycle outputs reproducible. Keep them deterministic and side-effect-limited. Cycle-specific one-off helpers still belong inside the cycle function.
 
 ### Step 2: Human Review
 
@@ -253,7 +260,7 @@ Auto mode: apply the self-review loop from `../auto-mode.md`. Self-correct withi
 
 ### Step 3: Subagent Review
 
-Dispatch two subagents in parallel.
+Dispatch the evaluation subagent every cycle. Dispatch the research subagent only when external domain, methodological, legal, standards, or audience knowledge can change this cycle's decision; otherwise record `research_sources: []` and let the evaluator recommend a research-backed follow-up if needed.
 
 Research subagent:
 
@@ -284,7 +291,7 @@ Agent(
   - Stay inside the approved question, active route, protocol rules, and visible data.
   - Ask only domain questions that clarify observed structure, anomalies, subgroup patterns, dependencies, measurement artifacts, or support limitations.
   - Cite sources only for claims that would change how the examination is interpreted or how later analysis should respond.
-  - Every citation must include its URL inline after the claim it supports.
+  - Every citation-worthy claim must be represented by a `research_log.jsonl` row; canonical YAML keeps only `research_log#n` pointers.
 
   Return concise findings with sources, organized by research question. Focus on
   information that changes support characterization, fragility assessment, or
@@ -347,7 +354,7 @@ Agent(
   - {gate_id}: PASS | FAIL - [evidence]
 
   ROUTE AND CLAIM BOUNDARY CHECK:
-  Read upstream.claim_boundary and the route file (active_route) from the
+  Read `upstream_contract.claim_boundary_ref` and the route file (`upstream_contract.active_route`) from the
   canonical YAML. Verify that no finding, support characterization, or
   handoff statement in this cycle uses verbs from verbs_forbidden_effective
   or asserts scope beyond the approved claim_boundary. If examination weakens
@@ -378,7 +385,7 @@ When both subagents return, the model parses three counts from the evaluation ou
 Digest the subagent replies into `cycle_history[*].subagents`; the replies themselves stay in memory. Admit something to `subagents` when a future reader needs it to reconstruct why this path was chosen.
 
 Include:
-- `research_sources`: URLs that actually tipped a call, each paired with a one-line claim. Drop sources that merely confirmed obvious baseline facts or rephrased what was already known.
+- `research_sources`: `research_log#n` pointers that actually tipped a call, each paired with a one-line claim. Drop sources that merely confirmed obvious baseline facts or rephrased what was already known.
 - `decisions`: operational choices where a reasonable alternative existed. Tag each with its PCS axis (`P`, `C`, `S`, or `null` when not PCS-relevant). Set `source` to the index into `research_sources` when a specific source drove the call. Default choices (reading a CSV with `read_csv`, computing sha256 with hashlib) are not decisions.
 - `rejected_alternatives`: paths actively weighed and dropped, with the reason and PCS axis. This is the stability counterfactual record.
 - `open_risks`: one line each. Unresolved concerns downstream stages must carry forward.
@@ -513,7 +520,7 @@ Agent(
 )
 ```
 
-Store the full output in `pcs_review.verbatim`.
+Store compact verdicts in `pcs_review.verdicts`; write the full output to `pcs_review.json` only when the transcript is needed, then set `pcs_review.transcript_ref`.
 
 - Interactive mode: present via `AskUserQuestion` with options `satisfied`, `valid_concern`, `disagree_override`. Wait for the user's answer before invoking any other tool.
 - Auto mode: apply `../auto-mode.md` stage-close rules.
@@ -534,7 +541,7 @@ After the PCS review clears or the user overrides it:
 
 4. Parse `04_examination.yaml` with a standard YAML loader. Repair if parsing fails.
 
-5. Render `04_examination.md` from the canonical YAML. Keep the report compact: one `##` section per top-level YAML key that is populated (`Upstream Contract`, `Visibility`, `Support Registry`, `Structure Profile`, `Relationships`, `Anomalies and Contradictions`, `Fragility Review`, `Claim Boundary Narrowing` (only when populated), `Analysis Handoff`, `Cycle Summary` with one line per cycle, `PCS Assessment`). Omit sections whose YAML keys are empty or absent. Reference the subagent verbatims through the YAML; the markdown is a rendered summary.
+5. Render `04_examination.md` from the canonical YAML. Keep the report compact: one `##` section per top-level YAML key that is populated (`Upstream Contract`, `Visibility`, `Support Registry`, `Structure Profile`, `Relationships`, `Anomalies and Contradictions`, `Fragility Review`, `Claim Boundary Narrowing` (only when populated), `Analysis Handoff`, `Cycle Summary` with one line per cycle, `PCS Assessment`). Omit sections whose YAML keys are empty or absent. Reference compact PCS verdicts through the YAML; if a transcript sidecar exists, link it without copying it into the markdown.
 
 6. Update `README.md` with:
 
@@ -543,7 +550,7 @@ After the PCS review clears or the user overrides it:
    Type: {question_type}
    Route: {active_route}
    Protocol mode: {protocol_mode}
-   Visibility: {one-line summary from upstream.visibility_rules_summary}
+   Visibility: {one-line summary from visibility_ref}
    Support: {one-line summary of what the data appears able to support}
    Main tensions: {one-line summary of main support gaps or anomalies}
    Route pressure: {one-line summary of what inside the active route looks stronger or weaker}

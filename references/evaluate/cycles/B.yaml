@@ -3,8 +3,9 @@ focus: Stability Adjudication
 mandatory: true
 
 upstream:
-  - upstream.analysis_contract
+  - upstream_contract.analysis_contract_ref
   - evaluation_plan.perturbation_axes
+  - evaluation_plan.dependency_map_ref
   - evaluation_plan.challengers
   - evaluation_plan.divergence_triage
 
@@ -16,8 +17,8 @@ checklist:
     evidence_key: axes_and_challengers_covered     # {perturbation_axes: [id, ...], challengers: [id, ...], missing_from_contract: []}
     writes_to: null
   - id: B02
-    question: For each perturbation axis, what is the direction of change, magnitude of change, whether the qualitative conclusion changes, and whether the claim boundary needs narrowing?
-    evidence_key: perturbation_axis_details         # {axis_id: {direction, magnitude, qualitative_change: bool, narrowing_required: bool}}
+    question: For each perturbation axis, what is the direction of change, magnitude of change, expected coupled movements from the dependency map, whether unexpected coupled movement occurred, whether the qualitative conclusion changes, and whether the claim boundary needs narrowing?
+    evidence_key: perturbation_axis_details         # {axis_id: {direction, magnitude, expected_coupled_movements: [], unexpected_movements: [], qualitative_change: bool, narrowing_required: bool}}
     writes_to: null
   - id: B03
     question: For each challenger, does it contradict the primary conclusion, what is the magnitude and direction of disagreement, and is the disagreement structural or parametric?
@@ -67,5 +68,6 @@ research_questions:
 guidance:
   - Small numeric shifts with preserved qualitative conclusions are acceptable variation, not instability. Document the magnitude of every shift; adjudicate the qualitative-conclusion change.
   - Convergent results strengthen the claim; divergent results must be diagnosed (genuine instability, known method limitation, or execution artifact) before driving a verdict.
+  - Use the dependency map from analyze when interpreting perturbations; coupled metrics that should move together must be expected together rather than noticed selectively after the fact.
   - All challengers producing materially different results from the primary is NOT a backtracking trigger on its own. Backtracking is warranted only when divergence invalidates the primary conclusion across the claim boundary.
   - The three stability verdicts are: stable (conclusions survive every perturbation), conditionally stable (survives most, sensitive to specific axes -- caveats required), unstable (changes materially under reasonable perturbations -- claim must be downgraded or killed).
