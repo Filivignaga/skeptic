@@ -59,7 +59,7 @@ your-project/
     02_protocol.py
     ...
     07_communication.py
-    stdout/
+    stdout/              # optional debug evidence for failed or user-requested cycle captures
   README.md
 ```
 

@@ -223,7 +223,7 @@ This protocol applies to every cycle, mandatory or follow-up.
 3. Cycle A only: create `04_examination.yaml` with `stage`, `schema_version`, `project`, the full `upstream` snapshot copied from the three upstream YAMLs, the derived `visibility` set (which cleaned artifacts and protocol-created artifacts `examine` may inspect, which are restricted, and what access level applies to each), and `status.current_cycle: A`. Create `04_examination.py` with the shape specified below.
 4. Every cycle: extend `04_examination.py` by writing or updating the cycle's function (`run_cycle_a`, `run_cycle_b`, ...). The function must produce every required evidence key named by the cycle spec. Operate only on artifacts in `visibility.visible_cleaned_artifacts` and `visibility.visible_protocol_artifacts`.
 5. Run `python {scripts_dir_name}/04_examination.py --cycle {cycle}`. Capture stdout.
-6. Parse stdout as JSON. Use the parsed dict as this cycle's candidate evidence for Step 2 and Step 3; Step 5 records a compact summary in `decision_ledger[*].script_evidence`. The script has already mirrored the same JSON to `{scripts_dir_name}/stdout/cycle_{cycle}.json` for external inspection; do not copy it into the canonical YAML.
+6. Parse stdout as JSON. Use the parsed dict as this cycle's candidate evidence for Step 2 and Step 3; Step 5 records a compact summary in `decision_ledger[*].script_evidence`. Do not retain raw stdout by default. Write a debug sidecar only when the cycle fails, is rerun for diagnosis, or the user asks for retained raw evidence.
 7. Scan stderr and stdout for unhandled exceptions. Any unhandled exception is a blocking defect and must be fixed before continuing. Functions that intentionally demonstrate failure must be explicitly flagged with a `# expected_failure` comment.
 
 Script contract: generate `04_examination.py` for the current project and follow `../script-contract.md`. Include only the helpers needed for protocol-visible cleaned artifacts and the active cycle evidence.
@@ -280,7 +280,7 @@ Agent(
   - Stay inside the approved question, active route, protocol rules, and visible data.
   - Ask only domain questions that clarify observed structure, anomalies, subgroup patterns, dependencies, measurement artifacts, or support limitations.
   - Cite sources only for claims that would change how the examination is interpreted or how later analysis should respond.
-  - Every citation-worthy claim must be represented by a `research_log.jsonl` row; canonical YAML keeps only `research_log#n` pointers.
+  - Create or reference a `research_log.jsonl` row only for sources that materially change a decision or will be cited in a deliverable; canonical YAML keeps only `research_log#n` pointers.
 
   Return concise findings with sources, organized by research question. Focus on
   information that changes support characterization, fragility assessment, or
@@ -347,10 +347,8 @@ Agent(
   or asserts scope beyond the approved claim_boundary. If examination weakens
   support, the narrowing belongs in claim_boundary_narrowing.
 
-  ALTERNATIVES CONSIDERED:
-  - Current approach: [description] - Score: [1-10] - [justification]
-  - Alt 1: [different framing] - Score: [1-10] - [justification]
-  - Alt 2: [different framing] - Score: [1-10] - [justification]
+  DECISION-RELEVANT COUNTERFACTUAL:
+  - Strongest plausible alternative that would change a downstream decision: [alternative, affected decision, why accepted/rejected]
 
   DESIGN IMPLICATIONS: [constraints or pressures this cycle surfaced for `analyze`, or "none"]
   GAPS REMAINING: [list, or "none"]
@@ -369,21 +367,15 @@ Agent(
 
 When both subagents return, the model parses three counts from the evaluation output: `Unanswered items`, `Blocking defects`, `Failed criteria`. `blocking_failures = unanswered + blocking_defects + failed_criteria`; `blocking_failures == 0` means PASS. Every required evidence key must be produced or formally skipped, and every acceptance criterion must pass or be explicitly overridden.
 
-Digest the subagent replies into `decision_ledger[*].subagents`; the replies themselves stay in memory. Admit something to `subagents` when a future reader needs it to reconstruct why this path was chosen.
+Digest subagent replies only when they change the cycle outcome or leave a risk that downstream stages must carry. Store those items in `decision_ledger[*].review_findings`.
 
-Include:
-- `research_sources`: URLs that actually tipped a call, each paired with a one-line claim. Drop sources that merely confirmed obvious baseline facts or rephrased what was already known.
-- `decisions`: operational choices where a reasonable alternative existed. Tag each with its PCS axis (`P`, `C`, `S`, or `null` when not PCS-relevant). Set `source` to the index into `research_sources` when a specific source drove the call. Default implementation choices that do not affect evidence or interpretation are not decisions.
-- `rejected_alternatives`: paths actively weighed and dropped, with the reason and PCS axis. This is the stability counterfactual record.
-- `open_risks`: one line each. Unresolved concerns downstream stages must carry forward.
+Include only:
+- blocking findings or failed criteria that drove the decision
+- decision-changing external sources, referenced by `research_log#n` when a research log exists
+- the strongest rejected alternative when it would change a downstream decision
+- unresolved risks that downstream stages must carry
 
-Exclude:
-- Prose summaries, meta-commentary, or "the subagent reviewed and confirmed" filler.
-- Restatements of required-evidence questions, acceptance-criteria definitions, `research_questions`, or `script_evidence` already on file.
-- Per-criterion PASS notes when nothing interesting happened. Only failed or non-obvious criteria whose reasoning belongs in the audit record.
-- Sources that confirmed baseline facts without changing behavior.
-
-Keep the schema as the authoritative field list. If something the subagent surfaced has no schema home, fit it into `open_risks` or leave it out.
+Exclude PASS notes, subagent summaries, restatements of required evidence, sources that did not change behavior, and default implementation choices.
 
 ### Step 4: Decision
 
@@ -525,7 +517,7 @@ After the PCS review clears or the user overrides it:
 
 4. Parse `04_examination.yaml` with a standard YAML loader. Repair if parsing fails.
 
-5. Render `04_examination.md` from the canonical YAML. Keep the report compact: one `##` section per top-level YAML key that is populated (`Upstream Contract`, `Visibility`, `Support Registry`, `Structure Profile`, `Relationships`, `Anomalies and Contradictions`, `Fragility Review`, `Claim Boundary Narrowing` (only when populated), `Analysis Handoff`, `Decision Summary` with one line per cycle, `PCS Assessment`). Omit sections whose YAML keys are empty or absent. Reference the compact `pcs_review` fields through the YAML; the markdown is a rendered summary.
+5. Render `04_examination.md` from the canonical YAML. Keep the report compact: one `##` section per top-level YAML key that is populated (`Upstream Contract`, `Visibility`, `Support Registry`, `Structure Profile`, `Relationships`, `Anomalies and Contradictions`, `Fragility Review`, `Claim Boundary Narrowing` (only when populated), `Analysis Handoff`, `PCS Assessment`). Omit sections whose YAML keys are empty or absent. Reference the compact `pcs_review` fields through the YAML; the markdown is a rendered summary.
 
 6. Update `README.md` with:
 

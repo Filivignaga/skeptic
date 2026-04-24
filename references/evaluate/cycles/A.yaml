@@ -36,10 +36,10 @@ required_evidence:
   evidence_shape: '{approved_question, question_type, target_quantity, claim_boundary_as_narrowed, protocol_mode, validation_logic,
     examine_support_registry, stakeholder_decision}'
 - id: A02
-  question: What is the full evaluation handoff from 05_analysis.yaml (contract summary, execution summary, deviation register,
-    contract amendments, flags for evaluate) and is it loaded into evaluate state?
+  question: What is the full evaluation handoff from 05_analysis.yaml (claim inventory, contract summary, execution summary,
+    deviation register, contract amendments, flags for evaluate) and is it loaded into evaluate state?
   evidence_key: analyze_handoff
-  evidence_shape: '{contract_summary, execution_summary, deviation_register, contract_amendments, flags_for_evaluate}'
+  evidence_shape: '{claim_inventory, contract_summary, execution_summary, deviation_register, contract_amendments, flags_for_evaluate}'
 - id: A03
   question: For every flag in the analyze evaluation handoff, what is the flag, which claim does it affect, and which evaluation
     cycle (B, C, or D) will address it?

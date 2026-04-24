@@ -63,7 +63,7 @@ Canonical YAML is the decision record, not a transcript or evidence dump.
 - File hashes have one authority. The first registration lives in `provenance.files` or the stage's equivalent provenance registry. Later stages record verification status and a `provenance_ref`, not a second hash value, unless they are checking a frozen derivative artifact.
 - Visibility constraints are inherited by reference from `protocol`. Later stages may record `visibility_ref`, `visibility_set_ref`, or a compact allowed/restricted summary needed for execution, but they must not duplicate the protocol visibility block as a second source of truth.
 - Batch identical no-op or "retained as-is" decisions when the rationale, alternatives, reversibility, and downstream consequence are identical. Preserve the affected column or artifact list inside the single decision entry.
-- `cycle_history[*].script_evidence` is compact: 4-8 one-line bullets, or one line per `evidence_key`. Full stdout stays in `{scripts_dir_name}/stdout/cycle_{cycle}.json`.
+- `cycle_history[*].script_evidence` is compact: 4-8 one-line bullets, or one line per `evidence_key`. Full stdout is not retained by default; write a debug sidecar only when a cycle fails, is rerun for diagnosis, or the user asks for retained raw evidence.
 - `pcs_review` stores compact verdicts, disposition, and open conditions in YAML. A full subagent reply may be written to a sidecar such as `pcs_review.json`; if no `transcript_ref` is present, the compact YAML verdict is the complete record.
 
 `pcs_review` shape:
@@ -86,9 +86,9 @@ Numeric, categorical, and citation claims in canonical YAML must be traceable.
 
 - Canonical YAML prose must not introduce numbers, percentages, counts, dates, thresholds, or categorical sets unless the same entry has `evidence_key`, `evidence_ref`, `research_log#n`, `upstream_ref`, or `computed_by`.
 - Use a warning-first YAML evidence-claim lint check. It flags suspicious prose and should allow legitimate IDs, versions, timestamps, and structured provenance fields.
-- External research citations live in one append-only `{docs_dir_name}/research_log.jsonl` sidecar per project. Canonical YAML references stable IDs such as `research_log#7`.
+- External research citations live in one append-only `{docs_dir_name}/research_log.jsonl` sidecar only when external sources materially drive a decision or are cited in a deliverable. Canonical YAML references stable IDs such as `research_log#7`.
 - Each research log row includes at least `id`, `stage`, `cycle`, `url`, `claim_used`, `verified_at`, and `status`.
-- `cycle_history[*].subagents.research_sources` stores research-log pointers and the one-line claim they affected, not raw citation strings or long source notes.
+- Cycle review findings store research-log pointers only when a source changed a decision, not raw citation strings or long source notes.
 
 ## User-Owned Judgment Decisions
 
@@ -114,7 +114,7 @@ Thresholds and expected perturbation effects are not agent inventions.
 
 ## Subagent Policy
 
-Default every cycle to an evaluation subagent. Add a research subagent only when external domain, methodological, legal, standards, or audience knowledge can change a decision.
+Use inline acceptance checks by default. Add an evaluation subagent only for high-risk cycles, unresolved blocking issues, stage close, or when claims could widen or cross the approved boundary. Add a research subagent only when external domain, methodological, legal, standards, or audience knowledge can change a decision.
 
 Likely research-backed cycles include question/domain framing, protocol standards and prohibitions, cleaning policy choices, route-specific anomaly interpretation, analysis contract selection, assumption policy, sensitivity design, evaluation verdict thresholds, claim survival, and audience/regulatory framing.
 
@@ -356,9 +356,7 @@ projects_root/
       07_communication.py
       *_constraints.json       # Optional clean/preprocess constraint artifacts.
       *.json                   # Optional companion artifacts shared across cycles.
-      stdout/                  # Latest stdout per cycle, written by the stage script:
-                               #   cycle_{cycle}.json
-                               # Overwritten on re-run. Audit artifact only; no cycle reads it.
+      stdout/                  # Optional debug evidence for failed or user-requested cycle captures.
     readme_name
 ```
 
@@ -387,7 +385,7 @@ Rules:
 - Use memoized loaders such as `load_state()`, `load_raw()`, or `load_inputs()` when multiple cycles read the same inputs. The loader must apply the encoding and dtype contract recorded in provenance.
 - Use a shared `check_dtype_meaning(series, expected_meaning)` helper when semantic dtype matters, including strings, identifiers, nullable integers, dates, categoricals, and pandas or pyarrow dtype variants.
 - Heavy data (full DataFrames, long arrays) is summarized, not dumped. Evidence packets stay compact.
-- `decision_ledger[*].evidence_summary` in the canonical YAML carries a compact summary of each cycle's stdout (4-8 one-line bullets, or one-line value per material evidence key). The stage script writes its latest stdout to `{scripts_dir_name}/stdout/cycle_{cycle}.json` for external inspection; the model never copies that file into the canonical YAML.
+- `decision_ledger[*].evidence_summary` in the canonical YAML carries a compact summary of each cycle's stdout (4-8 one-line bullets, or one-line value per material evidence key). The stage script does not write stdout sidecars by default. If a debug sidecar is written after a failure, rerun, or user request, the model never copies that file into the canonical YAML.
 - Per-file provenance (schema, encoding, sha256) is emitted only the first time a file is recorded -- typically Cycle A iter 1. After it lands in `provenance.files`, neither the stdout packet nor `decision_ledger[*].evidence_summary` re-emits those fields; downstream cycles reference those files by filename.
 - Seeds are set inside the function whenever stochastic steps run, and the seed value is echoed into the evidence packet.
 - Stable helper functions or sibling helper modules are allowed when they reduce duplication and improve reproducibility. Helpers must be deterministic, documented briefly, listed in provenance when project-local, and must not write canonical YAML or access restricted artifacts.

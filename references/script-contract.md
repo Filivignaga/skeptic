@@ -6,7 +6,7 @@ Every project-side stage script is generated for the current project and data so
 
 - Accept `--cycle {cycle}` and run only that cycle.
 - Print exactly one JSON object to stdout. Print nothing else.
-- Mirror the same JSON to `{scripts_dir_name}/stdout/cycle_{cycle}.json`.
+- Write a debug copy of stdout only when a cycle fails, is rerun for diagnosis, or the user asks for retained raw evidence.
 - Read canonical YAML and upstream artifacts as needed, but never write canonical YAML.
 - Produce every required evidence key named by the active cycle spec.
 - Summarize heavy data. Do not emit full DataFrames, long arrays, or full per-row outputs.

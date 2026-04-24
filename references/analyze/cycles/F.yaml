@@ -52,6 +52,12 @@ required_evidence:
   evidence_key: handoff_package
   evidence_shape: '{contract_summary, execution_summary: {primary, sensitivity_by_axis, challengers_by_name}, explicit_separation_confirmed:
     bool}'
+- id: F10
+  question: What compact claim inventory will evaluate adjudicate, with one row per claim the analysis contract was designed
+    to support and no survival verdicts or result-quality judgments?
+  evidence_key: claim_inventory
+  evidence_shape: '[{claim_id, claim_statement, quantity, evidence_keys: [], stability_inputs: [], known_limits: [], allowed_verbs:
+    [], forbidden_verbs: []}]'
 - id: F03
   question: What is the claim boundary as-narrowed at stage close, listing every narrowing entry added during analyze and
     confirming no widening has occurred?
@@ -97,6 +103,7 @@ writes:
   F02:
   - evaluation_handoff.contract_summary
   - evaluation_handoff.execution_summary
+  F10: evaluation_handoff.claim_inventory
   F03: claim_boundary
   F04:
   - contract_amendments
@@ -111,6 +118,11 @@ acceptance_criteria:
 - id: F02-separation
   condition: Handoff package preserves explicit separation between primary, sensitivity (by axis), and challenger (by name)
     outputs; no merged tables
+- id: F10-claim-inventory-complete
+  depends_on:
+  - F10
+  condition: Claim inventory has exactly one row per claim the analysis contract was designed to support, with evidence keys,
+    stability inputs, known limits, allowed verbs, and forbidden verbs; it contains no survival verdicts
 - id: F03-not-widened
   condition: Claim boundary at stage close preserves or narrows the boundary that entered analyze; scope, evidence_ceiling,
     generalization_limit, and effective verb set are never widened
