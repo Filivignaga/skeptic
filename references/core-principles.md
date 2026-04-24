@@ -55,6 +55,71 @@ If the rendered markdown disagrees with the canonical YAML, the YAML wins.
 
 Stage numbering follows stage order: `01_formulation`, `02_protocol`, `03_cleaning`, `04_examination`, `05_analysis`, `06_evaluation`, `07_communication`.
 
+## Canonical YAML Discipline
+
+Canonical YAML is the decision record, not a transcript or evidence dump.
+
+- Store upstream context as `upstream_refs` or `upstream_contract`: file path, section names, and hashes. Do not copy upstream fact blocks when a pointer plus hash is enough to detect drift.
+- File hashes have one authority. The first registration lives in `provenance.files` or the stage's equivalent provenance registry. Later stages record verification status and a `provenance_ref`, not a second hash value, unless they are checking a frozen derivative artifact.
+- Visibility constraints are inherited by reference from `protocol`. Later stages may record `visibility_ref`, `visibility_set_ref`, or a compact allowed/restricted summary needed for execution, but they must not duplicate the protocol visibility block as a second source of truth.
+- Batch identical no-op or "retained as-is" decisions when the rationale, alternatives, reversibility, and downstream consequence are identical. Preserve the affected column or artifact list inside the single decision entry.
+- `cycle_history[*].script_evidence` is compact: 4-8 one-line bullets, or one line per `evidence_key`. Full stdout stays in `{scripts_dir_name}/stdout/cycle_{cycle}.json`.
+- `pcs_review` stores compact verdicts, disposition, and open conditions in YAML. A full subagent reply may be written to a sidecar such as `pcs_review.json`; if no `transcript_ref` is present, the compact YAML verdict is the complete record.
+
+`pcs_review` shape:
+
+```yaml
+pcs_review:
+  verdicts:
+    predictability:
+    computability:
+    stability:
+  open_conditions: []
+  transcript_ref:
+  disposition:
+  disposition_reason:
+```
+
+## Evidence and Research Logs
+
+Numeric, categorical, and citation claims in canonical YAML must be traceable.
+
+- Canonical YAML prose must not introduce numbers, percentages, counts, dates, thresholds, or categorical sets unless the same entry has `evidence_key`, `evidence_ref`, `research_log#n`, `upstream_ref`, or `computed_by`.
+- Use a warning-first YAML evidence-claim lint check. It flags suspicious prose and should allow legitimate IDs, versions, timestamps, and structured provenance fields.
+- External research citations live in one append-only `{docs_dir_name}/research_log.jsonl` sidecar per project. Canonical YAML references stable IDs such as `research_log#7`.
+- Each research log row includes at least `id`, `stage`, `cycle`, `url`, `claim_used`, `verified_at`, and `status`.
+- `cycle_history[*].subagents.research_sources` stores research-log pointers and the one-line claim they affected, not raw citation strings or long source notes.
+
+## User-Owned Judgment Decisions
+
+In interactive mode, dispatch `AskUserQuestion` before closing any cycle that contains a user-owned judgment decision. If the user has no preference, record `agent_decides` with the evidence shown.
+
+Stage decision classes:
+
+- `formulate`: question type, operationalization, unit of analysis, claim boundary, intended/prohibited uses, material bias severity.
+- `protocol`: data usage mode, validation logic, leakage/prohibition policy, backtracking triggers, external standard adoption.
+- `clean`: missing-vs-censored policy, irreversible exclusions above materiality threshold, stability thresholds, high-impact perturbation axes.
+- `examine`: route-pressure decisions, stop/backtrack choices, analysis-handoff inclusion when patterns are material.
+- `analyze`: analysis contract approval, assumption-failure policy, material-difference thresholds, contract amendments.
+- `evaluate`: stability verdict thresholds, predictability verdicts, fatal validity threats, claim survival or narrowing decisions.
+- `communicate`: audience-action framing, caveat translation, recommendation strength, final deliverable approval.
+
+## Thresholds and Perturbations
+
+Thresholds and expected perturbation effects are not agent inventions.
+
+- Threshold sources must be one of: protocol-derived, data-derived computation, external standard recorded in `research_log.jsonl`, or explicit user approval.
+- `evaluate` consumes thresholds from protocol, analyze, or approved evaluation rules. It does not silently invent wider thresholds to pass claims.
+- Perturbation scripts should maintain or infer a dependency map so coupled metrics, variables, and claim components are expected to move together. Hand-written expected-movement maps are allowed only when the rationale and source are recorded.
+
+## Subagent Policy
+
+Default every cycle to an evaluation subagent. Add a research subagent only when external domain, methodological, legal, standards, or audience knowledge can change a decision.
+
+Likely research-backed cycles include question/domain framing, protocol standards and prohibitions, cleaning policy choices, route-specific anomaly interpretation, analysis contract selection, assumption policy, sensitivity design, evaluation verdict thresholds, claim survival, and audience/regulatory framing.
+
+Likely evaluator-only cycles include mechanical artifact audits, reproducibility reruns, filesystem presence checks, final assembly checks, pure rendering checks, and README updates. An evaluator may recommend a research-backed follow-up when it finds a knowledge gap.
+
 ## Execution Modes
 
 Skeptic supports two execution modes:
@@ -318,6 +383,9 @@ Rules:
 - CLI contract: `python {NN}_{stage}.py --cycle {cycle}`. Only the requested cycle runs.
 - Each function returns a dict. `main()` prints exactly one JSON object to stdout. Nothing else on stdout.
 - The script reads the canonical stage YAML to find data paths and prior decisions. It does not write the canonical YAML; only the model writes the canonical YAML.
+- Shared helpers are allowed when they prevent repeated file loading, preserve dtype or encoding consistency, validate constraints, or make cycle outputs reproducible. They must be deterministic, side-effect-limited, and covered by cycle evidence or final reproducibility checks.
+- Use memoized loaders such as `load_state()`, `load_raw()`, or `load_inputs()` when multiple cycles read the same inputs. The loader must apply the encoding and dtype contract recorded in provenance.
+- Use a shared `check_dtype_meaning(series, expected_meaning)` helper when semantic dtype matters, including strings, identifiers, nullable integers, dates, categoricals, and pandas or pyarrow dtype variants.
 - Heavy data (full DataFrames, long arrays) is summarized, not dumped. Evidence packets stay compact.
 - `decision_ledger[*].evidence_summary` in the canonical YAML carries a compact summary of each cycle's stdout (4-8 one-line bullets, or one-line value per material evidence key). The stage script writes its latest stdout to `{scripts_dir_name}/stdout/cycle_{cycle}.json` for external inspection; the model never copies that file into the canonical YAML.
 - Per-file provenance (schema, encoding, sha256) is emitted only the first time a file is recorded -- typically Cycle A iter 1. After it lands in `provenance.files`, neither the stdout packet nor `decision_ledger[*].evidence_summary` re-emits those fields; downstream cycles reference those files by filename.

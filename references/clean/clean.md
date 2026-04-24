@@ -65,7 +65,7 @@ project:
   started_at:                       # ISO timestamp
 
 status:
-  current_cycle:                    # A|B|C|D1|...|E|F|G1|...|R|S|null
+  current_cycle:                    # A|B|C|D1|...|F|G1|...|R|S|null
   completed_cycles: []
   skipped_cycles: {}                # {cycle_letter: reason} for conditional cycles (e.g., F)
   locked_at: null                   # set at stage close; presence = locked
@@ -74,31 +74,30 @@ route:
   active:                           # descriptive|exploratory|inferential|predictive|causal|mechanistic
   route_file:                       # references/routes/{active}/clean.md
 
-upstream_snapshot:                  # facts read from 01_formulation.yaml and 02_protocol.yaml
-  approved_question:
-  question_type:
-  target_quantity:
-  claim_boundary: {}                # compact copy: claim_type, scope, evidence_ceiling, generalization_limit
-  operationalization: {}
-  unit_of_analysis:
-  key_assumptions: []
-  data_usage_mode:
-  leakage_rules: []
-  forbidden_variable_classes: []
-  clean_prohibitions: []
-  validation_logic_reserved: []
-  backtracking_triggers: []
-  protocol_required_artifacts: []
+upstream_refs:                      # pointers to upstream fields; do not copy upstream fact blocks
+  - file: skeptic_documentation/01_formulation.yaml
+    sections: [approved_question, question_type, target_quantity, claim_boundary, operationalization, unit_of_analysis, key_assumptions]
+    sha256:
+  - file: skeptic_documentation/02_protocol.yaml
+    sections: [active_route, data_usage_mode, visibility_rules, leakage_rules, forbidden_variable_classes, clean_prohibitions, validation_logic, backtracking_triggers, protocol_required_artifacts]
+    sha256:
+
+upstream_contract:                  # compact interpretation or narrowing added by clean, not a literal upstream copy
+  claim_boundary_ref:
+  protocol_visibility_ref:
+  data_usage_mode_ref:
 
 precondition_check:
   formulation_sections_present: []
   protocol_sections_present: []
   readme_present:
-  raw_hash_verification: {}         # {filename: {expected, observed, match}}
+  raw_hash_verification: {}         # {filename: {provenance_ref, observed_match}}
   required_artifacts_present: {}    # {artifact: true|false|missing_reason}
 
-visibility:
-  visible_raw_files: []
+visibility_ref:
+  source: skeptic_documentation/02_protocol.yaml
+  sections: [visibility_rules, data_usage_mode, frozen_artifacts]
+  visible_raw_files: []             # compact execution summary derived from protocol
   visible_protocol_artifacts: []
   restricted_artifacts: []
   access_levels: {}                 # {artifact: allowed_operations}
@@ -194,13 +193,13 @@ Rules:
 | B | Integrity diagnostics | Yes |
 | C | Cleaning resolution | Yes |
 | D1, D2, ... | Cleaning follow-ups | Conditional |
-| E | Preprocessing | Yes |
+| E | Preprocessing | Retired - useful checks folded into Cycle C closeout |
 | F | Derived variables and related downstream-safe transforms | Conditional |
 | G1, G2, ... | Preprocessing and derived-variable follow-ups | Conditional |
 | R | Reproducibility | Yes |
 | S | Stability and transfer diagnostics | Yes |
 
-Cycle F runs only when derived variables or similarly downstream-safe transformations are justified by the approved question and protocol. Skipping F must be recorded in `status.skipped_cycles`. Cycles E, F, and G+ may force a new D-series follow-up if a representation decision turns out to be an unresolved cleaning issue.
+Cycle F runs only when derived variables or similarly downstream-safe transformations are justified by the approved question and protocol. Skipping F must be recorded in `status.skipped_cycles`. Cycle C closeout, F, and G+ may force a new D-series follow-up if a representation decision turns out to be an unresolved cleaning issue. Cycle E is retired; do not open it for new projects.
 
 ## Per-cycle Reference Files
 
@@ -236,8 +235,8 @@ This protocol applies to every cycle, mandatory or follow-up.
    - Load `references/routes/{route}/clean.md` once and keep it in memory for the rest of the stage. If the expected route file is missing, stop and reopen upstream.
    - Run the precondition check: verify `01_formulation.yaml`, `02_protocol.yaml`, `{readme_name}`, at least one raw file, and every protocol-required artifact exist. Recompute SHA-256 for each raw file and compare to `provenance.files.{filename}.sha256` in `01_formulation.yaml`. Any mismatch is a blocking defect; stop until raw data is restored or formulate is reopened.
    - Verify `01_formulation.yaml` carries an approved question, question type, target quantity, claim boundary, unit of analysis, operationalization, and key assumptions. Verify `02_protocol.yaml` carries question type, active route, data usage mode, visibility rules, frozen-artifact status, leakage rules, forbidden variable classes, clean prohibitions, validation logic, and backtracking triggers. Missing or contradictory fields block the stage.
-   - Derive the active visibility set and record it under `visibility`: visible raw files, visible protocol artifacts, restricted artifacts, access levels.
-   - Initialize `03_cleaning.yaml` with `stage`, `schema_version`, `project` (including `project.started_at`), `status.current_cycle: A`, `route`, `upstream_snapshot`, `precondition_check`, and `visibility`. Seed `question_critical_variables` from `contract.operationalization` in `01_formulation.yaml`.
+   - Derive the active visibility set from protocol and record it under `visibility_ref` as a protocol pointer plus compact execution summary: visible raw files, visible protocol artifacts, restricted artifacts, access levels.
+   - Initialize `03_cleaning.yaml` with `stage`, `schema_version`, `project` (including `project.started_at`), `status.current_cycle: A`, `route`, `upstream_refs`, `upstream_contract`, `precondition_check`, and `visibility_ref`. Seed `question_critical_variables` from `contract.operationalization` in `01_formulation.yaml`.
    - Create `03_cleaning.py` with the shape specified below.
 4. Every cycle after A: confirm the route context still resolves to the same route. If the route context becomes ambiguous, reread `01_formulation.yaml`, `02_protocol.yaml`, and the same route file before proceeding. Identify which visible artifacts the current cycle is allowed to inspect; if unclear, stop and reopen `protocol`.
 5. Every cycle: extend `03_cleaning.py` by writing or updating the cycle's function (`run_cycle_a`, `run_cycle_b`, ...). The function must produce every required evidence key named by the cycle spec.
@@ -251,6 +250,7 @@ Script rules:
 - The script prints exactly one JSON object to stdout. Nothing else on stdout.
 - The script does not write to `03_cleaning.yaml`. Only the model writes the canonical YAML.
 - The script respects protocol visibility and never loads restricted artifacts.
+- Constraint verifiers use `verify_allowed_values(series, allowed, nullable)` or equivalent logic with `bad = ser[ser.notna() & ~ser.isin(allowed)]`; nullability is checked separately.
 - Heavy data (arrays, full DataFrames) is summarized, not dumped. Evidence packets stay compact.
 - Per-file provenance (schema, encoding, sha256) is emitted only the first time a file is recorded -- typically Cycle A iter 1. After it lands in `provenance.files`, neither the stdout packet nor `decision_ledger[*].script_evidence` re-emits those fields; downstream cycles reference those files by filename.
 - Seeds are set inside the function whenever stochastic steps run, and the seed is echoed into the evidence packet.
@@ -303,8 +303,7 @@ Agent(
   - If a question does not apply, say "not applicable" and give a one-line reason.
   - Cite sources for any claim that would change a cleaning or preprocessing decision.
 
-  Return concise findings with sources. Every citation must include its URL
-  inline after the claim it supports. Organize findings by question. Focus on
+  Return concise findings. For every citation-worthy claim, write or reference a `research_log.jsonl` row with URL, claim_used, verified_at, and status; canonical YAML keeps only `research_log#n` pointers. Organize findings by question. Focus on
   facts that materially change cleaning judgments, semantic interpretation,
   or protocol compliance.
   """
@@ -470,7 +469,7 @@ Re-parse `03_cleaning.yaml` to confirm validity.
 
 The loop ends when all of the following hold:
 
-- every mandatory cycle (A, B, C, E, R, S) has a closing `decision` of `pass` or an `override`
+- every mandatory cycle (A, B, C, R, S) has a closing `decision` of `pass` or an `override`
 - Cycle F is completed with `pass` or `override`, or recorded in `status.skipped_cycles` with a specific reason (e.g., "no derived variables justified by the approved question and protocol")
 - every approved D-series or G-series follow-up is resolved
 - the latest dataset fitness review returns no unresolved `no` or `unclear` answers

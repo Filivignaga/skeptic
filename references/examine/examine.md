@@ -20,7 +20,7 @@ The active route is whatever `02_protocol` confirmed. Route candidates in `01_fo
 | Path | Role |
 |------|------|
 | `{scripts_dir_name}/04_examination.py` | Single Python file containing one function per cycle (`run_cycle_a`, `run_cycle_b`, `run_cycle_c`, `run_cycle_e`, and any opened follow-up `run_cycle_d1`, `run_cycle_d2`, ...). Invoked one cycle at a time. Returns a JSON evidence packet on stdout. |
-| `{docs_dir_name}/04_examination.yaml` | Canonical stage memory. Holds the upstream snapshot, visibility set, support registry, structure and relationship findings, anomaly and bias inventory, fragility review, analysis handoff, cycle history, and PCS review. Created at stage start, updated at the end of every cycle. |
+| `{docs_dir_name}/04_examination.yaml` | Canonical stage memory. Holds upstream references, visibility reference, support registry, structure and relationship findings, anomaly and bias inventory, fragility review, analysis handoff, cycle history, and PCS review. Created at stage start, updated at the end of every cycle. |
 | `{docs_dir_name}/04_examination.md` | Human-readable report. Rendered once at finalization from the canonical YAML. |
 | `{readme_name}` | Short `## Examine [COMPLETE]` block added at finalization. |
 
@@ -63,27 +63,29 @@ status:
   completed_cycles: []
   locked_at: null                   # set at stage close; presence = locked
 
-upstream:                           # snapshot copied once at Cycle A setup
-  formulation_yaml:                 # relative path
-  protocol_yaml:
-  cleaning_yaml:
-  approved_question:
-  question_type:
-  target_quantity:
-  claim_boundary:                   # {claim_type, scope, evidence_ceiling, generalization_limit, verbs_allowed_effective, verbs_forbidden_effective}
-  active_route:                     # descriptive|exploratory|inferential|predictive|causal|mechanistic
-  route_file:                       # references/routes/{route}/examine.md
-  protocol_mode:
-  visibility_rules_summary:
-  cleaned_artifact_list: []
-  protocol_created_artifact_list: []
-  leakage_rules_summary:
-  examine_prohibitions: []
-  backtracking_triggers: []
-  carried_assumptions: []
-  carried_open_questions: []
+upstream_refs:
+  - file: skeptic_documentation/01_formulation.yaml
+    sections: [approved_question, question_type, target_quantity, claim_boundary, key_assumptions]
+    sha256:
+  - file: skeptic_documentation/02_protocol.yaml
+    sections: [active_route, data_usage, visibility_rules, leakage, prohibitions, backtracking_triggers]
+    sha256:
+  - file: skeptic_documentation/03_cleaning.yaml
+    sections: [data_contract, question_critical_variables, row_count_reconciliation, dataset_fitness_reviews, claim_boundary_updates]
+    sha256:
 
-visibility:                         # derived once at Cycle A setup; reused across cycles
+upstream_contract:                  # compact examination-specific interpretation; not a copied upstream block
+  active_route:
+  route_file:                       # references/routes/{route}/examine.md
+  claim_boundary_ref:
+  protocol_mode_ref:
+  cleaned_artifact_list_ref:
+  carried_assumptions_ref:
+  carried_open_questions_ref:
+
+visibility_ref:                     # derived once from protocol; reused across cycles
+  source: skeptic_documentation/02_protocol.yaml
+  sections: [visibility_rules, data_usage, frozen_artifacts]
   visible_cleaned_artifacts: []     # [{name, access_level, notes}]
   visible_protocol_artifacts: []    # [{name, access_level, notes}]
   restricted_artifacts: []          # named artifacts that are out of bounds for examine
@@ -229,7 +231,7 @@ Script contract: generate `04_examination.py` for the current project and follow
 Script rules:
 - The script prints exactly one JSON object to stdout. Nothing else on stdout.
 - The script does not write to `04_examination.yaml`. Only the model writes the canonical YAML.
-- The script reads only artifacts named in `visibility.visible_cleaned_artifacts` and `visibility.visible_protocol_artifacts`. Touching a restricted artifact is a blocking defect.
+- The script reads only artifacts named in `visibility_ref.visible_cleaned_artifacts` and `visibility_ref.visible_protocol_artifacts`. Touching a restricted artifact is a blocking defect.
 - Heavy data (arrays, full DataFrames) is summarized, not dumped. Evidence packets stay compact.
 - Per-file provenance (schema, encoding, sha256) is emitted only the first time a file is recorded -- typically Cycle A iter 1. After it lands in `provenance.files`, neither the stdout packet nor `decision_ledger[*].script_evidence` re-emits those fields; downstream cycles reference those files by filename.
 - Seeds are set inside the function if any stochastic step runs (representative subsampling, resampled perturbations).
@@ -278,7 +280,7 @@ Agent(
   - Stay inside the approved question, active route, protocol rules, and visible data.
   - Ask only domain questions that clarify observed structure, anomalies, subgroup patterns, dependencies, measurement artifacts, or support limitations.
   - Cite sources only for claims that would change how the examination is interpreted or how later analysis should respond.
-  - Every citation must include its URL inline after the claim it supports.
+  - Every citation-worthy claim must be represented by a `research_log.jsonl` row; canonical YAML keeps only `research_log#n` pointers.
 
   Return concise findings with sources, organized by research question. Focus on
   information that changes support characterization, fragility assessment, or
@@ -339,7 +341,7 @@ Agent(
   - {criterion_id}: PASS | FAIL - [evidence]
 
   ROUTE AND CLAIM BOUNDARY CHECK:
-  Read upstream.claim_boundary and the route file (active_route) from the
+  Read `upstream_contract.claim_boundary_ref` and the route file (`upstream_contract.active_route`) from the
   canonical YAML. Verify that no finding, support characterization, or
   handoff statement in this cycle uses verbs from verbs_forbidden_effective
   or asserts scope beyond the approved claim_boundary. If examination weakens
@@ -532,7 +534,7 @@ After the PCS review clears or the user overrides it:
    Type: {question_type}
    Route: {active_route}
    Protocol mode: {protocol_mode}
-   Visibility: {one-line summary from upstream.visibility_rules_summary}
+   Visibility: {one-line summary from visibility_ref}
    Support: {one-line summary of what the data appears able to support}
    Main tensions: {one-line summary of main support gaps or anomalies}
    Route pressure: {one-line summary of what inside the active route looks stronger or weaker}

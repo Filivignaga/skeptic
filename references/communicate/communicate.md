@@ -18,7 +18,7 @@ IMPORTANT: Before executing, read `../core-principles.md`. `core-principles.md` 
 | Path | Role |
 |------|------|
 | `{scripts_dir_name}/07_communication.py` | Single Python file containing one function per cycle (`run_cycle_a`, `run_cycle_b`, `run_cycle_c`, `run_cycle_d`, `run_cycle_e`, `run_cycle_f`). Invoked one cycle at a time. Returns a JSON evidence packet on stdout. Read-only against upstream artifacts; read-and-scan against `deliverables/`. |
-| `{docs_dir_name}/07_communication.yaml` | Canonical stage memory. Holds upstream snapshot, communication plan, audience profile, translations, recommendations, deliverable metadata, cycle history, and the terminal fidelity review. Created at stage start, updated at the end of every cycle. |
+| `{docs_dir_name}/07_communication.yaml` | Canonical stage memory. Holds upstream references and a compact communication contract, communication plan, audience profile, translations, recommendations, deliverable metadata, cycle history, and the terminal fidelity review. Created at stage start, updated at the end of every cycle. |
 | `{docs_dir_name}/07_communication.md` | Human-readable report. Rendered once at finalization from the canonical YAML. |
 | `deliverables/` | Audience-facing deliverables. Contains exactly one primary deliverable plus zero or more companion data files. Created/reused at Cycle A. |
 | `{readme_name}` | Short `## Communicate [COMPLETE]` block added at finalization. |
@@ -78,7 +78,19 @@ upstream_snapshot:                  # read-only snapshot from upstream artifacts
   unresolved_risks: []              # [{description, source}]
   handoff_discipline:               # literal handoff discipline statement from evaluate
 
-plan:                               # derived in Cycle A from upstream_snapshot
+upstream_contract:                  # compact communication-specific interpretation; not a copied upstream block
+  approved_question_ref:
+  question_type_ref:
+  target_quantity_ref:
+  claim_boundary_final_ref:
+  active_route_ref:
+  decision_context_ref:
+  claim_survival_registry_ref:
+  mandatory_limitations_ref:
+  unresolved_risks_ref:
+  handoff_discipline_ref:
+
+plan:                               # derived in Cycle A from upstream_contract refs
   null_result_mode:                 # bool
   claims_to_communicate: []         # claim_ids
   limitations_to_disclose: []
@@ -180,7 +192,7 @@ Rules:
 - The YAML must parse with a standard YAML loader after every write.
 - `decision_ledger` is append-only. Superseded iterations stay in the list; new iterations append.
 - `communicate` may narrow the claim boundary via `boundary.narrowing`. It may not widen it. Widening forces backtrack to `formulate` plus `protocol`.
-- `upstream_snapshot` is read-only after Cycle A closes. If upstream content changes, backtrack instead of rewriting the snapshot.
+- `upstream_refs` and `upstream_contract` are read-only after Cycle A closes. If upstream content changes, backtrack instead of rewriting the references or compact contract.
 - Write only fields that apply.
 - Use only ASCII characters in generated YAML content. Replace em dashes with `--`, curly quotes with straight quotes. Source-data strings may keep non-ASCII when the encoding is declared.
 
@@ -288,7 +300,7 @@ Agent(
   - Research audience-appropriate presentation standards, visualization conventions,
     uncertainty communication formats, and reporting guidelines.
   - If a question does not apply, say "not applicable" with a one-line reason.
-  - Every citation must include its URL inline after the claim it supports.
+  - Every citation-worthy claim must be represented by a `research_log.jsonl` row; canonical YAML keeps only `research_log#n` pointers.
 
   Return concise findings organized by question. Focus on facts that materially
   change communication decisions.

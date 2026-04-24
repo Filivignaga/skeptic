@@ -20,7 +20,7 @@ Evaluate does not re-execute analysis, generate new claims, widen the claim boun
 | Path | Role |
 |------|------|
 | `{scripts_dir_name}/06_evaluation.py` | Single Python file containing one function per cycle (`run_cycle_a`, `run_cycle_b`, ...). Invoked one cycle at a time. Returns a JSON evidence packet on stdout. |
-| `{docs_dir_name}/06_evaluation.yaml` | Canonical stage memory. Holds the full upstream snapshot, reproducibility results, evaluation plan, per-cycle verdicts, claim survival registry, communicate handoff, cycle history, and PCS (integrity) review. Created at stage start, updated at the end of every cycle. |
+| `{docs_dir_name}/06_evaluation.yaml` | Canonical stage memory. Holds upstream references and a compact evaluation contract, reproducibility results, evaluation plan, per-cycle verdicts, claim survival registry, communicate handoff, cycle history, and PCS (integrity) review. Created at stage start, updated at the end of every cycle. |
 | `{docs_dir_name}/06_evaluation.md` | Human-readable report. Rendered once at finalization from the canonical YAML. |
 | `{readme_name}` | Short `## Evaluate [COMPLETE]` block added at finalization. |
 
@@ -67,25 +67,43 @@ route:
   active_route:                     # descriptive|exploratory|inferential|predictive|causal|mechanistic
   route_file_loaded:                # path to references/routes/{route}/evaluate.md
 
-upstream:                           # canonical snapshot read from prior-stage YAMLs at Cycle A
-  approved_question:
-  question_type:
-  target_quantity:
-  claim_boundary_as_narrowed: {}    # from 05_analysis.yaml (claim_type, scope, verbs_allowed, verbs_forbidden, evidence_ceiling, generalization_limit)
-  protocol_mode:
-  validation_logic:
-  analysis_contract: {}             # {method_family, primary_specification, perturbation_axes: [], challengers: [], deviation_register: []}
-  flags_for_evaluate: []            # [{id, description, affected_claim}]
-  examine_support_registry: {}      # supported / weakly_supported / unsupported and fragility verdicts from 04_examination.yaml
-  stakeholder_decision: {}          # from 01_formulation.yaml contract.decision_context
+upstream_refs:
+  - file: skeptic_documentation/01_formulation.yaml
+    sections: [approved_question, question_type, target_quantity, decision_context]
+    sha256:
+  - file: skeptic_documentation/02_protocol.yaml
+    sections: [data_usage, validation_logic, prohibitions, backtracking_triggers]
+    sha256:
+  - file: skeptic_documentation/03_cleaning.yaml
+    sections: [data_contract, dataset_fitness_reviews, robustness, claim_boundary_updates]
+    sha256:
+  - file: skeptic_documentation/04_examination.yaml
+    sections: [support_registry, fragility_review, analysis_handoff]
+    sha256:
+  - file: skeptic_documentation/05_analysis.yaml
+    sections: [contract, comparison_table, deviations, claim_boundary, evaluation_handoff]
+    sha256:
+
+upstream_contract:                  # compact evaluation-specific interpretation; not a copied upstream block
+  approved_question_ref:
+  question_type_ref:
+  target_quantity_ref:
+  claim_boundary_as_narrowed_ref:
+  protocol_mode_ref:
+  validation_logic_ref:
+  analysis_contract_ref:
+  flags_for_evaluate_ref:
+  examine_support_registry_ref:
+  stakeholder_decision_ref:
 
 reproducibility:
-  frozen_artifact_hashes: {}        # {path: {expected_sha256, observed_sha256, match: bool}}
+  frozen_artifact_hashes: {}        # {path: {provenance_ref, observed_sha256, match: bool}}
   recomputed_metrics: {}            # {analysis_output_name: {expected, observed, match: bool}}
 
 evaluation_plan:
-  perturbation_axes: []             # mirrored from analysis_contract for adjudication
-  challengers: []                   # mirrored from analysis_contract for adjudication
+  perturbation_axes: []             # mirrored by reference from analysis_contract for adjudication
+  dependency_map_ref:               # dependency map used to expect coupled metric or claim movements
+  challengers: []                   # mirrored by reference from analysis_contract for adjudication
   route_specific_checks: []         # enumerated from the loaded route file and mapped to cycles B, C, D
   flag_coverage_map: {}             # {flag_id: {description, affected_claim, assigned_cycle}}
   divergence_triage: {}             # {axis_or_challenger_id: {magnitude, class: minor|notable|major}}
@@ -258,8 +276,7 @@ Agent(
   - If a question does not apply, say "not applicable" with a one-line reason.
   - Cite sources for claims that would change an evaluation verdict.
 
-  Return concise findings organized by research question. Every citation must include
-  its URL inline after the claim it supports.
+  Return concise findings organized by research question. Every citation-worthy claim must be represented by a `research_log.jsonl` row; canonical YAML keeps only `research_log#n` pointers.
   """
 )
 ```

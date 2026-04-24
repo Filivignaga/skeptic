@@ -226,8 +226,7 @@ Agent(
   Answer these research questions for Cycle {X} ({cycle focus}):
   {research_questions list from the cycle YAML}
 
-  Return concise findings with sources. Every citation must include its URL inline
-  after the claim it supports. Organize findings by question. Focus on facts that
+  Return concise findings. For every citation-worthy claim, write or reference a `research_log.jsonl` row with URL, claim_used, verified_at, and status; canonical YAML keeps only `research_log#n` pointers. Organize findings by question. Focus on facts that
   materially change formulation, protocol handoff, or claim boundaries.
   """
 )

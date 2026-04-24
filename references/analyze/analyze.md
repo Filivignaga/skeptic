@@ -62,8 +62,8 @@ status:
   active_route:                     # resolved at stage entry; immutable within the stage
 
 provenance:                         # immutable audit facts only
-  upstream_artifacts: {}            # {path: sha256} for 01-04 yaml and cleaned artifacts read
-  visibility_set: {}                # {visible_cleaned: [], visible_protocol_created: [], restricted: [], access_level_per_artifact: {}}
+  upstream_artifacts: {}            # {path: {sha256, sections}} for 01-04 yaml and cleaned artifacts read
+  visibility_ref: {}                # {source: 02_protocol.yaml, sections: [visibility_rules, data_usage], visible_cleaned: [], visible_protocol_created: [], restricted: [], access_level_per_artifact: {}}
 
 contract:                           # locked in Cycle A; may be amended only under A07 policy
   estimand:
@@ -71,7 +71,7 @@ contract:                           # locked in Cycle A; may be amended only und
   method_family:
   primary_specification: {}         # variables, functional_form, parameters, configuration
   accuracy_metric:                  # when route overlay requires
-  perturbation_plan: {}             # {axes: [], types: [], scope}
+  perturbation_plan: {}             # {axes: [], types: [], scope, dependency_map: {}, expected_coupled_movements: {}}
   challenger_alternatives: []       # [{name, structural_difference, rationale}]
   assumption_failure_policy: {}     # {mode: backtrack_only|amendment_allowed, named_fallbacks: []}
   missing_data_rule:
@@ -226,7 +226,7 @@ Script contract: generate `05_analysis.py` for the current project and follow `.
 Script rules:
 - The script prints exactly one JSON object to stdout. Nothing else on stdout.
 - The script does not write to `05_analysis.yaml`. Only the model writes the canonical YAML.
-- The script reads only artifacts inside the visibility set recorded in `provenance.visibility_set`. Touching a restricted artifact is a blocking defect.
+- The script reads only artifacts allowed by the protocol visibility referenced in `provenance.visibility_ref`. Touching a restricted artifact is a blocking defect.
 - Heavy data (arrays, full DataFrames) is summarized, not dumped. Evidence packets stay compact.
 - Per-file provenance (schema, encoding, sha256) is emitted only the first time a file is recorded -- typically Cycle A iter 1. After it lands in `provenance.files`, neither the stdout packet nor `decision_ledger[*].script_evidence` re-emits those fields; downstream cycles reference those files by filename.
 - Seeds are set inside the function whenever stochastic steps run, and echoed into the evidence packet.
@@ -276,7 +276,7 @@ Agent(
   - Stay inside the approved question, protocol contract, and active route.
   - Focus on methodological guidance. Do not re-do domain discovery.
   - If a question does not apply, say "not applicable" with a one-line reason.
-  - Every citation must include its URL inline after the claim it supports.
+  - Every citation-worthy claim must be represented by a `research_log.jsonl` row; canonical YAML keeps only `research_log#n` pointers.
 
   Return concise findings organized by research question.
   """

@@ -62,7 +62,12 @@ status:
   locked_at: null                   # set at stage close; presence = locked
 
 provenance:                         # immutable audit facts only
-  files: {}                         # {filename: {sha256}} for frozen artifacts created in Cycle B
+  files: {}                         # {filename: {sha256}} for source files first registered by formulate and frozen artifacts created in Cycle B
+
+upstream_refs:
+  - file: skeptic_documentation/01_formulation.yaml
+    sections: [approved_question, question_type, target_quantity, claim_boundary, route_candidates, key_assumptions, protocol_handoff, provenance]
+    sha256:
 
 route:
   active:                           # descriptive|exploratory|inferential|predictive|causal|mechanistic
@@ -74,12 +79,12 @@ handoff_audit:                      # populated in Cycle A
   contradictions: []                # list of {issue, locations, severity}
   ambiguities: []                   # list of {issue, classification: protocol_safe|protocol_blocking|formulate_contradiction}
   minimum_decisions: []             # minimum set of decisions protocol must produce before clean can start
-  confirmed:                        # snapshot extracted from formulate
-    approved_question:
-    question_type:
-    target_quantity:
-    claim_boundary_summary:
-    route_candidates: []
+  confirmed:                        # compact refs or summaries extracted from formulate; do not copy full upstream fields
+    approved_question_ref:
+    question_type_ref:
+    target_quantity_ref:
+    claim_boundary_ref:
+    route_candidates_ref:
 
 data_usage:                         # populated in Cycle B
   mode:                             # full_data|frozen_holdout_split|temporal_split|group_split|rolling_validation|external_validation|resampling_only|cross_fitting_authorized|hybrid
@@ -267,8 +272,7 @@ Agent(
   Answer these research questions for Cycle {X} ({cycle focus}):
   {research_questions list from the cycle YAML}
 
-  Return concise findings with sources. Every citation must include its URL inline
-  after the claim it supports. Organize findings by question. Focus on facts that
+  Return concise findings. For every citation-worthy claim, write or reference a `research_log.jsonl` row with URL, claim_used, verified_at, and status; canonical YAML keeps only `research_log#n` pointers. Organize findings by question. Focus on facts that
   materially change:
   - data usage rules
   - validation logic
