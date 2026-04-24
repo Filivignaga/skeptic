@@ -11,7 +11,7 @@ research_questions:
 - What construct validity evidence exists for the operationalized measures?
 - When similar studies have produced incorrect conclusions, what was the root cause?
 guidance:
-- Cycle D has two phases. Phase 1 executes the route-specific formal tools named in the loaded route file. Phase 2 performs
+- Cycle D has two parts. First execute the route-specific formal tools named in the loaded route file. Then perform
   qualitative adversarial review (bias inversion, construct validity, expert falsification, examine alignment, scale translation,
   variance comparison, blinded comparison).
 - This cycle is distinct from analyze Cycle B (assumption verification). Analyze Cycle B checked whether model assumptions

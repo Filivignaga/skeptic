@@ -13,7 +13,7 @@ IMPORTANT: Before executing, read `../core-principles.md`. `core-principles.md` 
 
 ## Stage Outputs
 
-`communicate` writes exactly three project-side artifacts plus a README block plus the audience-facing deliverables. No notebooks. No separate metrics file.
+`communicate` writes exactly three project-side artifacts plus a README block plus the audience-facing deliverables. Compact state lives in the canonical YAML.
 
 | Path | Role |
 |------|------|
@@ -76,7 +76,7 @@ upstream_snapshot:                  # read-only snapshot from upstream artifacts
   claim_survival_registry: []       # [{claim_id, statement, verdict, caveats, evidence_summary}]
   mandatory_limitations: []         # [{description, source}]
   unresolved_risks: []              # [{description, source}]
-  handoff_discipline:               # verbatim handoff discipline statement from evaluate
+  handoff_discipline:               # literal handoff discipline statement from evaluate
 
 plan:                               # derived in Cycle A from upstream_snapshot
   null_result_mode:                 # bool
@@ -272,7 +272,7 @@ Agent(
   - Approved question: "{approved question}"
   - Question type: {question type}
   - Target quantity: {target quantity}
-  - Final claim boundary: {final claim boundary, verbatim}
+  - Final claim boundary: {final claim boundary, literal}
   - Active route: {active route}
   - Audience: {audience description from Cycle B, or "not yet identified" if Cycle A or B}
   - Delivery format: {format from Cycle B, or "not yet chosen" if Cycle A or B}
@@ -345,7 +345,7 @@ Agent(
   - Defect 2: BLOCKING | NON-BLOCKING - [one-line reason]
 
   ACCEPTANCE CRITERIA ASSESSMENT (list only failed criteria or non-obvious criteria that materially affected the decision; missing required evidence fails dependent criteria):
-  - {gate_id}: PASS | FAIL - [evidence]
+  - {criterion_id}: PASS | FAIL - [evidence]
 
   FIDELITY CHECK (Cycles C, D, F):
   - Claim fidelity: all claims faithful | {n} issues found
@@ -409,7 +409,7 @@ Always available regardless of `blocking_failures`:
 - `reopen_formulate_protocol` -> stop and reopen `formulate` plus `protocol` when surviving claims do not address the original question at a useful level, or when the claim boundary would have to widen to produce any meaningful deliverable
 - `null_result` -> confirm the null-result path already activated in Cycle A; valid when zero claims survived
 - `archive` -> stop with documentation of why
-- `override` -> user states the specific reason a FAIL is incorrect; logged as `override: {reason, gate}`; forward actions unlock
+- `override` -> user states the specific reason a FAIL is incorrect; logged as `override: {reason, criterion}`; forward actions unlock
 
 Interactive mode: present the synthesized assessment and the allowed actions via `AskUserQuestion`. Wait for the user's answer before invoking any other tool.
 
@@ -428,7 +428,7 @@ Write conditional fields only when they apply:
 
 - `user_observations`: captured in Step 2 when AskUserQuestion elicited user input.
 - `decision_reason`: required when `decision != pass`.
-- `override`: `{reason, gate}` only when a FAIL was overridden.
+- `override`: `{reason, criterion}` only when a FAIL was overridden.
 
 `blocking_failures` (0 = PASS, >0 = FAIL) is the enforceable integer summary. Record only material failed criteria, rejected alternatives, or source-backed decisions; do not store Per-criterion PASS notes or full subagent output.
 
@@ -444,7 +444,7 @@ The loop ends when all of the following hold:
 
 - every mandatory cycle (A through F) has a closing `decision` of `pass` or an `override`, or the stage closed with `null_result` documented
 - interactive mode: the user has explicitly approved the audience identification in Cycle B and has approved the assembled deliverable in Cycle F
-- auto mode: the stage approval gate in `../auto-mode.md` completes
+- auto mode: the stage approval checkpoint in `../auto-mode.md` completes
 
 Finalization requires explicit stage-close discipline.
 
@@ -541,7 +541,7 @@ Agent(
 )
 ```
 
-Digest the review into `pcs_review`: record `overall`, `blocking_findings`, `material_risks`, `material_findings`, `disposition`, and `disposition_reason`. Do not store the full review text unless a FAIL or override makes verbatim audit text necessary; if retained, store only a pointer in `full_review_pointer`. Parse the per-check verdicts into `pcs_review.checks`. Set `pcs_review.overall` to PASS only when every check returned PASS or N/A.
+Digest the review into `pcs_review`: record `overall`, `blocking_findings`, `material_risks`, `material_findings`, `disposition`, and `disposition_reason`. Do not store the full review text unless a FAIL or override makes literal audit text necessary; if retained, store only a pointer in `full_review_pointer`. Parse the per-check verdicts into `pcs_review.checks`. Set `pcs_review.overall` to PASS only when every check returned PASS or N/A.
 
 - Interactive mode: present the review via `AskUserQuestion` with options `satisfied`, `valid_concern`, `disagree_override`. Wait for the user's answer before invoking any other tool.
 - Auto mode: apply `../auto-mode.md` stage-close rules.
@@ -595,7 +595,7 @@ After the terminal fidelity review clears or the user overrides it:
 
 6. Set `status.locked_at: {ISO timestamp}`. Re-parse the YAML to confirm validity.
 
-7. Read `README.md` and quote the `## Communicate [COMPLETE]` block verbatim in the stage-close user message. If the block is not present or any field is empty, finalization is incomplete; return to step 5. Only then tell the user the Skeptic project is complete and state the deliverable location.
+7. Read `README.md` and include the `## Communicate [COMPLETE]` block exactly in the stage-close user message. If the block is not present or any field is empty, finalization is incomplete; return to step 5. Only then tell the user the Skeptic project is complete and state the deliverable location.
 
 ## Backtracking
 

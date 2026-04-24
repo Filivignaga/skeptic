@@ -1,6 +1,6 @@
 ---
 name: evaluate
-description: Use after formulate, protocol, clean, examine, and analyze to adjudicate whether outputs and claims survive route-appropriate PCS checks, rendering per-claim survival verdicts that gate what communicate may package.
+description: Use after formulate, protocol, clean, examine, and analyze to adjudicate whether outputs and claims survive route-appropriate PCS checks, rendering per-claim survival verdicts that determine what communicate may package.
 ---
 
 # /skeptic:evaluate - Route-Appropriate PCS Evaluation
@@ -324,7 +324,7 @@ Agent(
   - Defect 2: BLOCKING | NON-BLOCKING - [one-line reason]
 
   ACCEPTANCE CRITERIA ASSESSMENT (list only failed criteria or non-obvious criteria that materially affected the decision; missing required evidence fails dependent criteria):
-  - {gate_id}: PASS | FAIL - [evidence]
+  - {criterion_id}: PASS | FAIL - [evidence]
 
   ALTERNATIVES CONSIDERED:
   - Current approach: [description] - Score: [1-10] - [justification]
@@ -386,7 +386,7 @@ Always available regardless of `blocking_failures`:
 - `reopen_protocol` -> stop and reopen `protocol`
 - `reopen_formulate` -> stop and reopen `formulate` plus `protocol`
 - `archive` -> stop with documentation of why
-- `override` -> user states the specific reason a FAIL is incorrect; logged as `override: {reason, gate}`; forward actions unlock
+- `override` -> user states the specific reason a FAIL is incorrect; logged as `override: {reason, criterion}`; forward actions unlock
 
 If backtracking is chosen, append a `backtracking_log` entry with `{cycle, trigger, return_to_stage, rationale}` and preserve the full `decision_ledger` when the stage reopens.
 
@@ -405,7 +405,7 @@ Write conditional fields only when they apply:
 
 - `user_observations`: captured in Step 2 when AskUserQuestion elicited user input.
 - `decision_reason`: required when `decision != pass`.
-- `override`: `{reason, gate}` only when a FAIL was overridden.
+- `override`: `{reason, criterion}` only when a FAIL was overridden.
 
 `blocking_failures` (0 = PASS, >0 = FAIL) is the enforceable integer summary. Record only material failed criteria, rejected alternatives, or source-backed decisions; do not store Per-criterion PASS notes or full subagent output.
 
@@ -422,13 +422,13 @@ The loop ends when all of the following hold:
 - every mandatory cycle (A through F) has a closing `decision` of `pass` or an `override`
 - every approved follow-up cycle (G1, G2, ...) is resolved
 - interactive mode: the user explicitly approved the claim survival registry in Cycle E
-- auto mode: the stage approval gate in `../auto-mode.md` completes
+- auto mode: the stage approval checkpoint in `../auto-mode.md` completes
 
 Finalization requires explicit stage-close discipline.
 
 ## PCS Subagent Review
 
-Evaluate is itself the PCS gate for the project's claims. The stage-close review is a mechanical integrity audit, not a meta-PCS review of evaluate's own reasoning. Dispatch at stage close:
+Evaluate is itself the PCS checkpoint for the project's claims. The stage-close review is a mechanical integrity audit, not a meta-PCS review of evaluate's own reasoning. Dispatch at stage close:
 
 ```text
 Agent(
@@ -450,7 +450,7 @@ Agent(
     one row in claim_survival_registry? List missing claims.
 
   CONSISTENCY:
-  - Does any "survived" verdict in claim_survival_registry contradict a FAIL gate
+  - Does any "survived" verdict in claim_survival_registry contradict a failed criterion
     logged in decision_ledger for Cycles B, C, or D? List contradictions.
 
   FLAG COVERAGE:
@@ -471,7 +471,7 @@ Agent(
     claims, post-hoc testing, audience framing, or method comparison? Flag any
     violations.
 
-  CHECKLIST COVERAGE:
+  REQUIRED EVIDENCE COVERAGE:
   - For each cycle, were all required evidence keys produced or explicitly skipped, and did all acceptance criteria pass or get explicitly overridden?
 
   Output each check as PASS or FAIL with specifics. End with OVERALL: PASS or FAIL.
@@ -480,7 +480,7 @@ Agent(
 )
 ```
 
-Digest the review into `pcs_review`: record `overall`, `blocking_findings`, `material_risks`, `material_findings`, `disposition`, and `disposition_reason`. Do not store the full review text unless a FAIL or override makes verbatim audit text necessary; if retained, store only a pointer in `full_review_pointer`.
+Digest the review into `pcs_review`: record `overall`, `blocking_findings`, `material_risks`, `material_findings`, `disposition`, and `disposition_reason`. Do not store the full review text unless a FAIL or override makes literal audit text necessary; if retained, store only a pointer in `full_review_pointer`.
 
 - Interactive mode: present via `AskUserQuestion` with options `satisfied`, `valid_concern`, `disagree_override`. Wait for the user's answer before invoking any other tool.
 - Auto mode: apply `../auto-mode.md` stage-close rules.
@@ -516,7 +516,7 @@ After the integrity check clears or the user overrides it:
 
 5. Set `status.locked_at: {ISO timestamp}`. Re-parse the YAML to confirm validity.
 
-6. Read `README.md` and quote the `## Evaluate [COMPLETE]` block verbatim in the stage-close user message. If the block is not present or any field is empty, finalization is incomplete; return to step 4. Only then tell the user the evaluate stage is complete and the next stage is `communicate`.
+6. Read `README.md` and include the `## Evaluate [COMPLETE]` block exactly in the stage-close user message. If the block is not present or any field is empty, finalization is incomplete; return to step 4. Only then tell the user the evaluate stage is complete and the next stage is `communicate`.
 
 ## Backtracking
 

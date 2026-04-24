@@ -54,4 +54,4 @@ writes:
 acceptance_criteria:
 - id: C02-type-supported
   condition: Data collection and design plausibly support the classified type (an answer of "not supported; alternative is
-    X" fails this gate)
+    X" fails this criterion)

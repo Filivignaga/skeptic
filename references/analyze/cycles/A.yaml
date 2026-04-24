@@ -173,7 +173,7 @@ acceptance_criteria:
   condition: Perturbation plan explicitly names axes, types, and scope; each axis probes a route-relevant instability
 - id: A06-stress-tests
   condition: Each challenger alternative is structurally different enough from the primary to expose genuine weaknesses; cosmetic
-    variation does not satisfy this gate
+    variation does not satisfy this criterion
 - id: A07-fallbacks-named
   condition: Assumption-failure policy is backtrack_only (no fallbacks) or amendment_allowed with each pre-approved narrowing
     fallback named explicitly

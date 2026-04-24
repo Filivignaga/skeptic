@@ -234,7 +234,7 @@ This protocol applies to every cycle, mandatory or follow-up.
 3. Cycle A only:
    - Resolve the active route from `01_formulation.yaml` plus `02_protocol.yaml`. If they contradict, or do not collapse to one route for `clean`, stop and reopen `protocol`.
    - Load `references/routes/{route}/clean.md` once and keep it in memory for the rest of the stage. If the expected route file is missing, stop and reopen upstream.
-   - Run the precondition gate: verify `01_formulation.yaml`, `02_protocol.yaml`, `{readme_name}`, at least one raw file, and every protocol-required artifact exist. Recompute SHA-256 for each raw file and compare to `provenance.files.{filename}.sha256` in `01_formulation.yaml`. Any mismatch is a blocking defect; stop until raw data is restored or formulate is reopened.
+   - Run the precondition check: verify `01_formulation.yaml`, `02_protocol.yaml`, `{readme_name}`, at least one raw file, and every protocol-required artifact exist. Recompute SHA-256 for each raw file and compare to `provenance.files.{filename}.sha256` in `01_formulation.yaml`. Any mismatch is a blocking defect; stop until raw data is restored or formulate is reopened.
    - Verify `01_formulation.yaml` carries an approved question, question type, target quantity, claim boundary, unit of analysis, operationalization, and key assumptions. Verify `02_protocol.yaml` carries question type, active route, data usage mode, visibility rules, frozen-artifact status, leakage rules, forbidden variable classes, clean prohibitions, validation logic, and backtracking triggers. Missing or contradictory fields block the stage.
    - Derive the active visibility set and record it under `visibility`: visible raw files, visible protocol artifacts, restricted artifacts, access levels.
    - Initialize `03_cleaning.yaml` with `stage`, `schema_version`, `project` (including `project.started_at`), `status.current_cycle: A`, `route`, `upstream_snapshot`, `precondition_check`, and `visibility`. Seed `question_critical_variables` from `contract.operationalization` in `01_formulation.yaml`.
@@ -363,7 +363,7 @@ Agent(
   - Defect 2: BLOCKING | NON-BLOCKING - [one-line reason]
 
   ACCEPTANCE CRITERIA ASSESSMENT (list only failed criteria or non-obvious criteria that materially affected the decision; missing required evidence fails dependent criteria):
-  - {gate_id}: PASS | FAIL - [evidence]
+  - {criterion_id}: PASS | FAIL - [evidence]
 
   ALTERNATIVES CONSIDERED:
   - Current approach: [description] - Score: [1-10] - [justification]
@@ -430,7 +430,7 @@ Always available regardless of `blocking_failures`:
 - `reopen_formulate` -> stop and reopen `formulate` (then `protocol`, then return) with a written reason
 - `data_insufficient` -> log why and present options (request more data, reformulate, archive)
 - `archive` -> stop with documentation of why
-- `override` -> user states the specific reason a FAIL is incorrect; logged as `override: {reason, gate}`; forward actions unlock
+- `override` -> user states the specific reason a FAIL is incorrect; logged as `override: {reason, criterion}`; forward actions unlock
 
 Dataset fitness checkpoint (mandatory at Cycle C close, and after any later cycle that materially changes coverage, population, question-critical variables, or visibility): answer each of these and append a record to `dataset_fitness_reviews`:
 - Is the cleaned dataset still fit for the approved question?
@@ -456,7 +456,7 @@ Write conditional fields only when they apply:
 
 - `user_observations`: captured in Step 2 when AskUserQuestion elicited user input.
 - `decision_reason`: required when `decision != pass`.
-- `override`: `{reason, gate}` only when a FAIL was overridden.
+- `override`: `{reason, criterion}` only when a FAIL was overridden.
 
 `blocking_failures` (0 = PASS, >0 = FAIL) is the enforceable integer summary. Record only material failed criteria, rejected alternatives, or source-backed decisions; do not store Per-criterion PASS notes or full subagent output.
 
@@ -475,7 +475,7 @@ The loop ends when all of the following hold:
 - every approved D-series or G-series follow-up is resolved
 - the latest dataset fitness review returns no unresolved `no` or `unclear` answers
 - interactive mode: the user explicitly approves the stage state before finalization
-- auto mode: the stage approval gate in `../auto-mode.md` completes
+- auto mode: the stage approval checkpoint in `../auto-mode.md` completes
 
 Finalization requires explicit stage-close discipline. Do not finalize because the stage "seems good enough."
 
@@ -526,7 +526,7 @@ Agent(
 )
 ```
 
-Digest the review into `pcs_review`: record `overall`, `blocking_findings`, `material_risks`, `material_findings`, `disposition`, and `disposition_reason`. Do not store the full review text unless a FAIL or override makes verbatim audit text necessary; if retained, store only a pointer in `full_review_pointer`.
+Digest the review into `pcs_review`: record `overall`, `blocking_findings`, `material_risks`, `material_findings`, `disposition`, and `disposition_reason`. Do not store the full review text unless a FAIL or override makes literal audit text necessary; if retained, store only a pointer in `full_review_pointer`.
 
 - Interactive mode: present via `AskUserQuestion` with options `satisfied`, `valid_concern`, `disagree_override`. Wait for the user's answer before invoking any other tool.
 - Auto mode: apply `../auto-mode.md` stage-close rules.
@@ -586,7 +586,7 @@ After the PCS review clears or the user overrides it:
 
 5. Set `status.locked_at: {ISO timestamp}`. Re-parse the YAML to confirm validity.
 
-6. Read `README.md` and quote the `## Clean [COMPLETE]` block verbatim in the stage-close user message. If the block is not present or any field is empty, finalization is incomplete; return to step 4. Only then tell the user the clean stage is complete.
+6. Read `README.md` and include the `## Clean [COMPLETE]` block exactly in the stage-close user message. If the block is not present or any field is empty, finalization is incomplete; return to step 4. Only then tell the user the clean stage is complete.
 
 ## Backtracking
 

@@ -17,14 +17,13 @@ Read `references/core-principles.md` for architecture decisions and the design c
 ## What We Don't Accept
 
 - Changes that weaken sequential stage enforcement
-- Removing or softening gate conditions
+- Removing or softening acceptance criteria
 - Adding "skip stage" or "fast path" shortcuts to the core workflow
 - Generic prompt improvements that don't reference specific failure modes
 
 ## Writing Standards
 
 - **README**: product language, payoff before theory
-- **SPEC.md**: engineering language, precise and contractual
 - **references/**: formal methodology language, executable by Claude Code
 - **Route files**: four sections only (What This Stage Protects, What This Stage Prohibits, What This Stage Defers, What Triggers Backtracking)
 
@@ -41,7 +40,7 @@ Read `references/core-principles.md` for architecture decisions and the design c
 
 Before submitting, verify:
 - All 30 route files exist (`references/routes/{descriptive,exploratory,inferential,predictive,causal,mechanistic}/{protocol,clean,examine,analyze,evaluate}.md`)
-- All 7 stage-core files exist in `references/`
+- All 7 stage files exist under `references/{stage}/{stage}.md`
 - No absolute paths or personal details in any file
 - `SKILL.md` subcommand table matches actual stage files
 - `VERSION` is bumped and `CHANGELOG.md` is updated

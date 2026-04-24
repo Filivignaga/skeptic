@@ -13,7 +13,7 @@ A good analyst updates the question instead of forcing the original wording thro
 
 ## Stage Outputs
 
-`formulate` writes exactly three project-side artifacts plus a README block. No notebooks. No separate metrics file. No separate claim-boundary registry file.
+`formulate` writes exactly three project-side artifacts plus a README block. Compact state lives in the canonical YAML.
 
 | Path | Role |
 |------|------|
@@ -277,7 +277,7 @@ Agent(
   - Defect 2: BLOCKING | NON-BLOCKING - [one-line reason]
 
   ACCEPTANCE CRITERIA ASSESSMENT (list only failed criteria or non-obvious criteria that materially affected the decision; missing required evidence fails dependent criteria):
-  - {gate_id}: PASS | FAIL - [evidence]
+  - {criterion_id}: PASS | FAIL - [evidence]
 
   ALTERNATIVES CONSIDERED:
   - Current approach: [description] - Score: [1-10] - [justification]
@@ -337,7 +337,7 @@ Always available regardless of `blocking_failures`:
 - `data_insufficient` -> log why and present options (request more data, reformulate, archive)
 - `reformulate` -> pivot to a question the data can support
 - `archive` -> stop with documentation of why
-- `override` -> user states the specific reason a FAIL is incorrect; logged as `override: {reason, gate}`; forward actions unlock
+- `override` -> user states the specific reason a FAIL is incorrect; logged as `override: {reason, criterion}`; forward actions unlock
 
 Interactive mode: present the synthesized assessment and the allowed actions via `AskUserQuestion`. Wait for the user's answer before invoking any other tool.
 
@@ -356,7 +356,7 @@ Write conditional fields only when they apply:
 
 - `user_observations`: captured in Step 2 when AskUserQuestion elicited user input.
 - `decision_reason`: required when `decision != pass`.
-- `override`: `{reason, gate}` only when a FAIL was overridden.
+- `override`: `{reason, criterion}` only when a FAIL was overridden.
 
 `blocking_failures` (0 = PASS, >0 = FAIL) is the enforceable integer summary. Record only material failed criteria, rejected alternatives, or source-backed decisions; do not store Per-criterion PASS notes or full subagent output.
 
@@ -373,7 +373,7 @@ The loop ends when all of the following hold:
 - every mandatory cycle (A through E) has a closing `decision` of `pass` or an `override`
 - every approved follow-up cycle is resolved
 - interactive mode: the user explicitly approves the final contract, claim boundary, and protocol handoff
-- auto mode: the stage approval gate in `../auto-mode.md` completes
+- auto mode: the stage approval checkpoint in `../auto-mode.md` completes
 
 Finalization requires explicit stage-close discipline.
 
@@ -416,7 +416,7 @@ Agent(
 )
 ```
 
-Digest the review into `pcs_review`: record `overall`, `blocking_findings`, `material_risks`, `material_findings`, `disposition`, and `disposition_reason`. Do not store the full review text unless a FAIL or override makes verbatim audit text necessary; if retained, store only a pointer in `full_review_pointer`.
+Digest the review into `pcs_review`: record `overall`, `blocking_findings`, `material_risks`, `material_findings`, `disposition`, and `disposition_reason`. Do not store the full review text unless a FAIL or override makes literal audit text necessary; if retained, store only a pointer in `full_review_pointer`.
 
 - Interactive mode: present via `AskUserQuestion` with options `satisfied`, `valid_concern`, `disagree_override`. Wait for the user's answer before invoking any other tool.
 - Auto mode: apply `../auto-mode.md` stage-close rules.
@@ -457,7 +457,7 @@ After the PCS review clears or the user overrides it:
 
 5. Set `status.locked_at: {ISO timestamp}`. Re-parse the YAML to confirm validity.
 
-6. Read `README.md` and quote the `## Formulate [COMPLETE]` block verbatim in the stage-close user message. If the block is not present or any field is empty, finalization is incomplete; return to step 4. Only then tell the user the formulate stage is complete.
+6. Read `README.md` and include the `## Formulate [COMPLETE]` block exactly in the stage-close user message. If the block is not present or any field is empty, finalization is incomplete; return to step 4. Only then tell the user the formulate stage is complete.
 
 ## Backtracking
 

@@ -42,7 +42,7 @@ Stage purposes:
 
 ## Canonical Artifact Model
 
-Every stage produces a compact, fixed artifact set. No notebooks. No stage-wide metrics file. No separate claim-boundary registry file. Compact metrics, acceptance state, narrowing history, and a compact decision ledger live inside the canonical YAML.
+Every stage produces a compact, fixed artifact set. Only the canonical YAML, stage script, rendered report, README block, and declared deliverables belong to the active artifact contract. Compact metrics, acceptance state, narrowing history, and a compact decision ledger live inside the canonical YAML.
 
 | Artifact | Role |
 |----------|------|
@@ -249,7 +249,7 @@ Every cycle decision uses a two-row matrix based on `blocking_failures` (missing
 Rules:
 
 - Backward actions are always available regardless of `blocking_failures`: reopen relevant upstream stages (each stage file specifies which), archive.
-- User override is always available: user states the specific reason the FAIL is incorrect, logged as `override: {reason, gate}`, forward actions unlock.
+- User override is always available: user states the specific reason the FAIL is incorrect, logged as `override: {reason, criterion}`, forward actions unlock.
 - The stage presents only the allowed forward actions plus the universal options.
 
 ## Project Folder Structure

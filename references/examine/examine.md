@@ -15,7 +15,7 @@ The active route is whatever `02_protocol` confirmed. Route candidates in `01_fo
 
 ## Stage Outputs
 
-`examine` writes exactly three project-side artifacts plus a README block. No notebooks. No separate metrics file. No separate claim-boundary registry file.
+`examine` writes exactly three project-side artifacts plus a README block. Compact state lives in the canonical YAML.
 
 | Path | Role |
 |------|------|
@@ -120,7 +120,7 @@ anomalies_and_contradictions:       # Cycle C
   backtracking_decision:            # {required: bool, target: none|clean|protocol|formulate_plus_protocol, reason}
   stop_rule_decision:               # {decision: stop|continue|open_follow_up, reason}
 
-fragility_review:                   # set at stage close (Phase 1 equivalent); each item also feeds Cycle E
+fragility_review:                   # set at stage close; each item also feeds Cycle E
   patterns: []                      # [{pattern, alternatives_tested, verdict: stable|conditional|fragile, downstream_consequence}]
   framing_incremental_risk:         # free-text; one-line if no risk introduced
 
@@ -336,7 +336,7 @@ Agent(
   - Defect 2: BLOCKING | NON-BLOCKING - [one-line reason]
 
   ACCEPTANCE CRITERIA ASSESSMENT (list only failed criteria or non-obvious criteria that materially affected the decision; missing required evidence fails dependent criteria):
-  - {gate_id}: PASS | FAIL - [evidence]
+  - {criterion_id}: PASS | FAIL - [evidence]
 
   ROUTE AND CLAIM BOUNDARY CHECK:
   Read upstream.claim_boundary and the route file (active_route) from the
@@ -406,7 +406,7 @@ Always available regardless of `blocking_failures`:
 - `reopen_formulate_plus_protocol` -> stop and reopen `formulate` and then `protocol`
 - `data_insufficient` -> log why and present options (request more data, reformulate, archive)
 - `archive` -> stop with documentation of why
-- `override` -> user states the specific reason a FAIL is incorrect; logged as `override: {reason, gate}`; forward actions unlock
+- `override` -> user states the specific reason a FAIL is incorrect; logged as `override: {reason, criterion}`; forward actions unlock
 
 Interactive mode: present the synthesized assessment and the allowed actions via `AskUserQuestion`. Wait for the user's answer before invoking any other tool.
 
@@ -425,7 +425,7 @@ Write conditional fields only when they apply:
 
 - `user_observations`: captured in Step 2 when AskUserQuestion elicited user input.
 - `decision_reason`: required when `decision != pass`.
-- `override`: `{reason, gate}` only when a FAIL was overridden.
+- `override`: `{reason, criterion}` only when a FAIL was overridden.
 
 `blocking_failures` (0 = PASS, >0 = FAIL) is the enforceable integer summary. Record only material failed criteria, rejected alternatives, or source-backed decisions; do not store Per-criterion PASS notes or full subagent output.
 
@@ -442,7 +442,7 @@ The loop ends when all of the following hold:
 - every mandatory cycle (A, B, C, E) has a closing `decision` of `pass` or an `override`
 - every approved follow-up cycle (`D1`, `D2`, ...) is resolved
 - interactive mode: the user explicitly approves the fragility review, support registry, and analysis handoff
-- auto mode: the stage approval gate in `../auto-mode.md` completes
+- auto mode: the stage approval checkpoint in `../auto-mode.md` completes
 
 Finalization requires explicit stage-close discipline.
 
@@ -502,7 +502,7 @@ Agent(
 )
 ```
 
-Digest the review into `pcs_review`: record `overall`, `blocking_findings`, `material_risks`, `material_findings`, `disposition`, and `disposition_reason`. Do not store the full review text unless a FAIL or override makes verbatim audit text necessary; if retained, store only a pointer in `full_review_pointer`.
+Digest the review into `pcs_review`: record `overall`, `blocking_findings`, `material_risks`, `material_findings`, `disposition`, and `disposition_reason`. Do not store the full review text unless a FAIL or override makes literal audit text necessary; if retained, store only a pointer in `full_review_pointer`.
 
 - Interactive mode: present via `AskUserQuestion` with options `satisfied`, `valid_concern`, `disagree_override`. Wait for the user's answer before invoking any other tool.
 - Auto mode: apply `../auto-mode.md` stage-close rules.
@@ -541,7 +541,7 @@ After the PCS review clears or the user overrides it:
 
 7. Set `status.locked_at: {ISO timestamp}`. Re-parse the YAML to confirm validity.
 
-8. Read `README.md` and quote the `## Examine [COMPLETE]` block verbatim in the stage-close user message. If the block is not present or any field is empty, finalization is incomplete; return to step 6. Only then tell the user the examine stage is complete.
+8. Read `README.md` and include the `## Examine [COMPLETE]` block exactly in the stage-close user message. If the block is not present or any field is empty, finalization is incomplete; return to step 6. Only then tell the user the examine stage is complete.
 
 ## Backtracking
 

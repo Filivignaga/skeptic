@@ -81,7 +81,7 @@ contract:                           # locked in Cycle A; may be amended only und
   visibility_confirmation: {}       # {used: [], restricted: []}
   examination_support_alignment: {} # {contract_field: {support_registry_entry, classification, how_addressed}}
   route_overlay_requirements: {}    # {contract_field: {requirement_or_prohibition, how_satisfied}}
-  user_approval:                    # {at: ISO date, via: AskUserQuestion|auto-mode-gate}
+  user_approval:                    # {at: ISO date, via: AskUserQuestion|auto-mode-approval}
 
 assumptions:
   required_checks: []               # [{id, assumption, source: route_overlay|contract, check_description}]
@@ -334,7 +334,7 @@ Agent(
   - Defect 2: BLOCKING | NON-BLOCKING - [one-line reason]
 
   ACCEPTANCE CRITERIA ASSESSMENT (list only failed criteria or non-obvious criteria that materially affected the decision; missing required evidence fails dependent criteria):
-  - {gate_id}: PASS | FAIL - [evidence]
+  - {criterion_id}: PASS | FAIL - [evidence]
 
   CLAIM BOUNDARY CHECK:
   - Locked verbs_allowed and verbs_forbidden (from claim_boundary plus any narrowing_log_additions): [summary]
@@ -402,7 +402,7 @@ Always available regardless of `blocking_failures`:
 - `reopen_clean` -> stop and reopen `clean` (structural data problem not caught earlier)
 - `data_insufficient` -> log why and present options (request more data, reformulate, archive)
 - `archive` -> stop with documentation of why
-- `override` -> user states the specific reason a FAIL is incorrect; logged as `override: {reason, gate}`; forward actions unlock
+- `override` -> user states the specific reason a FAIL is incorrect; logged as `override: {reason, criterion}`; forward actions unlock
 
 Cycle A special rule: passing Cycle A additionally requires explicit user approval of the full locked contract. The decision matrix applies, but the model does not set `status.current_cycle: B` until that approval is recorded in `contract.user_approval`.
 
@@ -423,7 +423,7 @@ Write conditional fields only when they apply:
 
 - `user_observations`: captured in Step 2 when AskUserQuestion elicited user input.
 - `decision_reason`: required when `decision != pass`.
-- `override`: `{reason, gate}` only when a FAIL was overridden.
+- `override`: `{reason, criterion}` only when a FAIL was overridden.
 
 `blocking_failures` (0 = PASS, >0 = FAIL) is the enforceable integer summary. Record only material failed criteria, rejected alternatives, or source-backed decisions; do not store Per-criterion PASS notes or full subagent output.
 
@@ -441,7 +441,7 @@ The loop ends when all of the following hold:
 - every approved En follow-up is resolved
 - `reproducibility.status` is `pass` (produced by Cycle F)
 - interactive mode: the user explicitly approves the contract (Cycle A), the deviation register, evaluation handoff, and claim boundary as-narrowed
-- auto mode: the stage approval gate in `../auto-mode.md` completes
+- auto mode: the stage approval checkpoint in `../auto-mode.md` completes
 
 Finalization requires explicit stage-close discipline.
 
@@ -505,7 +505,7 @@ Agent(
 )
 ```
 
-Digest the review into `pcs_review`: record `overall`, `blocking_findings`, `material_risks`, `material_findings`, `disposition`, and `disposition_reason`. Do not store the full review text unless a FAIL or override makes verbatim audit text necessary; if retained, store only a pointer in `full_review_pointer`.
+Digest the review into `pcs_review`: record `overall`, `blocking_findings`, `material_risks`, `material_findings`, `disposition`, and `disposition_reason`. Do not store the full review text unless a FAIL or override makes literal audit text necessary; if retained, store only a pointer in `full_review_pointer`.
 
 - Interactive mode: present via `AskUserQuestion` with options `satisfied`, `valid_concern`, `disagree_override`. Wait for the user's answer before invoking any other tool.
 - Auto mode: apply `../auto-mode.md` stage-close rules.
@@ -544,7 +544,7 @@ After the PCS review clears or the user overrides it:
 
 6. Set `status.locked_at: {ISO timestamp}`. Re-parse the YAML to confirm validity.
 
-7. Read `README.md` and quote the `## Analyze [COMPLETE]` block verbatim in the stage-close user message. If the block is not present or any field is empty, finalization is incomplete; return to step 5. Only then tell the user the analyze stage is complete.
+7. Read `README.md` and include the `## Analyze [COMPLETE]` block exactly in the stage-close user message. If the block is not present or any field is empty, finalization is incomplete; return to step 5. Only then tell the user the analyze stage is complete.
 
 ## Backtracking
 

@@ -55,7 +55,7 @@ required_evidence:
   evidence_shape: '{axis_or_challenger_id: {class: convergent|unstable|limitation|artifact, evidence}}'
 - id: B07
   question: For each claim the analysis contract was designed to support, what is the stability verdict (stable, conditionally
-    stable, or unstable), and which specific notebook or script outputs from analyze ground the verdict?
+    stable, or unstable), and which specific script outputs from analyze ground the verdict?
   evidence_key: null
 - id: B08
   question: If any claim is unstable, is backtracking required or can the instability be carried as an explicit caveat, and
@@ -85,4 +85,4 @@ acceptance_criteria:
   condition: Each divergence is classified as acceptable variation, instability requiring a caveat, instability requiring
     backtracking, a known method limitation, or an execution artifact
 - id: B07-verdict-grounded
-  condition: Stability verdicts reference specific notebook or script outputs from analyze, not assertions
+  condition: Stability verdicts reference specific script outputs from analyze, not assertions

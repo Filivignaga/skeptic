@@ -77,4 +77,4 @@ acceptance_criteria:
     register, and jargon translation terms
 - id: B06-user-approved
   condition: The user explicitly approved the audience identification and delivery format (interactive) or the auto-mode approval
-    gate recorded the decision with rationale (auto)
+    approval record captured the decision with rationale (auto)
