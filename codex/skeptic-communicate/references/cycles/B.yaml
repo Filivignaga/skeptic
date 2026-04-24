@@ -1,0 +1,80 @@
+cycle: B
+focus: Audience and Delivery Framing
+mandatory: true
+upstream:
+- upstream_snapshot.approved_question
+- upstream_snapshot.claim_boundary
+- plan.claims_to_communicate
+- plan.null_result_mode
+research_questions:
+- What communication conventions are standard for this audience type and domain?
+- What format and depth do similar deliverables use for this audience?
+- What jargon translation is needed for the technical terms this project produces (perturbation axes, stability verdicts,
+  predictability checks, claim boundaries)?
+- What visualization formats are standard for this audience's domain?
+guidance:
+- Audience identification is the user's call in both modes. Step 2 must dispatch AskUserQuestion with three audience questions
+  (who is the audience, what is their technical level and decision context, what format do they expect); auto mode uses the
+  audience prompt specified in the `--auto` rule in SKILL.md.
+- All layers share the same claims, boundary, and mandatory limitations. Depth varies; substance does not.
+- The five mandatory sections fix the scaffolding: Question, Findings, Confidence, Limitations, Methods Summary.
+- If the audience differs materially from the stakeholder named in formulate's decision_context, record the mismatch and flag
+  it as a finalization risk.
+step4_additions:
+  description: Audience identification requires explicit user approval before Cycle C may start. Record audience.user_approved_at
+    as the ISO timestamp of that approval.
+  user_approval: required
+required_evidence:
+- id: B01
+  question: Who is the intended audience (customers, internal team, technical reviewers, executives, regulators, or other)?
+  evidence_key: audience_hints
+  evidence_shape: '{from_decision_context, from_prior_stage_notes, candidate_audience_types}'
+- id: B02
+  question: What is the audience's technical level, decision context, and action capacity?
+  evidence_key: null
+- id: B03
+  question: What delivery format and medium are appropriate for this audience, and what is the justification?
+  evidence_key: null
+- id: B04
+  question: How many output layers are needed (single layer, headline-plus-detail, tiered appendix), and what depth does each
+    require?
+  evidence_key: null
+- id: B05
+  question: What is the communication scaffolding (section structure following the five mandatory sections, depth calibration
+    per section, tone, vocabulary register, and jargon translation terms)?
+  evidence_key: null
+- id: B06
+  question: Did the user explicitly approve the audience identification and delivery format?
+  evidence_key: null
+writes:
+  B01: audience.type
+  B02:
+  - audience.technical_level
+  - audience.decision_context
+  - audience.action_capacity
+  B03:
+  - audience.expected_format
+  - delivery.format
+  - delivery.medium
+  - delivery.format_justification
+  B04: delivery.layers
+  B05: delivery.scaffolding
+  B06: audience.user_approved_at
+acceptance_criteria:
+- id: B-audience-identified
+  depends_on:
+  - B01
+  - B02
+  condition: Audience type, technical level, decision context, and action capacity are all explicit and come from user input
+    (interactive) or the auto-mode audience prompt (auto)
+- id: B03-format-chosen
+  condition: Delivery format and medium are chosen with a written justification tied to audience attributes
+- id: B04-layer-structure-decided
+  condition: The number of output layers and the depth of each is determined by audience needs; all layers share the same
+    claims, boundary, and mandatory limitations
+- id: B05-scaffolding-set
+  condition: Scaffolding documents section structure (the five mandatory sections), depth calibration per section, tone, vocabulary
+    register, and jargon translation terms
+- id: B06-user-approved
+  condition: The user explicitly approved the audience identification and delivery format (interactive) or the auto-mode approval
+    approval record captured the decision with rationale (auto)

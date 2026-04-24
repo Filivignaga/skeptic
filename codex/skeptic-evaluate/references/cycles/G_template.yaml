@@ -1,0 +1,24 @@
+cycle: G{n}
+focus: '{short description of the follow-up topic, e.g. ''Resolve whether challenger X divergence is execution artifact or
+  genuine instability''}'
+mandatory: false
+upstream:
+- '{list which canonical-YAML fields must be set before the follow-up runs}'
+research_questions:
+- '{at most a handful; narrow to the follow-up topic}'
+guidance:
+- Keep the follow-up narrow. One topic per cycle.
+- Do not turn the follow-up into re-analysis, unrestricted exploration, or post-hoc testing. If new analysis computation is
+  needed, backtrack to analyze.
+- If the same topic recurs across follow-ups, escalate instead of looping.
+- Close the follow-up as pass, acknowledge_gap, reopen_analyze, reopen_examine, reopen_protocol, reopen_formulate, or archive
+  under the standard decision matrix.
+required_evidence:
+- id: G{n}01
+  question: '{question derived from the specific follow-up topic}'
+  evidence_key: '{key name, or null if judgment-driven}'
+writes:
+  G{n}01: '{canonical-YAML field, list of fields, or null}'
+acceptance_criteria:
+- id: G{n}01-{short-name}
+  condition: '{condition that closes the follow-up topic}'

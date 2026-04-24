@@ -1,0 +1,61 @@
+cycle: C
+focus: Predictability Adjudication
+mandatory: true
+upstream:
+- upstream.validation_logic
+- upstream.protocol_mode
+- route.route_file_loaded
+research_questions:
+- What predictability benchmarks exist for this route and domain?
+- What baseline performance or replication rates are considered adequate for similar projects?
+- Are there known calibration pitfalls for this method family?
+- When the protocol-specified reality check is not held-out prediction, what standards exist for the chosen check type?
+guidance:
+- Predictability is not always held-out prediction. It is the route-appropriate reality check named in protocol. Descriptive,
+  exploratory, inferential, causal, and mechanistic routes each have their own natural checks (see the loaded route file).
+- The three predictability verdicts are: adequate (reality check passed; result reemerges), marginal (partially passed; some
+    aspects hold, others weaker), inadequate (failed; result does not reemerge).
+- If held-out data must be unsealed, verify protocol authorizes unsealing for this stage before executing the check. Unauthorized
+  unsealing is a BLOCKING defect and forces reopening protocol.
+required_evidence:
+- id: C01
+  question: What is the specific predictability reality check that protocol specified for this project, stated explicitly
+    (held-out or temporal validation, refreshed-data replication, external corroboration, resampling consistency, perturbation-based
+    pattern persistence, falsification or placebo tests, simulation-based validation, or another protocol-specified check)?
+  evidence_key: null
+- id: C02
+  question: Was the protocol-specified check executed on actual data through the script, with protocol visibility rules respected
+    if held-out data needed to be unsealed for this stage?
+  evidence_key: reality_check_output
+  evidence_shape: '{check_type, inputs_used, visibility_authorization: {required: bool, authorized_by_protocol: bool}, output_summary}'
+- id: C03
+  question: How do the reality-check outputs compare against the primary analysis outputs (direction, magnitude, calibration
+    where relevant)?
+  evidence_key: reality_check_comparison
+  evidence_shape: '{per_claim: {primary_value, reality_check_value, agreement: agree|partial|disagree, calibration_summary}}'
+- id: C04
+  question: Does the primary finding hold on the reality-check data or procedure, is the magnitude consistent or does it shift
+    materially, and is calibration adequate where calibration matters?
+  evidence_key: null
+- id: C05
+  question: For each claim the analysis contract was designed to support, what is the predictability verdict (adequate, marginal,
+    or inadequate), and which reality-check outputs ground it?
+  evidence_key: null
+writes:
+  C05: predictability_verdicts
+acceptance_criteria:
+- id: C-reality-check-executed
+  depends_on:
+  - C01
+  - C02
+  condition: The protocol-specified reality check is executed on actual data through the script, not described hypothetically
+- id: C01-protocol-match
+  condition: The reality check that was executed matches the check named in 02_protocol.yaml, not a substitute
+- id: C02-visibility-respected
+  condition: If held-out data was unsealed for the reality check, unsealing is authorized by 02_protocol.yaml for the evaluate
+    stage
+- id: C-verdict-grounded
+  depends_on:
+  - C04
+  - C05
+  condition: Predictability verdicts reference specific reality-check outputs, not assertions

@@ -1,0 +1,104 @@
+cycle: A
+focus: Setup + Data Overview
+mandatory: true
+upstream:
+- project.name
+- project.data_sources
+- project.rough_question
+setup_side_effects:
+- Execute the numbered bootstrap sequence in ../bootstrap.md (project folder creation, raw data copy, documentation copy,
+  README init, canonical YAML init, project-specific 01_formulation.py creation under script-contract.md). One-time only;
+  not rerun on backtrack.
+required_evidence:
+- id: A00
+  question: For each source data file, what is the detected character encoding?
+  evidence_key: encoding
+  evidence_shape: '{filename: {detected, bom_present, confidence}}'
+- id: A01
+  question: What is the shape, column list, and dtype of each loaded source?
+  evidence_key: schema
+  evidence_shape: '{filename: {n_rows, n_cols, columns: [{name, dtype, nullable}]}}'
+- id: A02
+  question: What do sample rows look like?
+  evidence_key: sample_rows
+  evidence_shape: '{filename: first_5_rows_as_records}'
+- id: A03
+  question: What is the dtype-aware profile for each loaded source, including numeric tails, categorical concentration and
+    rare levels, datetime coverage, text length and empty/whitespace rates, ID uniqueness, and missingness?
+  evidence_key: dtype_profile
+  evidence_shape: '{filename: {n_rows, n_cols, columns: {column: dtype-aware profile}, key_integrity: {column: uniqueness/duplicates/missingness}}}'
+- id: A04
+  question: For low-cardinality categorical columns, what are the value distributions?
+  evidence_key: low_cardinality_distributions
+  evidence_shape: '{filename: {column: {unique_count, value_counts_top_20}}} for cols with unique_count <= 20'
+- id: A05
+  question: If the question involves time, what is the date coverage and time grain? If grouping matters, what are group counts?
+    If multiple tables, what is join-key overlap?
+  evidence_key: structural_coverage
+  evidence_shape: '{filename or pair: {temporal_coverage, group_counts, join_key_overlap}} only when applicable'
+  skip_when: question has no temporal, grouping, or multi-table aspect
+- id: A06
+  question: Is the question framed as a real stakeholder or scientific problem (not a method request), have at least two plausible
+    framings been considered, is the approved framing useful, specific, not already sufficiently answered, and plausibly answerable
+    with available evidence, AND does the approved framing name the stakeholder decision, the candidate actions, and how the
+    answer changes the chosen action (or, if academic, the prior and the evidence threshold)?
+  evidence_key: null
+- id: A07
+  question: For each raw data file, what is its SHA-256 hash?
+  evidence_key: sha256
+  evidence_shape: '{filename: hex_digest}'
+- id: A08
+  question: Who is the intended audience for this question, and is the question interesting or useful to them?
+  evidence_key: null
+acceptance_criteria:
+- id: A01-loadable
+  condition: Data loadable and structurally sound
+- id: A-relevant
+  depends_on:
+  - A01
+  - A02
+  - A03
+  condition: Data appears relevant to the stated question
+- id: A-question-fit
+  depends_on:
+  - A01
+  - A02
+  - A03
+  - A06
+  condition: Question is framed as a real stakeholder or scientific problem; at least two plausible framings considered; approved
+    framing is useful, specific, not already sufficiently answered, plausibly answerable with available evidence; names stakeholder
+    decision, candidate actions, and how the answer changes the chosen action (or academic alt names prior and evidence threshold)
+- id: A-no-red-flags
+  depends_on:
+  - A03
+  - A04
+  - A05
+  condition: No immediate structural red flags likely to derail formulation
+format_aware_ingest:
+  reference: ../data-formats.md
+  rule: Identify each source file's format and apply the matching ingest checks before loading. Record check results inside
+    the relevant evidence.
+research_questions:
+- What domain context matters for understanding this dataset?
+- Are there known data quality issues or collection artifacts typical of this source type?
+- What codebooks, metadata standards, or public documentation usually exist for this kind of data?
+- What business or scientific decision is this question meant to support?
+- What prior art or similar analyses already answer part of this question, and would that change project order or scope?
+- What are the main alternative framings of the same underlying problem, and how do they differ in audience, decision, or
+  claim boundary?
+- Is the question already answered well enough that this project should narrow, reorder, or stop?
+- What makes this question concretely answerable with the data and resources that are actually available?
+guidance:
+- Before loading any text-based source file, detect encoding. Try UTF-8 strict first; on failure, check for BOM, then try
+  Latin-1 / Windows-1252. Record the detected encoding. All downstream reads must pass the detected encoding explicitly.
+- If the source contains non-ASCII text, verify values display correctly before proceeding.
+- Framing must name the stakeholder, the candidate actions, and how the answer changes which action they pick. If the project
+  is academic, name the prior to be updated and the evidence threshold that would update it.
+- At least two plausible framings must be surfaced before one is approved. Record rejected framings inside contract.decision_context
+  so they survive backtracking.
+- All splits, folds, and data-visibility partitioning belong to `protocol`.
+writes:
+  A00: provenance.files
+  A06: contract.decision_context
+  A07: provenance.files
+  A08: contract.audience
