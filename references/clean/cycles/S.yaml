@@ -11,7 +11,7 @@ upstream:
   - cleaning_decisions
   - preprocessing_decisions
   - derived_variables
-  - upstream_snapshot.data_usage_mode
+  - upstream_contract.data_usage_mode_ref
 
 setup_side_effects:
   - Extend {scripts_dir_name}/03_cleaning.py with a stability perturbation runner that sweeps high-impact judgment calls recorded in cleaning_decisions and preprocessing_decisions
@@ -19,21 +19,21 @@ setup_side_effects:
 
 checklist:
   - id: S01
-    question: What instability thresholds apply to question-critical variables (maximum acceptable change in distribution, counts, or derived summaries under a perturbation), and are they approved?
-    evidence_key: instability_thresholds        # {variable: {metric, threshold, approval_state, rationale}}
+    question: What instability thresholds apply to question-critical variables (maximum acceptable change in distribution, counts, or derived summaries under a perturbation), what is each threshold's source (protocol-derived, data-derived, external standard, or explicit user approval), and are user-owned choices approved?
+    evidence_key: instability_thresholds        # {variable: {metric, threshold, source: protocol|data_derived|external_standard|user_approved, evidence_ref, approval_state, rationale}}
     writes_to: robustness.instability_thresholds
   - id: S02
     question: Are protocol-conditioned transfer diagnostics relevant and visible for this stage (restricted partitions the protocol allows inspecting for this purpose, temporal or group artifacts, external or secondary artifacts, later validation artifacts the protocol allows checking now)?
     evidence_key: transfer_diagnostics_decision  # {relevant: bool, visible: bool, decision: run|skip, skip_reason_if_any, diagnostics_if_run: {raw_vs_post_pipeline, artifact_transform_rates, interpretation}}
     writes_to: [robustness.transfer_diagnostics_status, robustness.transfer_diagnostics_reason]
   - id: S03
-    question: Under Layer 1 one-at-a-time perturbations for high-impact judgment calls, which question-critical variables exceed their thresholds, and for each question-critical variable does at least one competing cleaning policy appear as a stability axis?
-    evidence_key: layer1_perturbations          # list of {judgment_call, variable, metric, baseline, perturbed, delta, threshold, exceeded: bool, competing_policies_covered: bool}
+    question: Under Layer 1 one-at-a-time perturbations for high-impact judgment calls, which question-critical variables exceed their thresholds, which coupled metrics were expected to move from the dependency map, and for each question-critical variable does at least one competing cleaning policy appear as a stability axis?
+    evidence_key: layer1_perturbations          # list of {judgment_call, variable, metric, baseline, perturbed, delta, threshold, exceeded: bool, dependency_map_ref, expected_coupled_movements: [], unexpected_movements: [], competing_policies_covered: bool}
     writes_to: robustness.layer1_perturbations
   - id: S04
-    question: Should Layer 2 interaction perturbations run (user approved a fuller track or protocol complexity makes interaction effects plausible), and if run which interactions exceed thresholds?
+    question: Should Layer 2 interaction perturbations run (user approved a fuller track or protocol complexity makes interaction effects plausible), and if run which interactions exceed thresholds or violate dependency-map expected movements?
     skip_when: user declined a Layer 2 track and protocol complexity does not make interaction effects plausible
-    evidence_key: layer2_perturbations          # {performed: bool, reason, interactions: [{variables, metric, baseline, perturbed, delta, threshold, exceeded}]}
+    evidence_key: layer2_perturbations          # {performed: bool, reason, dependency_map_ref, interactions: [{variables, metric, baseline, perturbed, delta, threshold, exceeded, expected_movements, unexpected_movements}]}
     writes_to: robustness.layer2_performed
   - id: S05
     question: Which variables are the main unstable ones, which judgment calls are the main risk drivers, and is any instability severe enough to require reopening a D-series or G-series follow-up?
@@ -46,7 +46,7 @@ checklist:
 
 gates:
   - id: S01-thresholds-approved
-    condition: Instability thresholds exist for every question-critical variable and are approved (interactive) or recorded with autonomous approval reasoning (auto)
+    condition: Instability thresholds exist for every question-critical variable and each source is protocol-derived, data-derived, external-standard-backed, or explicitly user-approved; invented or self-widened thresholds are blocking defects
   - id: S02-transfer-decided
     condition: Transfer diagnostics are explicitly run when protocol-relevant and visible, or skipped with a concrete reason; no hallucinated holdout checks appear when the protocol chose full-data or resampling-only logic
   - id: S-perturbations-run
@@ -65,6 +65,8 @@ research_questions:
 
 guidance:
   - Protocol-conditioned transfer diagnostics only run when the protocol makes them visible. Do not invent holdout transfer checks when the protocol chose full-data or resampling-only logic.
+  - Thresholds must be derived from protocol, computed from data, backed by an external standard recorded in `research_log.jsonl`, or explicitly approved by the user.
+  - Maintain or infer a dependency map before interpreting perturbation results so coupled metrics are expected together instead of hand-listed after the fact.
   - For each question-critical variable, Layer 1 must include at least one competing cleaning policy as a stability axis.
   - If a single reversed judgment call would change the analyzable population enough to alter the claim boundary, that is a reopen signal, not a threshold violation to normalize.
 

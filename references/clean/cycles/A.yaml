@@ -23,7 +23,7 @@ setup_side_effects:
   - Verify 01_formulation.yaml, 02_protocol.yaml, {readme_name}, at least one raw file, and every protocol-required artifact exist
   - Recompute SHA-256 for each raw file and compare to provenance.files.{filename}.sha256 recorded in 01_formulation.yaml
   - Derive the active visibility set (visible raw files, visible protocol artifacts, restricted artifacts, access levels)
-  - Initialize {docs_dir_name}/03_cleaning.yaml with stage, schema_version, project (including project.started_at), status.current_cycle A, route, upstream_snapshot, precondition_check, and visibility
+  - Initialize {docs_dir_name}/03_cleaning.yaml with stage, schema_version, project (including project.started_at), status.current_cycle A, route, upstream_refs, upstream_contract, precondition_check, and visibility_ref
   - Seed question_critical_variables from contract.operationalization in 01_formulation.yaml
   - Create {scripts_dir_name}/03_cleaning.py with the shape specified in the stage entry
 
@@ -46,7 +46,7 @@ checklist:
     writes_to: null
   - id: A04
     question: Across multiple visible artifacts, what are the candidate join keys and do they align on type, cardinality, and referential coverage?
-    skip_when: only one visible artifact exists in visibility.visible_raw_files and visibility.visible_protocol_artifacts combined
+    skip_when: only one visible artifact exists in visibility_ref.visible_raw_files and visibility_ref.visible_protocol_artifacts combined
     evidence_key: join_key_alignment            # {pairs: [{left_artifact, right_artifact, join_keys, left_coverage, right_coverage, type_match, notes}]}
     writes_to: null
   - id: A05

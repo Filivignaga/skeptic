@@ -29,7 +29,7 @@ Optional companion artifacts (written during Cycle R or beyond):
 | Path | Role |
 |------|------|
 | `{scripts_dir_name}/clean_constraints.json` | Declared and derived constraints produced by `clean_data`. See `../constraint-spec.md`. |
-| `{scripts_dir_name}/preprocess_constraints.json` | Declared and derived constraints produced by `preprocess_data` when Cycle E or F ran. Otherwise an explicit no-additional-constraints file. |
+| `{scripts_dir_name}/preprocess_constraints.json` | Declared and derived constraints produced by `preprocess_data` when Cycle C closeout or F justifies preprocessing. Otherwise an explicit no-additional-constraints file. |
 | `{data_dir_name}/silver/` | Cleaned outputs when they differ from raw inputs. Each artifact has a documented schema and known limitations. |
 
 The canonical YAML is the single source of truth. If the rendered markdown disagrees with the YAML, the YAML wins.
@@ -65,7 +65,7 @@ project:
   started_at:                       # ISO timestamp
 
 status:
-  current_cycle:                    # A|B|C|D1|...|E|F|G1|...|R|S|null
+  current_cycle:                    # A|B|C|D1|...|F|G1|...|R|S|null
   completed_cycles: []
   skipped_cycles: {}                # {cycle_letter: reason} for conditional cycles (e.g., F)
   locked_at: null                   # set at stage close; presence = locked
@@ -74,31 +74,30 @@ route:
   active:                           # descriptive|exploratory|inferential|predictive|causal|mechanistic
   route_file:                       # references/routes/{active}/clean.md
 
-upstream_snapshot:                  # facts read from 01_formulation.yaml and 02_protocol.yaml
-  approved_question:
-  question_type:
-  target_quantity:
-  claim_boundary: {}                # compact copy: claim_type, scope, evidence_ceiling, generalization_limit
-  operationalization: {}
-  unit_of_analysis:
-  key_assumptions: []
-  data_usage_mode:
-  leakage_rules: []
-  forbidden_variable_classes: []
-  clean_prohibitions: []
-  validation_logic_reserved: []
-  backtracking_triggers: []
-  protocol_required_artifacts: []
+upstream_refs:                      # pointers to upstream fields; do not copy upstream fact blocks
+  - file: skeptic_documentation/01_formulation.yaml
+    sections: [approved_question, question_type, target_quantity, claim_boundary, operationalization, unit_of_analysis, key_assumptions]
+    sha256:
+  - file: skeptic_documentation/02_protocol.yaml
+    sections: [active_route, data_usage_mode, visibility_rules, leakage_rules, forbidden_variable_classes, clean_prohibitions, validation_logic, backtracking_triggers, protocol_required_artifacts]
+    sha256:
+
+upstream_contract:                  # compact interpretation or narrowing added by clean, not a verbatim upstream copy
+  claim_boundary_ref:
+  protocol_visibility_ref:
+  data_usage_mode_ref:
 
 precondition_check:
   formulation_sections_present: []
   protocol_sections_present: []
   readme_present:
-  raw_hash_verification: {}         # {filename: {expected, observed, match}}
+  raw_hash_verification: {}         # {filename: {provenance_ref, observed_match}}
   required_artifacts_present: {}    # {artifact: true|false|missing_reason}
 
-visibility:
-  visible_raw_files: []
+visibility_ref:
+  source: skeptic_documentation/02_protocol.yaml
+  sections: [visibility_rules, data_usage_mode, frozen_artifacts]
+  visible_raw_files: []             # compact execution summary derived from protocol
   visible_protocol_artifacts: []
   restricted_artifacts: []
   access_levels: {}                 # {artifact: allowed_operations}
@@ -154,12 +153,12 @@ pcs_review: null                    # set at stage close
 Each `cycle_history` entry:
 
 ```yaml
-- cycle:                            # A|B|C|D1|...|E|F|G1|...|R|S
+- cycle:                            # A|B|C|D1|...|F|G1|...|R|S
   iteration:                        # 1-based per cycle letter
   unanswered: []                    # checklist IDs not answered; empty = all answered
   script_evidence: {}               # compact summary only: 4-8 one-line bullets, or one-line value per evidence_key. No full JSON, no DataFrames, no arrays, no per-column schema.
   subagents:
-    research_sources: []            # [{url, claim}] -- only sources that materially shaped a decision this iteration
+    research_sources: []            # [{ref, claim}] -- research_log#n pointers that materially shaped a decision this iteration
     decisions: []                   # [{what, why, pcs: P|C|S|null, source: int?}] -- operational choices where a reasonable alternative existed (distinct from the top-level `decision:` verdict below; `source` is an optional index into research_sources)
     rejected_alternatives: []       # [{option, reason, pcs: P|C|S|null}] -- paths considered and dropped (the PCS Stability counterfactual record)
     open_risks: []                  # [str] -- unresolved concerns downstream stages must carry forward
@@ -174,7 +173,12 @@ The main model reads both subagent replies, distills them, and writes the result
 
 ```yaml
 pcs_review:
-  verbatim:
+  verdicts:
+    predictability:
+    computability:
+    stability:
+  open_conditions: []
+  transcript_ref:
   disposition:                      # satisfied|valid_concern|disagree_override
   disposition_reason:
 ```
@@ -194,13 +198,13 @@ Rules:
 | B | Integrity diagnostics | Yes |
 | C | Cleaning resolution | Yes |
 | D1, D2, ... | Cleaning follow-ups | Conditional |
-| E | Preprocessing | Yes |
+| E | Preprocessing | Retired - useful checks folded into Cycle C closeout |
 | F | Derived variables and related downstream-safe transforms | Conditional |
 | G1, G2, ... | Preprocessing and derived-variable follow-ups | Conditional |
 | R | Reproducibility | Yes |
 | S | Stability and transfer diagnostics | Yes |
 
-Cycle F runs only when derived variables or similarly downstream-safe transformations are justified by the approved question and protocol. Skipping F must be recorded in `status.skipped_cycles`. Cycles E, F, and G+ may force a new D-series follow-up if a representation decision turns out to be an unresolved cleaning issue.
+Cycle F runs only when derived variables or similarly downstream-safe transformations are justified by the approved question and protocol. Skipping F must be recorded in `status.skipped_cycles`. Cycle C closeout, F, and G+ may force a new D-series follow-up if a representation decision turns out to be an unresolved cleaning issue. Cycle E is retired; do not open it for new projects.
 
 ## Per-cycle Reference Files
 
@@ -242,8 +246,8 @@ This protocol applies to every cycle, mandatory or follow-up.
    - Load `references/routes/{route}/clean.md` once and keep it in memory for the rest of the stage. If the expected route file is missing, stop and reopen upstream.
    - Run the precondition gate: verify `01_formulation.yaml`, `02_protocol.yaml`, `{readme_name}`, at least one raw file, and every protocol-required artifact exist. Recompute SHA-256 for each raw file and compare to `provenance.files.{filename}.sha256` in `01_formulation.yaml`. Any mismatch is a blocking defect; stop until raw data is restored or formulate is reopened.
    - Verify `01_formulation.yaml` carries an approved question, question type, target quantity, claim boundary, unit of analysis, operationalization, and key assumptions. Verify `02_protocol.yaml` carries question type, active route, data usage mode, visibility rules, frozen-artifact status, leakage rules, forbidden variable classes, clean prohibitions, validation logic, and backtracking triggers. Missing or contradictory fields block the stage.
-   - Derive the active visibility set and record it under `visibility`: visible raw files, visible protocol artifacts, restricted artifacts, access levels.
-   - Initialize `03_cleaning.yaml` with `stage`, `schema_version`, `project` (including `project.started_at`), `status.current_cycle: A`, `route`, `upstream_snapshot`, `precondition_check`, and `visibility`. Seed `question_critical_variables` from `contract.operationalization` in `01_formulation.yaml`.
+   - Derive the active visibility set from protocol and record it under `visibility_ref` as a protocol pointer plus compact execution summary: visible raw files, visible protocol artifacts, restricted artifacts, access levels.
+   - Initialize `03_cleaning.yaml` with `stage`, `schema_version`, `project` (including `project.started_at`), `status.current_cycle: A`, `route`, `upstream_refs`, `upstream_contract`, `precondition_check`, and `visibility_ref`. Seed `question_critical_variables` from `contract.operationalization` in `01_formulation.yaml`.
    - Create `03_cleaning.py` with the shape specified below.
 4. Every cycle after A: confirm the route context still resolves to the same route. If the route context becomes ambiguous, reread `01_formulation.yaml`, `02_protocol.yaml`, and the same route file before proceeding. Identify which visible artifacts the current cycle is allowed to inspect; if unclear, stop and reopen `protocol`.
 5. Every cycle: extend `03_cleaning.py` by writing or updating the cycle's function (`run_cycle_a`, `run_cycle_b`, ...). The function must produce every non-null `evidence_key` named in the cycle's checklist.
@@ -251,16 +255,17 @@ This protocol applies to every cycle, mandatory or follow-up.
 7. Parse stdout as JSON. Use the parsed dict as this cycle's candidate evidence for Step 2 and Step 3; Step 5 records a compact summary in `cycle_history[*].script_evidence`. The script has already mirrored the same JSON to `{scripts_dir_name}/stdout/cycle_{cycle}.json` for external inspection; do not copy it into the canonical YAML.
 8. Scan stderr and stdout for unhandled exceptions. Any unhandled exception is a blocking defect and must be fixed before continuing. Functions that intentionally demonstrate failure must be explicitly flagged with a `# expected_failure` comment.
 
-Script shape: one `run_cycle_*` function per cycle, a `load_state()` helper that reads `03_cleaning.yaml` (and `01_formulation.yaml`, `02_protocol.yaml` for upstream facts), an `argparse --cycle X` CLI, and a `main()` that prints exactly one JSON object to stdout. Claude writes the file from scratch in Cycle A and extends it with a new function at the start of every subsequent cycle. Cycle R adds the `clean_data(...)` and `preprocess_data(...)` helpers plus the reproducibility validator. Cycle S adds the stability perturbation runner and the optional transfer-diagnostics runner.
+Script shape: one `run_cycle_*` function per cycle, a `load_state()` helper that reads `03_cleaning.yaml` (and upstream YAMLs named in `upstream_refs` when needed), memoized `load_raw()` or `load_inputs()` helpers for repeated data access, `check_dtype_meaning(...)` when semantic dtype checks are needed, an `argparse --cycle X` CLI, and a `main()` that prints exactly one JSON object to stdout. Claude writes the file from scratch in Cycle A and extends it with a new function at the start of every subsequent cycle. Cycle R adds the `clean_data(...)` and `preprocess_data(...)` helpers plus the reproducibility validator. Cycle S adds the stability perturbation runner and the optional transfer-diagnostics runner.
 
 Script rules:
 - The script prints exactly one JSON object to stdout. Nothing else on stdout.
 - The script does not write to `03_cleaning.yaml`. Only the model writes the canonical YAML.
 - The script respects protocol visibility and never loads restricted artifacts.
+- Constraint verifiers use `verify_allowed_values(series, allowed, nullable)` or equivalent logic with `bad = ser[ser.notna() & ~ser.isin(allowed)]`; nullability is checked separately.
 - Heavy data (arrays, full DataFrames) is summarized, not dumped. Evidence packets stay compact.
 - Per-file provenance (schema, encoding, sha256) is emitted only the first time a file is recorded -- typically Cycle A iter 1. After it lands in `provenance.files`, neither the stdout packet nor `cycle_history[*].script_evidence` re-emits those fields; downstream cycles reference those files by filename.
 - Seeds are set inside the function whenever stochastic steps run, and the seed is echoed into the evidence packet.
-- No generic helpers at module scope beyond those named in the Script shape above (including the Cycle R `clean_data` and `preprocess_data` helpers). Any helper introduced for a cycle lives inside that cycle's function and is removed once the cycle passes.
+- Shared module-scope helpers are allowed when they prevent repeated file loading, preserve dtype or encoding consistency, validate constraints, or make cycle outputs reproducible. Keep them deterministic and side-effect-limited. Cycle-specific one-off helpers still belong inside the cycle function.
 
 ### Step 2: Human Review
 
@@ -274,7 +279,7 @@ Auto mode: apply the self-review loop from `../auto-mode.md`. Self-correct withi
 
 ### Step 3: Subagent Review
 
-Dispatch two subagents in parallel.
+Dispatch the evaluation subagent every cycle. Dispatch the research subagent only when external domain, methodological, legal, standards, or audience knowledge can change this cycle's decision; otherwise record `research_sources: []` and let the evaluator recommend a research-backed follow-up if needed.
 
 Research subagent:
 
@@ -309,8 +314,7 @@ Agent(
   - If a question does not apply, say "not applicable" and give a one-line reason.
   - Cite sources for any claim that would change a cleaning or preprocessing decision.
 
-  Return concise findings with sources. Every citation must include its URL
-  inline after the claim it supports. Organize findings by question. Focus on
+  Return concise findings. For every citation-worthy claim, write or reference a `research_log.jsonl` row with URL, claim_used, verified_at, and status; canonical YAML keeps only `research_log#n` pointers. Organize findings by question. Focus on
   facts that materially change cleaning judgments, semantic interpretation,
   or protocol compliance.
   """
@@ -403,7 +407,7 @@ When both subagents return, the model parses three counts from the evaluation ou
 Digest the subagent replies into `cycle_history[*].subagents`; the replies themselves stay in memory. Admit something to `subagents` when a future reader needs it to reconstruct why this path was chosen.
 
 Include:
-- `research_sources`: URLs that actually tipped a call, each paired with a one-line claim. Drop sources that merely confirmed obvious baseline facts or rephrased what was already known.
+- `research_sources`: `research_log#n` pointers that actually tipped a call, each paired with a one-line claim. Drop sources that merely confirmed obvious baseline facts or rephrased what was already known.
 - `decisions`: operational choices where a reasonable alternative existed. Tag each with its PCS axis (`P`, `C`, `S`, or `null` when not PCS-relevant). Set `source` to the index into `research_sources` when a specific source drove the call. Default choices (reading a CSV with `read_csv`, computing sha256 with hashlib) are not decisions.
 - `rejected_alternatives`: paths actively weighed and dropped, with the reason and PCS axis. This is the stability counterfactual record.
 - `open_risks`: one line each. Unresolved concerns downstream stages must carry forward.
@@ -481,7 +485,7 @@ Re-parse `03_cleaning.yaml` to confirm validity.
 
 The loop ends when all of the following hold:
 
-- every mandatory cycle (A, B, C, E, R, S) has a closing `decision` of `pass` or an `override`
+- every mandatory cycle (A, B, C, R, S) has a closing `decision` of `pass` or an `override`
 - Cycle F is completed with `pass` or `override`, or recorded in `status.skipped_cycles` with a specific reason (e.g., "no derived variables justified by the approved question and protocol")
 - every approved D-series or G-series follow-up is resolved
 - the latest dataset fitness review returns no unresolved `no` or `unclear` answers
@@ -537,7 +541,7 @@ Agent(
 )
 ```
 
-Store the full output in `pcs_review.verbatim`.
+Store compact verdicts in `pcs_review.verdicts`; write the full output to `pcs_review.json` only when the transcript is needed, then set `pcs_review.transcript_ref`.
 
 - Interactive mode: present via `AskUserQuestion` with options `satisfied`, `valid_concern`, `disagree_override`. Wait for the user's answer before invoking any other tool.
 - Auto mode: apply `../auto-mode.md` stage-close rules.
@@ -552,7 +556,7 @@ After the PCS review clears or the user overrides it:
 
 1. Parse `03_cleaning.yaml` with a standard YAML loader. Repair if parsing fails.
 
-2. Render `03_cleaning.md` from the canonical YAML. Keep the report compact: one `##` section per populated top-level YAML key (`Data Contract`, `Question-Critical Variables`, `Visibility`, `Cleaning Decisions`, `Preprocessing Decisions`, `Derived Variables`, `Row Count Reconciliation`, `Dataset Fitness Reviews`, `Reproducibility`, `Robustness`, `Claim Boundary Updates`, `Cycle Summary` with one line per cycle, `PCS Assessment`). Omit sections whose YAML keys are empty or absent. Reference the subagent verbatims through the YAML; the markdown is a rendered summary.
+2. Render `03_cleaning.md` from the canonical YAML. Keep the report compact: one `##` section per populated top-level YAML key (`Upstream References`, `Data Contract`, `Question-Critical Variables`, `Visibility Reference`, `Cleaning Decisions`, `Preprocessing Decisions`, `Derived Variables`, `Row Count Reconciliation`, `Dataset Fitness Reviews`, `Reproducibility`, `Robustness`, `Claim Boundary Updates`, `Cycle Summary` with one line per cycle, `PCS Assessment`). Omit sections whose YAML keys are empty or absent. Reference compact PCS verdicts through the YAML; if a transcript sidecar exists, link it without copying it into the markdown.
 
 3. Append a Cleaning Scorecard block to `03_cleaning.md`:
 
@@ -575,7 +579,7 @@ After the PCS review clears or the user overrides it:
    | Judgment calls total | {n} | cleaning_decisions + preprocessing_decisions |
    | Judgment calls stable under perturbation | {n}/{tested} | robustness.layer1_perturbations |
    | Transfer diagnostics | {pass / flagged / skipped: {reason}} | robustness.transfer_diagnostics_status |
-   | PCS verdict | {verbatim summary} | pcs_review.verbatim |
+   | PCS verdict | {compact verdict summary} | pcs_review.verdicts |
    | PCS user decision | {satisfied / valid_concern / disagree_override: {reason}} | pcs_review.disposition |
    ```
 

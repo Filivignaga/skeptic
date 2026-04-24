@@ -18,7 +18,7 @@ IMPORTANT: Before executing, read `../core-principles.md`. `core-principles.md` 
 | Path | Role |
 |------|------|
 | `{scripts_dir_name}/07_communication.py` | Single Python file containing one function per cycle (`run_cycle_a`, `run_cycle_b`, `run_cycle_c`, `run_cycle_d`, `run_cycle_e`, `run_cycle_f`). Invoked one cycle at a time. Returns a JSON evidence packet on stdout. Read-only against upstream artifacts; read-and-scan against `deliverables/`. |
-| `{docs_dir_name}/07_communication.yaml` | Canonical stage memory. Holds upstream snapshot, communication plan, audience profile, translations, recommendations, deliverable metadata, cycle history, and the terminal fidelity review. Created at stage start, updated at the end of every cycle. |
+| `{docs_dir_name}/07_communication.yaml` | Canonical stage memory. Holds upstream references and a compact communication contract, communication plan, audience profile, translations, recommendations, deliverable metadata, cycle history, and the terminal fidelity review. Created at stage start, updated at the end of every cycle. |
 | `{docs_dir_name}/07_communication.md` | Human-readable report. Rendered once at finalization from the canonical YAML. |
 | `deliverables/` | Audience-facing deliverables. Contains exactly one primary deliverable plus zero or more companion data files. Created/reused at Cycle A. |
 | `{readme_name}` | Short `## Communicate [COMPLETE]` block added at finalization. |
@@ -66,19 +66,30 @@ status:
   completed_cycles: []
   locked_at: null                   # set at stage close; presence = locked
 
-upstream_snapshot:                  # read-only snapshot from upstream artifacts
-  approved_question:
-  question_type:
-  target_quantity:
-  claim_boundary:                   # final boundary from evaluate (claim_type, scope, evidence_ceiling, generalization_limit, verbs_allowed/forbidden effective set)
-  active_route:
-  decision_context:                 # from formulate (stakeholder, actions, how_answer_changes_action, or academic alt)
-  claim_survival_registry: []       # [{claim_id, statement, verdict, caveats, evidence_summary}]
-  mandatory_limitations: []         # [{description, source}]
-  unresolved_risks: []              # [{description, source}]
-  handoff_discipline:               # verbatim handoff discipline statement from evaluate
+upstream_refs:
+  - file: skeptic_documentation/01_formulation.yaml
+    sections: [approved_question, question_type, target_quantity, decision_context]
+    sha256:
+  - file: skeptic_documentation/02_protocol.yaml
+    sections: [active_route, data_usage, validation_logic, prohibitions]
+    sha256:
+  - file: skeptic_documentation/06_evaluation.yaml
+    sections: [claim_survival_registry, claim_boundary_final, communicate_handoff]
+    sha256:
 
-plan:                               # derived in Cycle A from upstream_snapshot
+upstream_contract:                  # compact communication-specific interpretation; not a copied upstream block
+  approved_question_ref:
+  question_type_ref:
+  target_quantity_ref:
+  claim_boundary_final_ref:
+  active_route_ref:
+  decision_context_ref:
+  claim_survival_registry_ref:
+  mandatory_limitations_ref:
+  unresolved_risks_ref:
+  handoff_discipline_ref:
+
+plan:                               # derived in Cycle A from upstream_contract refs
   null_result_mode:                 # bool
   claims_to_communicate: []         # claim_ids
   limitations_to_disclose: []
@@ -155,7 +166,7 @@ Each `cycle_history` entry:
   unanswered: []                    # checklist IDs not answered; empty = all answered
   script_evidence: {}               # compact summary only: 4-8 one-line bullets, or one-line value per evidence_key. No full JSON, no DataFrames, no arrays, no per-column schema.
   subagents:
-    research_sources: []            # [{url, claim}] -- only sources that materially shaped a decision this iteration
+    research_sources: []            # [{ref, claim}] -- research_log#n pointers that materially shaped a decision this iteration
     decisions: []                   # [{what, why, pcs: P|C|S|null, source: int?}] -- operational choices where a reasonable alternative existed (distinct from the top-level `decision:` verdict below; `source` is an optional index into research_sources)
     rejected_alternatives: []       # [{option, reason, pcs: P|C|S|null}] -- paths considered and dropped (the PCS Stability counterfactual record)
     open_risks: []                  # [str] -- unresolved concerns downstream stages must carry forward
@@ -170,7 +181,12 @@ The main model reads both subagent replies, distills them, and writes the result
 
 ```yaml
 pcs_review:
-  verbatim:                         # full terminal fidelity subagent output
+  transcript_ref:                   # optional sidecar for full terminal fidelity subagent output
+  verdicts:
+    predictability:
+    computability:
+    stability:
+  open_conditions: []
   checks: {}                        # {claim_completeness, caveat_preservation, claim_fidelity, boundary_integrity, limitation_completeness, recommendation_scope, computation_boundary, self_sufficiency, mandatory_sections, encoding_integrity, companion_data_quality} -> PASS|FAIL|N/A
   overall:                          # PASS|FAIL
   disposition:                      # satisfied|valid_concern|disagree_override
@@ -181,7 +197,7 @@ Rules:
 - The YAML must parse with a standard YAML loader after every write.
 - `cycle_history` is append-only. Superseded iterations stay in the list; new iterations append.
 - `communicate` may narrow the claim boundary via `boundary.narrowing`. It may not widen it. Widening forces backtrack to `formulate` plus `protocol`.
-- `upstream_snapshot` is read-only after Cycle A closes. If upstream content changes, backtrack instead of rewriting the snapshot.
+- `upstream_refs` and `upstream_contract` are read-only after Cycle A closes. If upstream content changes, backtrack instead of rewriting the references or compact contract.
 - Write only fields that apply.
 - Use only ASCII characters in generated YAML content. Replace em dashes with `--`, curly quotes with straight quotes. Source-data strings may keep non-ASCII when the encoding is declared.
 
@@ -223,9 +239,9 @@ This protocol applies to every cycle.
 1. Read `cycles/{cycle}.yaml`.
 2. Resolve route context:
    - Cycle A: before anything else, verify every upstream artifact listed under Required Inputs exists and contains the expected sections. Abort with a concrete failure list if a precondition is violated; do not silently continue. Then read `01_formulation.yaml`, `02_protocol.yaml`, ..., `06_evaluation.yaml` once to load the upstream contract, the claim survival registry, the final claim boundary, mandatory limitations, unresolved risks, and handoff discipline. Resolve the active route from `02_protocol.yaml` (and the as-narrowed route from `05_analysis.yaml`). `communicate` does not load a route-specific overlay file: the route-specific constraints arrive encoded in the evaluate handoff. Keep the active route in memory so Step 3 subagents inherit it.
-   - First cycle entered in a fresh session (not Cycle A), or first cycle after a backtrack reopens the stage: read `07_communication.yaml` once to load upstream_snapshot, plan, audience, delivery, translations, recommendations, boundary, and prior `cycle_history`. The route context lives inside `upstream_snapshot.active_route`.
+   - First cycle entered in a fresh session (not Cycle A), or first cycle after a backtrack reopens the stage: read `07_communication.yaml` once to load `upstream_refs`, `upstream_contract`, plan, audience, delivery, translations, recommendations, boundary, and prior `cycle_history`. The route context lives inside `upstream_contract.active_route_ref`.
    - Every other case (continuing the same chat session): skip the re-read; the canonical YAML content is already in context from the cycle that just wrote it.
-3. Cycle A only: create `deliverables/` under the project root if it does not already exist. Initialize `07_communication.yaml` with `stage`, `schema_version`, `project` (including `project.started_at` as ISO timestamp), `status.current_cycle: A`, and the `upstream_snapshot` scaffold populated from the upstream artifacts. Create `07_communication.py` with the shape specified below.
+3. Cycle A only: create `deliverables/` under the project root if it does not already exist. Initialize `07_communication.yaml` with `stage`, `schema_version`, `project` (including `project.started_at` as ISO timestamp), `status.current_cycle: A`, `upstream_refs`, and the compact `upstream_contract` scaffold populated with references to upstream artifacts. Create `07_communication.py` with the shape specified below.
 4. Every cycle: extend `07_communication.py` by writing or updating the cycle's function (`run_cycle_a`, `run_cycle_b`, ...). The function must produce every non-null `evidence_key` named in the cycle's checklist.
 5. Run `python {scripts_dir_name}/07_communication.py --cycle {cycle}`. Capture stdout.
 6. Parse stdout as JSON. Use the parsed dict as this cycle's candidate evidence for Step 2 and Step 3; Step 5 records a compact summary in `cycle_history[*].script_evidence`. The script has already mirrored the same JSON to `{scripts_dir_name}/stdout/cycle_{cycle}.json` for external inspection; do not copy it into the canonical YAML.
@@ -240,7 +256,7 @@ Script rules:
 - Heavy data (arrays, full DataFrames) is summarized, not dumped. Evidence packets stay compact.
 - Per-file provenance (schema, encoding, sha256) is emitted only the first time a file is recorded -- typically Cycle A iter 1. After it lands in `provenance.files`, neither the stdout packet nor `cycle_history[*].script_evidence` re-emits those fields; downstream cycles reference those files by filename.
 - Seeds are set inside the function if any stochastic step runs.
-- No generic helpers at module scope beyond those named in the Script shape above. Any helper introduced for a cycle lives inside that cycle's function and is removed once the cycle passes.
+- Shared module-scope helpers are allowed when they prevent repeated file loading, preserve dtype or encoding consistency, validate constraints, or make cycle outputs reproducible. Keep them deterministic and side-effect-limited. Cycle-specific one-off helpers still belong inside the cycle function.
 
 ### Step 2: Human Review
 
@@ -254,7 +270,7 @@ Auto mode: apply the self-review loop from `../auto-mode.md`. Self-correct withi
 
 ### Step 3: Subagent Review
 
-Dispatch two subagents in parallel.
+Dispatch the evaluation subagent every cycle. Dispatch the research subagent only when external domain, methodological, legal, standards, or audience knowledge can change this cycle's decision; otherwise record `research_sources: []` and let the evaluator recommend a research-backed follow-up if needed.
 
 Research subagent:
 
@@ -287,7 +303,7 @@ Agent(
   - Research audience-appropriate presentation standards, visualization conventions,
     uncertainty communication formats, and reporting guidelines.
   - If a question does not apply, say "not applicable" with a one-line reason.
-  - Every citation must include its URL inline after the claim it supports.
+  - Every citation-worthy claim must be represented by a `research_log.jsonl` row; canonical YAML keeps only `research_log#n` pointers.
 
   Return concise findings organized by question. Focus on facts that materially
   change communication decisions.
@@ -375,7 +391,7 @@ When both subagents return, the model parses three counts from the evaluation ou
 Digest the subagent replies into `cycle_history[*].subagents`; the replies themselves stay in memory. Admit something to `subagents` when a future reader needs it to reconstruct why this path was chosen.
 
 Include:
-- `research_sources`: URLs that actually tipped a call, each paired with a one-line claim. Drop sources that merely confirmed obvious baseline facts or rephrased what was already known.
+- `research_sources`: `research_log#n` pointers that actually tipped a call, each paired with a one-line claim. Drop sources that merely confirmed obvious baseline facts or rephrased what was already known.
 - `decisions`: operational choices where a reasonable alternative existed. Tag each with its PCS axis (`P`, `C`, `S`, or `null` when not PCS-relevant). Set `source` to the index into `research_sources` when a specific source drove the call. Default choices (reading a CSV with `read_csv`, computing sha256 with hashlib) are not decisions.
 - `rejected_alternatives`: paths actively weighed and dropped, with the reason and PCS axis. This is the stability counterfactual record.
 - `open_risks`: one line each. Unresolved concerns downstream stages must carry forward.
@@ -545,7 +561,7 @@ Agent(
 )
 ```
 
-Store the full output in `pcs_review.verbatim`. Parse the per-check verdicts into `pcs_review.checks`. Set `pcs_review.overall` to PASS only when every check returned PASS or N/A.
+Store compact verdicts in `pcs_review.verdicts`; write the full output to `pcs_review.json` only when the transcript is needed, then set `pcs_review.transcript_ref`. Parse the per-check verdicts into `pcs_review.checks`. Set `pcs_review.overall` to PASS only when every check returned PASS or N/A.
 
 - Interactive mode: present the review via `AskUserQuestion` with options `satisfied`, `valid_concern`, `disagree_override`. Wait for the user's answer before invoking any other tool.
 - Auto mode: apply `../auto-mode.md` stage-close rules.
@@ -576,7 +592,7 @@ After the terminal fidelity review clears or the user overrides it:
    - `Cycle Summary` (one line per cycle, iteration counts, blocking failures)
    - `PCS Assessment` (overall from pcs_review, per-check summary, disposition)
 
-   Omit sections whose YAML keys are empty or absent. Reference the subagent verbatims through the YAML; the markdown is a rendered summary.
+   Omit sections whose YAML keys are empty or absent. Reference compact PCS verdicts through the YAML; if a transcript sidecar exists, link it without copying it into the markdown.
 
 4. Scan every file under `deliverables/` and every file touched in this stage under `{docs_dir_name}/` and `{scripts_dir_name}/` for non-ASCII typographic punctuation (em dashes, curly quotes, en dashes). Treat any violation as a blocking defect for stage closure until the affected files are rewritten cleanly.
 

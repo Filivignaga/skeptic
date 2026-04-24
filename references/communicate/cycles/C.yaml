@@ -3,8 +3,8 @@ focus: Claim Translation and Caveat Calibration
 mandatory: true
 
 upstream:
-  - upstream_snapshot.claim_survival_registry
-  - upstream_snapshot.claim_boundary
+  - upstream_contract.claim_survival_registry
+  - upstream_contract.claim_boundary
   - audience.type
   - delivery.scaffolding
 

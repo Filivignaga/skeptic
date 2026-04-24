@@ -5,10 +5,10 @@ mandatory: false
 upstream:
   - cleaning_decisions
   - preprocessing_decisions
-  - upstream_snapshot.approved_question
-  - upstream_snapshot.claim_boundary
-  - upstream_snapshot.forbidden_variable_classes
-  - upstream_snapshot.leakage_rules
+  - upstream_refs
+  - upstream_contract.claim_boundary_ref
+  - upstream_contract.protocol_visibility_ref
+  - upstream_contract.protocol_visibility_ref
 
 setup_side_effects: []
 

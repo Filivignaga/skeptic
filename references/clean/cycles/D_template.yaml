@@ -5,7 +5,7 @@ mandatory: false
 # D-series follow-ups run under the same 5-step cycle protocol as the mandatory
 # cycles A through C. They are triggered when:
 #   1. Cycle C closes with an unresolved cleaning issue the user agrees to reopen
-#   2. The evaluation subagent for a later cycle (E, F, G-series, R, S) recommends
+#   2. The evaluation subagent for a later cycle (F, G-series, R, S) recommends
 #      routing a discovered issue back to cleaning
 #   3. The user requests one
 #

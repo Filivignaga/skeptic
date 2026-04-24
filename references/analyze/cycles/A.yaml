@@ -56,7 +56,7 @@ checklist:
     evidence_key: null
     writes_to: contract.accuracy_metric
   - id: A05
-    question: What perturbation plan is locked -- axes, types, and scope -- and how does each axis probe route-relevant instability?
+    question: What perturbation plan is locked -- axes, types, scope, dependency map, and expected coupled movements -- and how does each axis probe route-relevant instability?
     evidence_key: null
     writes_to: contract.perturbation_plan
   - id: A06
@@ -129,6 +129,7 @@ research_questions:
 
 guidance:
   - Cycle A produces a locked specification. Do not execute the primary analysis, perturbations, or challengers here. Execution begins in Cycle C after assumption verification in Cycle B.
+  - Include a dependency map so expected movements for coupled metrics, variables, or claims are derived rather than hand-written after results are seen.
   - Contract lock is not a second examination stage. Examination tells you what the data can support; Cycle A translates that into one executable specification inside those constraints.
   - Route overlays may add route-specific fields (causal adds identification strategy; mechanistic adds structural model; predictive adds hyperparameter search space). Capture overlay-specific fields under contract.route_overlay_requirements rather than inventing new top-level contract fields.
   - Competing operationalizations surfaced in formulate must be stability-tested at the contract level. If any reasonable alternative would change method family or active route, append a narrowing entry to claim_boundary.narrowing_log_additions.

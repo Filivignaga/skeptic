@@ -3,8 +3,8 @@ focus: Audience and Delivery Framing
 mandatory: true
 
 upstream:
-  - upstream_snapshot.approved_question
-  - upstream_snapshot.claim_boundary
+  - upstream_contract.approved_question
+  - upstream_contract.claim_boundary
   - plan.claims_to_communicate
   - plan.null_result_mode
 

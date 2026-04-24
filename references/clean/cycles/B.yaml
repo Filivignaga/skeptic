@@ -6,9 +6,9 @@ upstream:
   - data_contract.raw_artifacts
   - data_contract.codebook_contents
   - data_contract.missing_vs_censored_rule
-  - visibility.visible_raw_files
-  - visibility.visible_protocol_artifacts
-  - visibility.restricted_artifacts
+  - visibility_ref.visible_raw_files
+  - visibility_ref.visible_protocol_artifacts
+  - visibility_ref.restricted_artifacts
   - question_critical_variables
 
 setup_side_effects: []
@@ -36,7 +36,7 @@ checklist:
     writes_to: null
   - id: B06
     question: Were any restricted artifacts accessed, and if so, was that access inside a protocol-approved operation?
-    skip_when: visibility.restricted_artifacts is empty
+    skip_when: visibility_ref.restricted_artifacts is empty
     evidence_key: restricted_artifact_audit     # {accessed: [{artifact, operation, protocol_approved: bool, evidence}], leakage_risk: none|low|medium|high, notes}
     writes_to: null
   - id: B07
@@ -56,7 +56,7 @@ gates:
   - id: B05-cross-variable-checked
     condition: Cross-variable consistency rules are drawn from documented domain sources or conventions, not invented for convenience
   - id: B06-restricted-artifacts-respected
-    condition: No restricted artifact was accessed outside a protocol-approved operation; the skip_when path is taken only when visibility.restricted_artifacts is empty
+    condition: No restricted artifact was accessed outside a protocol-approved operation; the skip_when path is taken only when visibility_ref.restricted_artifacts is empty
   - id: B07-missing-censored-separated
     condition: Missing, structurally missing, and censored values are distinguished according to codebook and source rules for every question-critical and high-risk field
 

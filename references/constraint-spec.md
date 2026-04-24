@@ -137,6 +137,14 @@ Typed `details` payloads by check family:
 ```
 Status is PASS if `failure_count <= floor(element_count * (1 - tolerance))`.
 
+For set-membership checks, nullability is a separate constraint. Do not treat nulls as unexpected category values. Use this shape:
+
+```python
+bad = ser[ser.notna() & ~ser.isin(allowed)]
+```
+
+Then apply the nullable constraint independently. A nullable column can have zero set-membership failures and still fail its nullable rule; a non-nullable column can pass set membership and fail nullability.
+
 *Schema checks* (column existence, dtype):
 ```python
 "details": {
