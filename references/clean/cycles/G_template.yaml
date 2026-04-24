@@ -33,9 +33,8 @@ checklist:
 gates:
   - id: "G{n}01-{short-name}"
     condition: "{condition that closes the unresolved representation topic}"
-  # Single-dep gates encode the checklist ID in the gate ID.
-  # Multi-dep gates use id: "G{n}-{short-name}" and depends_on: [G{n}01, G{n}02, ...].
-  # At least one gate is required so the cycle has an enforceable exit.
+  # Legacy gates are interpreted as acceptance criteria.
+  # At least one acceptance criterion is required so the follow-up has an enforceable exit.
 
 research_questions:
   - "{at most a handful; narrow to the unresolved representation topic}"

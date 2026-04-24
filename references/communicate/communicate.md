@@ -143,29 +143,25 @@ deliverable:                        # set in Cycle F
   companion_files: []
     # [{path, filename, role, has_data_dictionary, temporal_columns_disambiguated, degeneracy_check}]
 
-cycle_history: []                   # append-only list, one entry per iteration
+decision_ledger: []                   # append-only list, one entry per iteration
 pcs_review: null                    # set at stage close; holds Terminal Fidelity Review
 ```
 
-Each `cycle_history` entry:
+Each `decision_ledger` entry:
 
 ```yaml
-- cycle:                            # A|B|C|D|E|F
-  iteration:                        # 1-based per cycle letter
-  unanswered: []                    # checklist IDs not answered; empty = all answered
-  script_evidence: {}               # compact summary only: 4-8 one-line bullets, or one-line value per evidence_key. No full JSON, no DataFrames, no arrays, no per-column schema.
-  subagents:
-    research_sources: []            # [{url, claim}] -- only sources that materially shaped a decision this iteration
-    decisions: []                   # [{what, why, pcs: P|C|S|null, source: int?}] -- operational choices where a reasonable alternative existed (distinct from the top-level `decision:` verdict below; `source` is an optional index into research_sources)
-    rejected_alternatives: []       # [{option, reason, pcs: P|C|S|null}] -- paths considered and dropped (the PCS Stability counterfactual record)
-    open_risks: []                  # [str] -- unresolved concerns downstream stages must carry forward
-    blocking_failures:              # int (0 = PASS, >0 = FAIL)
-  decision:                         # pass|iterate|acknowledge_gap|reopen_evaluate|reopen_formulate_protocol|null_result|archive
-  # Optional: user_observations (captured in Step 2 when ambiguities required user input); decision_reason (required when decision != pass); override: {reason, gate} when a FAIL was overridden.
+- cycle:                            # cycle letter or follow-up id
+  iteration:                        # 1-based per cycle id
+  decision:                         # pass|iterate|acknowledge_gap|reopen_*|data_insufficient|archive|override
+  blocking_failures:                # int (0 = PASS, >0 = FAIL)
+  blocking_reason:                  # one-line reason when blocking_failures > 0, else null
+  evidence_summary: {}              # compact material evidence only; no full JSON, DataFrames, arrays, or per-column schema dumps
+  changed_fields: []                # canonical-YAML fields written or materially changed this iteration
+  next_action:                      # next cycle, follow-up, finalization, or backtrack target
+  # Optional: user_observations, decision_reason, override: {reason, criterion}, material_sources: [{url, claim}], rejected_alternatives: [{option, reason}]
 ```
 
-The main model reads both subagent replies, distills them, and writes the result into the `subagents` fields above; the replies themselves stay in memory. Populate those fields with the entries that materially shaped this iteration. `blocking_failures` (0 = PASS, >0 = FAIL) is the enforceable integer summary. Route per-gate reasoning into `cycle_history` through the specific `decisions[*]` or `rejected_alternatives[*]` entry that a gate produced. Keep the subagents block to the schema fields above; route any finding without a schema home into `open_risks`, or leave it out.
-
+Analytical findings belong in their destination fields. The decision ledger records only what changed, why the cycle did or did not close, and what happens next. Do not store full subagent replies, criterion-by-criterion PASS notes, or repeated script output in canonical YAML.
 `pcs_review` when set (holds the Terminal Fidelity Review):
 
 ```yaml
@@ -179,7 +175,7 @@ pcs_review:
 
 Rules:
 - The YAML must parse with a standard YAML loader after every write.
-- `cycle_history` is append-only. Superseded iterations stay in the list; new iterations append.
+- `decision_ledger` is append-only. Superseded iterations stay in the list; new iterations append.
 - `communicate` may narrow the claim boundary via `boundary.narrowing`. It may not widen it. Widening forces backtrack to `formulate` plus `protocol`.
 - `upstream_snapshot` is read-only after Cycle A closes. If upstream content changes, backtrack instead of rewriting the snapshot.
 - Write only fields that apply.
@@ -206,8 +202,10 @@ Before running cycle X, load only `cycles/{X}.yaml`. Each cycle YAML carries:
 
 - `upstream`: canonical-YAML fields that must be set before the cycle starts
 - `setup_side_effects`: one-time actions (Cycle A only)
-- `checklist`: the items the cycle must answer. Each item has `id`, `question`, `evidence_key`, `writes_to`, and optional `skip_when` (absent means "never skip")
-- `gates`: verifiable conditions. Single-dep gates encode the dep in the ID (e.g. `A02-handoff-complete`); multi-dep gates use a short ID plus `depends_on`
+- `required_evidence`: evidence keys or judgment outputs the cycle must produce
+- `acceptance_criteria`: 3-5 verifiable conditions for cycle closure
+- `writes`: mapping from evidence or judgment outputs to canonical-YAML fields
+- Legacy cycle files may still spell these as `checklist`, `gates`, and `writes_to`; interpret them through the collapsed evidence/criteria model.
 - `research_questions`: topics for the research subagent
 - `guidance`: short, cycle-specific judgment rules
 - `step4_additions`, `pcs_focus`, `log_extension`: present only when the cycle adds a specific discipline. `pcs_focus` holds cycle-specific PCS questions injected into the evaluation subagent prompt; it has no separate Step 5 application.
@@ -223,12 +221,12 @@ This protocol applies to every cycle.
 1. Read `cycles/{cycle}.yaml`.
 2. Resolve route context:
    - Cycle A: before anything else, verify every upstream artifact listed under Required Inputs exists and contains the expected sections. Abort with a concrete failure list if a precondition is violated; do not silently continue. Then read `01_formulation.yaml`, `02_protocol.yaml`, ..., `06_evaluation.yaml` once to load the upstream contract, the claim survival registry, the final claim boundary, mandatory limitations, unresolved risks, and handoff discipline. Resolve the active route from `02_protocol.yaml` (and the as-narrowed route from `05_analysis.yaml`). `communicate` does not load a route-specific overlay file: the route-specific constraints arrive encoded in the evaluate handoff. Keep the active route in memory so Step 3 subagents inherit it.
-   - First cycle entered in a fresh session (not Cycle A), or first cycle after a backtrack reopens the stage: read `07_communication.yaml` once to load upstream_snapshot, plan, audience, delivery, translations, recommendations, boundary, and prior `cycle_history`. The route context lives inside `upstream_snapshot.active_route`.
+   - First cycle entered in a fresh session (not Cycle A), or first cycle after a backtrack reopens the stage: read `07_communication.yaml` once to load upstream_snapshot, plan, audience, delivery, translations, recommendations, boundary, and prior `decision_ledger`. The route context lives inside `upstream_snapshot.active_route`.
    - Every other case (continuing the same chat session): skip the re-read; the canonical YAML content is already in context from the cycle that just wrote it.
 3. Cycle A only: create `deliverables/` under the project root if it does not already exist. Initialize `07_communication.yaml` with `stage`, `schema_version`, `project` (including `project.started_at` as ISO timestamp), `status.current_cycle: A`, and the `upstream_snapshot` scaffold populated from the upstream artifacts. Create `07_communication.py` with the shape specified below.
-4. Every cycle: extend `07_communication.py` by writing or updating the cycle's function (`run_cycle_a`, `run_cycle_b`, ...). The function must produce every non-null `evidence_key` named in the cycle's checklist.
+4. Every cycle: extend `07_communication.py` by writing or updating the cycle's function (`run_cycle_a`, `run_cycle_b`, ...). The function must produce every required evidence key named by the cycle spec.
 5. Run `python {scripts_dir_name}/07_communication.py --cycle {cycle}`. Capture stdout.
-6. Parse stdout as JSON. Use the parsed dict as this cycle's candidate evidence for Step 2 and Step 3; Step 5 records a compact summary in `cycle_history[*].script_evidence`. The script has already mirrored the same JSON to `{scripts_dir_name}/stdout/cycle_{cycle}.json` for external inspection; do not copy it into the canonical YAML.
+6. Parse stdout as JSON. Use the parsed dict as this cycle's candidate evidence for Step 2 and Step 3; Step 5 records a compact summary in `decision_ledger[*].script_evidence`. The script has already mirrored the same JSON to `{scripts_dir_name}/stdout/cycle_{cycle}.json` for external inspection; do not copy it into the canonical YAML.
 7. Scan stderr and stdout for unhandled exceptions. Any unhandled exception is a blocking defect and must be fixed before continuing. Functions that intentionally demonstrate failure must be explicitly flagged with a `# expected_failure` comment.
 
 Script shape: one `run_cycle_*` function per cycle, a `load_state()` helper that reads `07_communication.yaml`, helpers that read upstream artifacts read-only, an `argparse --cycle X` CLI, and a `main()` that prints exactly one JSON object to stdout. Claude writes the file from scratch in Cycle A and extends it with a new function at the start of every subsequent cycle.
@@ -238,9 +236,9 @@ Script rules:
 - The script does not write to `07_communication.yaml`. Only the model writes the canonical YAML.
 - The script only scans and extracts. It does not compute new statistics, fit new models, or run new queries on raw or cleaned data. The only admissible script computations are presentation-level scans: ASCII encoding check, section-presence scan, data-dictionary scan, degeneracy count over existing companion files, regex diffs between deliverable text and the evaluate claim survival registry.
 - Heavy data (arrays, full DataFrames) is summarized, not dumped. Evidence packets stay compact.
-- Per-file provenance (schema, encoding, sha256) is emitted only the first time a file is recorded -- typically Cycle A iter 1. After it lands in `provenance.files`, neither the stdout packet nor `cycle_history[*].script_evidence` re-emits those fields; downstream cycles reference those files by filename.
+- Per-file provenance (schema, encoding, sha256) is emitted only the first time a file is recorded -- typically Cycle A iter 1. After it lands in `provenance.files`, neither the stdout packet nor `decision_ledger[*].script_evidence` re-emits those fields; downstream cycles reference those files by filename.
 - Seeds are set inside the function if any stochastic step runs.
-- No generic helpers at module scope beyond those named in the Script shape above. Any helper introduced for a cycle lives inside that cycle's function and is removed once the cycle passes.
+- Stable helper functions or sibling helper modules are allowed when they reduce duplication and improve reproducibility. Helpers must be deterministic, documented briefly, and must not write canonical YAML or access restricted artifacts.
 
 ### Step 2: Human Review
 
@@ -248,13 +246,13 @@ Interactive mode:
 1. Present the script evidence inline, concisely.
 2. Scan the evidence for ambiguities, decision points the model cannot resolve alone, and research topics worth seeding into Step 3 beyond the cycle's default research_questions.
 3. If at least one such item exists, dispatch `AskUserQuestion` with 1-3 questions targeting them. Otherwise proceed directly to Step 3. Cycle B always has at least one ambiguity by design (the audience is not yet identified); the AskUserQuestion dispatch in Cycle B carries the audience questions listed in `cycles/B.yaml`.
-4. When AskUserQuestion was dispatched, record the user's answers as `user_observations` in the pending cycle_history entry. Pass them into Step 3 subagent prompts via the `User observations:` field.
+4. When AskUserQuestion was dispatched, record the user's answers as `user_observations` in the pending decision_ledger entry. Pass them into Step 3 subagent prompts via the `User observations:` field.
 
 Auto mode: apply the self-review loop from `../auto-mode.md`. Self-correct within the configured budget, then proceed unless an escalation trigger fires.
 
 ### Step 3: Subagent Review
 
-Dispatch two subagents in parallel.
+Run subagents only when the cycle risk warrants it. Use the research subagent only when outside domain or methodological information can materially change a decision. Use the evaluation subagent on high-risk cycles, unresolved blocking issues, or stage close; otherwise perform the acceptance-criteria check inline.
 
 Research subagent:
 
@@ -277,7 +275,7 @@ Agent(
   - Delivery format: {format from Cycle B, or "not yet chosen" if Cycle A or B}
   - Script evidence for this cycle: {compact summary of script_evidence}
 
-  User observations: {cycle_history entry's user_observations from Step 2, or "none"}
+  User observations: {decision_ledger entry's user_observations from Step 2, or "none"}
 
   Answer these research questions for Cycle {X} ({cycle focus}):
   {research_questions list from the cycle YAML}
@@ -315,22 +313,20 @@ Agent(
   Cycle focus: {cycle focus description}
   Cycle YAML for reference: {cycles/{X}.yaml full content}
   Script evidence produced this iteration: {the candidate script_evidence}
-  User observations: {cycle_history entry's user_observations from Step 2, or "none"}
+  User observations: {decision_ledger entry's user_observations from Step 2, or "none"}
 
   Produce this structured output, in order, with these exact section headings:
 
   EVALUATION: Cycle {X} - {focus}
 
-  UNANSWERED CHECKLIST ITEMS (list the IDs of any checklist item that was not answered -- absence of an item's evidence_key in the script output, or absence of the corresponding judgment, counts as unanswered; items with a matching `skip_when` condition are not unanswered):
+  MISSING REQUIRED EVIDENCE (list required evidence keys or judgment outputs that are absent; evidence with a satisfied skip rule is not missing):
   - Unanswered: [list of IDs, or "none"]
 
-  CYCLE-SPECIFIC PCS QUESTIONS (from the cycle YAML `pcs_focus.items`; answer each one explicitly in the DEFECT SCAN below if any are defined, otherwise state "none defined"):
+  CYCLE-SPECIFIC PCS QUESTIONS (from `pcs_focus.items`, if any):
   {pcs_focus.items from the cycle YAML, one bullet per item, or "none defined"}
 
   DEFECT SCAN (adversarial mode):
-  Assume the work contains errors. Actively falsify each gate and checklist
-  answer rather than confirm them. For each gate marked PASS, state the
-  specific failure mode you tested and ruled out. Categories: claim inflation,
+  Assume the work contains errors. Actively falsify the acceptance criteria and material evidence rather than confirm them. Record only failures or non-obvious risks; do not write PASS notes for every criterion. Categories: claim inflation,
   caveat suppression, boundary widening, computation-boundary violations,
   recommendation overreach, selective reporting, visualization misleading,
   audience mismatch, narrative overreach, encoding corruption, data-dictionary
@@ -345,7 +341,7 @@ Agent(
   - Defect 1: BLOCKING | NON-BLOCKING - [one-line reason]
   - Defect 2: BLOCKING | NON-BLOCKING - [one-line reason]
 
-  GATE ASSESSMENTS (use gate IDs from the cycle YAML; list every gate, not only failures. A gate whose `depends_on` includes any unanswered item fails automatically):
+  ACCEPTANCE CRITERIA ASSESSMENT (list only failed criteria or non-obvious criteria that materially affected the decision; missing required evidence fails dependent criteria):
   - {gate_id}: PASS | FAIL - [evidence]
 
   FIDELITY CHECK (Cycles C, D, F):
@@ -363,16 +359,16 @@ Agent(
   FINAL COUNTS:
   Unanswered items: [count]
   Blocking defects: [count]
-  Failed gates: [count]
+  Failed criteria: [count]
 
   Be objective. Not harsh, not lenient.
   """
 )
 ```
 
-When both subagents return, the model parses three counts from the evaluation output: `Unanswered items`, `Blocking defects`, `Failed gates`. `blocking_failures = unanswered + blocking_defects + failed_gates`; `blocking_failures == 0` means PASS. Every checklist item must be answered (or formally skipped via a matching `skip_when`) for the cycle to pass.
+When both subagents return, the model parses three counts from the evaluation output: `Unanswered items`, `Blocking defects`, `Failed criteria`. `blocking_failures = unanswered + blocking_defects + failed_criteria`; `blocking_failures == 0` means PASS. Every required evidence key must be produced or formally skipped, and every acceptance criterion must pass or be explicitly overridden.
 
-Digest the subagent replies into `cycle_history[*].subagents`; the replies themselves stay in memory. Admit something to `subagents` when a future reader needs it to reconstruct why this path was chosen.
+Digest the subagent replies into `decision_ledger[*].subagents`; the replies themselves stay in memory. Admit something to `subagents` when a future reader needs it to reconstruct why this path was chosen.
 
 Include:
 - `research_sources`: URLs that actually tipped a call, each paired with a one-line claim. Drop sources that merely confirmed obvious baseline facts or rephrased what was already known.
@@ -382,8 +378,8 @@ Include:
 
 Exclude:
 - Prose summaries, meta-commentary, or "the subagent reviewed and confirmed" filler.
-- Restatements of checklist questions, gate definitions, `research_questions`, or `script_evidence` already on file.
-- Per-gate PASS notes when nothing interesting happened. Only gates whose reasoning belongs in the audit record.
+- Restatements of checklist questions, acceptance-criteria definitions, `research_questions`, or `script_evidence` already on file.
+- Per-criterion PASS notes when nothing interesting happened. Only failed or non-obvious criteria whose reasoning belongs in the audit record.
 - Sources that confirmed baseline facts without changing behavior.
 
 Keep the schema as the authoritative field list. If something the subagent surfaced has no schema home, fit it into `open_risks` or leave it out.
@@ -393,8 +389,8 @@ Keep the schema as the authoritative field list. If something the subagent surfa
 When both subagents return:
 
 1. Verify each result is non-empty and contains its required sections. If malformed, escalate to the user (interactive) or follow `../auto-mode.md` (auto).
-2. Parse `Unanswered items`, `Blocking defects`, `Failed gates` from the evaluation output.
-3. Compute `blocking_failures = unanswered + blocking_defects + failed_gates`.
+2. Parse `Unanswered items`, `Blocking defects`, `Failed criteria` from the evaluation output.
+3. Compute `blocking_failures = unanswered + blocking_defects + failed_criteria`.
 4. Apply the decision matrix.
 
 Decision matrix:
@@ -420,13 +416,10 @@ Auto mode: apply the autonomous decision protocol from `../auto-mode.md`.
 
 ### Step 5: Log
 
-Append one entry to `cycle_history`. Required fields:
+Append one entry to `decision_ledger`. Required fields:
 
 - `cycle`, `iteration`
-- `unanswered` (list of checklist IDs that could not be answered; empty list when all were answered or formally skipped)
-- `script_evidence` (compact summary only: 4-8 one-line bullets, or one-line value per `evidence_key` from the cycle YAML). Do not re-emit the full JSON, full DataFrames, or full arrays; after Cycle A iter 1, do not re-emit file schema, encoding, or sha256 -- those are immutable and live in `provenance.files`.
-- `subagents.research_sources`, `subagents.decisions`, `subagents.rejected_alternatives`, `subagents.open_risks`, `subagents.blocking_failures` (populate each only with entries that materially shaped this iteration; empty lists are valid)
-- `decision`
+- `decision`, `blocking_failures`, `blocking_reason`, `evidence_summary`, `changed_fields`, and `next_action`
 
 Write conditional fields only when they apply:
 
@@ -434,9 +427,9 @@ Write conditional fields only when they apply:
 - `decision_reason`: required when `decision != pass`.
 - `override`: `{reason, gate}` only when a FAIL was overridden.
 
-`blocking_failures` (0 = PASS, >0 = FAIL) is the enforceable integer summary. Per-gate reasoning enters `cycle_history` only through `subagents.decisions[*]` or `subagents.rejected_alternatives[*]` when a gate's reasoning materially changed the outcome; never as a full gate-by-gate restatement.
+`blocking_failures` (0 = PASS, >0 = FAIL) is the enforceable integer summary. Record only material failed criteria, rejected alternatives, or source-backed decisions; do not store Per-criterion PASS notes or full subagent output.
 
-Update every canonical-YAML field named in a checklist item's `writes_to`, but only for fields this project actually populates. Leave non-applicable optional fields out entirely rather than setting them to null. Cycle-specific `step4_additions` are applied at this point if the cycle YAML defines them. `pcs_focus` is consumed by the Step 3 evaluation subagent prompt and produces no separate Step 5 entry.
+Update every canonical-YAML field named by the cycle spec `writes` or legacy `writes_to`, but only for fields this project actually populates. Leave non-applicable optional fields out entirely rather than setting them to null. Cycle-specific `step4_additions` are applied at this point if the cycle YAML defines them. `pcs_focus` is consumed by the Step 3 evaluation subagent prompt and produces no separate Step 5 entry.
 
 Set `status.current_cycle` to the next cycle letter (or keep for another iteration). Append the closed cycle letter to `status.completed_cycles` only when the cycle passes or is closed by override.
 
@@ -573,7 +566,7 @@ After the terminal fidelity review clears or the user overrides it:
    - `Uncertainty Presentation`
    - `Visualizations`
    - `Deliverable Register` (primary + companion files)
-   - `Cycle Summary` (one line per cycle, iteration counts, blocking failures)
+   - `Decision Summary` (one line per cycle, iteration counts, blocking failures)
    - `PCS Assessment` (overall from pcs_review, per-check summary, disposition)
 
    Omit sections whose YAML keys are empty or absent. Reference the subagent verbatims through the YAML; the markdown is a rendered summary.
@@ -612,7 +605,7 @@ After the terminal fidelity review clears or the user overrides it:
 
 When backtracking:
 
-- Preserve every entry in `cycle_history`. Append new iterations.
+- Preserve every entry in `decision_ledger`. Append new iterations.
 - Unlock the stage: set `status.locked_at: null`.
 - Re-run the affected cycles and re-render the markdown at the end.
 - Mark the superseded deliverable in `deliverable.primary` by renaming the stale file with a `.superseded` suffix rather than deleting it. Keep the audit trail intact.

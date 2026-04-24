@@ -42,7 +42,7 @@ Stage purposes:
 
 ## Canonical Artifact Model
 
-Every stage produces a compact, fixed artifact set. No notebooks. No stage-wide metrics file. No separate claim-boundary registry file. Compact metrics, gate state, narrowing history, and cycle history live inside the canonical YAML.
+Every stage produces a compact, fixed artifact set. No notebooks. No stage-wide metrics file. No separate claim-boundary registry file. Compact metrics, acceptance state, narrowing history, and a compact decision ledger live inside the canonical YAML.
 
 | Artifact | Role |
 |----------|------|
@@ -70,8 +70,8 @@ Mode-selection rules:
 
 Auto mode keeps the same rigor:
 
-- every checklist item still must be answered.
-- every gate still must be evaluated.
+- every required evidence key still must be produced or explicitly skipped.
+- every acceptance criterion still must be evaluated.
 - route files still narrow behavior.
 - PCS and integrity reviews still run.
 - backtracking still must be logged and preserved.
@@ -112,11 +112,14 @@ Each per-cycle YAML carries:
 
 - `upstream`: canonical-YAML fields that must be set before the cycle runs
 - `setup_side_effects`: one-time actions (typically for the first cycle only)
-- `checklist`: the items the cycle must answer. Each item carries `id`, `question`, `evidence_key` (script output key, or `null` if judgment-driven), `writes_to` (canonical-YAML field or list of fields, or `null`), and optionally `skip_when` (absent means "never skip")
-- `gates`: verifiable conditions. Single-dep gates encode the dep in the ID (e.g. `A01-loadable`); multi-dep gates use a short ID plus `depends_on`
-- `research_questions`: topics for the research subagent
+- `required_evidence`: the evidence keys the script or model must produce for the cycle
+- `acceptance_criteria`: 3-5 verifiable conditions that must hold for the cycle to close
+- `writes`: mapping from evidence or judgment outputs to canonical-YAML fields
+- `research_questions`: topics for a research subagent only when outside information can materially change a decision
 - `guidance`: short, cycle-specific judgment rules
-- `step4_additions`, `pcs_focus`, `log_extension`: present only when the cycle adds a specific discipline. `pcs_focus` holds cycle-specific PCS questions injected into the evaluation subagent prompt; it has no separate Step 5 application.
+- `pcs_focus` or `log_extension`: present only when the cycle adds a specific discipline
+
+Legacy cycle files may still use `checklist` and `gates`. Treat each non-null `evidence_key` as `required_evidence`, each `writes_to` as `writes`, and collapse gates into `acceptance_criteria`. Do not perform a second criterion-by-criterion proof when a checklist answer already satisfies the acceptance criterion.
 
 ### Load Pattern
 
@@ -222,23 +225,22 @@ Route files may narrow the stage-core. They may not override reproducibility rul
 
 Two patterns every stage must follow.
 
-### 1. Per-cycle Checklists and Gates
+### 1. Per-cycle Evidence and Acceptance Criteria
 
-Every cycle is specified by a cycle YAML under `references/{stage}/cycles/{cycle}.yaml`. That file defines the checklist, gates, research questions, and guidance for that cycle.
+Every cycle is specified by a cycle YAML under `references/{stage}/cycles/{cycle}.yaml`. That file defines the required evidence, acceptance criteria, optional research questions, and guidance for that cycle.
 
 Rules:
 
-- Checklist IDs use the format `{CycleLetter}{TwoDigitNumber}` (A01, A02, B01, ...).
-- Each checklist item carries `evidence_key` (the JSON key the script must produce for this item, or `null` if judgment-driven) and `writes_to` (the canonical-YAML field or list of fields the answer populates, or `null` if the item only feeds gates).
-- Every item must be answered for a cycle to pass. Unanswered items feed `blocking_failures` directly; there is no 1:1 "was this answered" gate. Gates exist only for checks stricter than "the item was answered."
-- Gates depend on one or more checklist items. Single-dep gates encode the dep in the gate ID (e.g. `A01-loadable` depends on A01). Multi-dep gates use a short ID plus an explicit `depends_on: [ID1, ID2, ...]` field. If any depended-on item was not answered, the gate auto-fails without judgment.
-- The evaluation subagent lists the unanswered items, the blocking defects, and the failed gates. The model sums the three counts into `blocking_failures`.
-- Items may not be skipped unless a `skip_when` condition is present and satisfied. Absent `skip_when` means "never skip."
-- Every gate is binary: PASS or FAIL. If a project needs to proceed with a bounded risk, use `override: {reason, gate}` rather than a soft-fail concept.
+- Required evidence keys are the script JSON keys or model judgments that must exist before the cycle can close.
+- Acceptance criteria are the enforceable cycle bar. Keep them few enough to reason about directly; 3-5 criteria is the default target.
+- A missing required evidence key or failed acceptance criterion is a blocking failure.
+- Skip rules must be explicit. If a required evidence key has no skip rule, absence is blocking.
+- Legacy `gates` are still valid but should be interpreted as acceptance criteria. Do not require a separate 1:1 gate for every checklist item.
+- If a project needs to proceed with a bounded risk, use `override: {reason, criterion}` rather than a soft-fail concept.
 
 ### 2. Decision Matrix
 
-Every Step 4 (Decision) in every stage uses a two-row matrix based on `blocking_failures` (unanswered checklist items + blocking defects + failed gates from the evaluation subagent):
+Every cycle decision uses a two-row matrix based on `blocking_failures` (missing required evidence + blocking defects + failed acceptance criteria):
 
 | blocking_failures | forward actions allowed |
 |-------------------|------------------------|
@@ -288,6 +290,7 @@ projects_root/
       05_analysis.py
       06_evaluation.py
       07_communication.py
+      *_constraints.json       # Optional clean/preprocess constraint artifacts.
       *.json                   # Optional companion artifacts shared across cycles.
       stdout/                  # Latest stdout per cycle, written by the stage script:
                                #   cycle_{cycle}.json
@@ -315,9 +318,10 @@ Rules:
 - Each function returns a dict. `main()` prints exactly one JSON object to stdout. Nothing else on stdout.
 - The script reads the canonical stage YAML to find data paths and prior decisions. It does not write the canonical YAML; only the model writes the canonical YAML.
 - Heavy data (full DataFrames, long arrays) is summarized, not dumped. Evidence packets stay compact.
-- `cycle_history[*].script_evidence` in the canonical YAML carries a compact summary of each cycle's stdout (4-8 one-line bullets, or one-line value per `evidence_key`). The stage script writes its latest stdout to `{scripts_dir_name}/stdout/cycle_{cycle}.json` for external inspection; the model never copies that file into the canonical YAML.
-- Per-file provenance (schema, encoding, sha256) is emitted only the first time a file is recorded -- typically Cycle A iter 1. After it lands in `provenance.files`, neither the stdout packet nor `cycle_history[*].script_evidence` re-emits those fields; downstream cycles reference those files by filename.
+- `decision_ledger[*].evidence_summary` in the canonical YAML carries a compact summary of each cycle's stdout (4-8 one-line bullets, or one-line value per material evidence key). The stage script writes its latest stdout to `{scripts_dir_name}/stdout/cycle_{cycle}.json` for external inspection; the model never copies that file into the canonical YAML.
+- Per-file provenance (schema, encoding, sha256) is emitted only the first time a file is recorded -- typically Cycle A iter 1. After it lands in `provenance.files`, neither the stdout packet nor `decision_ledger[*].evidence_summary` re-emits those fields; downstream cycles reference those files by filename.
 - Seeds are set inside the function whenever stochastic steps run, and the seed value is echoed into the evidence packet.
+- Stable helper functions or sibling helper modules are allowed when they reduce duplication and improve reproducibility. Helpers must be deterministic, documented briefly, listed in provenance when project-local, and must not write canonical YAML or access restricted artifacts.
 - After script execution, scan stdout and stderr for unhandled exceptions. Any unhandled exception is a blocking defect and must be fixed before continuing, unless the function body explicitly marks an expected failure with a `# expected_failure` comment.
 
 ## Universal Rules
@@ -330,8 +334,8 @@ Rules:
 - Keep one canonical YAML plus one rendered markdown per completed stage in the configured documentation directory.
 - Re-run from raw data plus protocol-defined frozen artifacts, not from ad hoc saved intermediates.
 - Record random seeds when stochastic procedures matter.
-- Preserve an audit trail when backtracking. `cycle_history` is append-only; new iterations append to the list and past entries remain as recorded.
-- Keep `cycle_history` entries to the schema defined in the stage entry file; that schema is exhaustive. Route findings without a schema home into `subagents.open_risks`, attach them to an existing `subagents.decisions[*]` or `subagents.rejected_alternatives[*]` entry, or leave them out.
+- Preserve an audit trail when backtracking. `decision_ledger` is append-only; new iterations append to the list and past entries remain as recorded.
+- Keep decision ledger entries compact. Analytical findings belong in their destination fields, not in a parallel process log.
 - Generated project documents must reference real project files. Every reference must point to a file that currently exists in the project.
 - Derive README summaries from the actual project filesystem state and verify them against artifacts on disk.
 
@@ -379,7 +383,7 @@ Later stages may force a return to earlier stages. Backtrack when any of the fol
 
 When backtracking:
 
-- Preserve the earlier record. `cycle_history` entries are append-only.
+- Preserve the earlier record. `decision_ledger` entries are append-only.
 - Unlock the stage (set `status.locked_at: null`) and re-run the affected cycles.
 - Re-render the markdown at the end of the reopen.
 - Preserve earlier work by marking it superseded in a new iteration; past entries stay as written.

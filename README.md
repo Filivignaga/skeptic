@@ -8,9 +8,9 @@
 
 ---
 
-Ask any AI to "analyze this CSV" and watch what happens: it skips the question, picks a method, runs it, and hands you results with zero audit trail. The output looks professional. The methodology is indefensible.
+Ask any AI to "analyze this dataset" and watch what happens: it skips the question, picks a method, runs it, and hands you results with zero audit trail. The output looks professional. The methodology is indefensible.
 
-Skeptic fixes this. It forces a 7-stage sequence where each stage has explicit gates, and claims that don't survive evaluation never reach the deliverable.
+Skeptic fixes this. It forces a 7-stage sequence where each stage has explicit acceptance criteria, and claims that don't survive evaluation never reach the deliverable.
 
 ## How It Works
 
@@ -26,7 +26,7 @@ Skeptic fixes this. It forces a 7-stage sequence where each stage has explicit g
 
 `/skeptic:auto` runs the full sequence autonomously, pausing only for startup intake, escalation triggers, required human-input checkpoints, and stage-boundary approvals.
 
-Each stage produces auditable artifacts. Each gate is enforceable. Backtracking is explicit and logged.
+Each stage produces auditable artifacts. Each acceptance criterion is enforceable. Backtracking is explicit and logged.
 
 ## Why This Exists
 
@@ -50,7 +50,7 @@ Each stage produces auditable artifacts. Each gate is enforceable. Backtracking 
 | PCS evaluation gate | Yes | No | No | No | No |
 | Route-specific analysis (6 types) | Yes | No | No | No | No |
 | Auditable artifact chain | Yes | Partial | Partial | No | Partial |
-| Dual-subagent review per cycle | Yes | Yes | No | No | No |
+| Conditional subagent review on high-risk cycles | Yes | Partial | No | No | No |
 | Prevents unsupported claims | Yes | Partial | Partial | No | No |
 | Knowledge compounding | No | Yes | No | No | No |
 | ML model shipping pipeline | No | Yes | Yes | Yes | Partial |
@@ -103,7 +103,7 @@ your-project/
 │   ├── 05_analysis.md         # Locked analysis contract + results
 │   ├── 06_evaluation.md       # PCS verdicts, claim survival registry
 │   └── 07_communication.md    # Final deliverable (surviving claims only)
-├── notebooks/                 # Executable analysis notebooks
+├── scripts/                   # Executable stage scripts and compact JSON evidence
 ├── data/                      # Cleaned data + partition metadata
 └── skeptic.yaml                # Project configuration
 ```
@@ -147,7 +147,6 @@ skeptic/
 ├── commands/                   # Slash command definitions (8 files)
 └── references/
     ├── core-principles.md      # Master architecture
-    ├── constraint-spec.md      # Constraint file format
     ├── auto-mode.md            # /skeptic:auto runtime
     ├── data-formats.md         # Format-agnostic ingest rules
     ├── formulate.md            # Stage 1

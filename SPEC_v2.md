@@ -2,7 +2,7 @@
 
 ## Goals
 
-Reduce per-sub-skill context usage while preserving the Veridical Data Science rigor, PCS discipline, gate and route machinery, and full audit trail of the current skill.
+Reduce per-sub-skill context usage while preserving the Veridical Data Science rigor, PCS discipline, acceptance-criteria and route machinery, and the compact audit trail of the current skill.
 
 The refactor is guided by six changes.
 
@@ -42,7 +42,7 @@ The refactor is guided by six changes.
   - project-side execution script
   - canonical stage YAML
   - final rendered markdown report
-- Compact metrics, gate state, narrowing history, and cycle history should live inside the canonical YAML when they are small and stage-specific.
+- Compact metrics, acceptance state, narrowing history, and decision ledger should live inside the canonical YAML when they are small and stage-specific.
 - `README.md` should hold a short summary block for stage completion and status visibility.
 - This keeps the file surface small and gives later chats one authoritative place to reload stage state.
 
@@ -52,12 +52,12 @@ The refactor is guided by six changes.
 - Each cycle YAML should contain the fields needed to run that cycle:
   - inputs
   - outputs
-  - checklists
-  - gates
+  - required evidence
+  - acceptance criteria
   - dependencies
   - required artifacts
   - a small `guidance` section with short judgment rules and execution goals
-- Each checklist and each gate should be defined once inside its own collection.
+- Each required evidence key and acceptance criterion should be defined once inside its own collection.
 - The model reads a cycle YAML file only when that cycle is about to run.
 - This keeps active context limited to the current cycle instead of the full stage design.
 
@@ -82,16 +82,16 @@ The refactor should move the skill toward:
 
 **What execution looks like now**
 1. read the long prose stage file
-2. create or append notebook cells
-3. execute the notebook
-4. reread notebook outputs
+2. create or append stage-script cycle functions
+3. execute the stage script for one cycle
+4. read the JSON evidence packet
 5. write cycle logs into `01_formulation.md`
 6. append rows to `metrics.md`
 7. keep `README.md` in sync
 8. write the claim-boundary YAML at finalization
 
 **Current output shape**
-- `notebooks/01_formulation.ipynb` -> working scratchpad, evidence, outputs
+- `scripts/01_formulation.py` -> executable stage script
 - `skeptic_documentation/01_formulation.md` -> cycle logs, raw subagent outputs, summary
 - `skeptic_documentation/metrics.md` -> metrics and repeated context
 - `skeptic_documentation/claim_boundary_registry.yaml` -> canonical claim boundary written late
@@ -102,7 +102,7 @@ The refactor should move the skill toward:
 ```text
 large prose instructions loaded first
         ->
-notebook-centered execution
+script-centered execution
         ->
 many outputs updated in parallel
         ->

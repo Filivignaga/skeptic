@@ -14,7 +14,7 @@ setup_side_effects:
   - Extend {scripts_dir_name}/03_cleaning.py with clean_data(visible_inputs, **judgment_call_params) covering every cleaning transform recorded in cleaning_decisions (Cycles A through C and any D-series follow-ups)
   - Extend {scripts_dir_name}/03_cleaning.py with preprocess_data(clean_outputs, **judgment_call_params, fit_params=None) covering every preprocessing and derived-variable transform recorded in preprocessing_decisions and derived_variables (Cycles E, F, and any G-series follow-ups); declare the helper as no-op with an explicit reason when Cycles E and F contributed no distinct transforms
   - Extend run_cycle_r to rerun both helpers against the protocol-visible inputs and compare against the stage-produced cleaned and preprocessed outputs under a deterministic equality rule
-  - Emit {scripts_dir_name}/clean_constraints.json with declared and derived constraints per ../constraint-spec.md
+  - Emit {scripts_dir_name}/clean_constraints.json with declared constraints from domain rules and derived constraints from observed clean outputs
   - Emit {scripts_dir_name}/preprocess_constraints.json, or an explicit no-additional-constraints file with a reason when Cycles E and F produced nothing new
 
 checklist:
@@ -54,7 +54,7 @@ guidance:
   - The script never writes to 03_cleaning.yaml; only the model does.
   - Declared-error constraint failures are hard defects. Relabeling a declared-error as declared-warn to paper over a failure is a defect of its own.
   - Keep helper signatures minimal and documented so examine and later stages can reuse them without reading the full script.
-  - See ../constraint-spec.md for the declared-and-derived constraint file format.
+  - Constraint files keep declared constraints separate from derived constraints. Declared constraints are normative and may block; derived constraints are informational unless explicitly promoted.
 
 step4_additions:
   description: After the standard decision, state each field listed below before closing the cycle. These populate reproducibility.* in the canonical YAML.

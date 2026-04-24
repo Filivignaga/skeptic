@@ -20,7 +20,7 @@ mandatory: false
 # The model does NOT create a new YAML file on disk for each follow-up.
 # Instead it materializes the concrete En spec inline inside 05_analysis.yaml
 # under a scratch area (status.active_followup_spec), runs the cycle, then
-# appends the closing cycle_history entry.
+# appends the closing decision_ledger entry.
 
 upstream:
   - "{list which canonical-YAML fields must be set before the follow-up runs, e.g. primary_execution.failure_details or challenger_execution.per_challenger[name].failure_details}"

@@ -12,7 +12,7 @@ mandatory: false
 # The model does NOT create a new YAML file on disk for each D{n} follow-up.
 # It materializes the concrete Dn spec inline inside 03_cleaning.yaml under a
 # scratch area (e.g., status.active_followup_spec), runs the cycle, then appends
-# the closing cycle_history entry.
+# the closing decision_ledger entry.
 #
 # Use this template as the shape for that inline spec.
 
@@ -36,9 +36,8 @@ checklist:
 gates:
   - id: "D{n}01-{short-name}"
     condition: "{condition that closes the unresolved cleaning topic}"
-  # Single-dep gates encode the checklist ID in the gate ID (e.g. D{n}01-resolved).
-  # Multi-dep gates use id: "D{n}-{short-name}" and depends_on: [D{n}01, D{n}02, ...].
-  # At least one gate is required so the cycle has an enforceable exit.
+  # Legacy gates are interpreted as acceptance criteria.
+  # At least one acceptance criterion is required so the follow-up has an enforceable exit.
 
 research_questions:
   - "{at most a handful; narrow to the unresolved cleaning topic}"

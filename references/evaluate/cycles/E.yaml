@@ -21,7 +21,7 @@ checklist:
     evidence_key: null
     writes_to: claim_survival_registry
   - id: E03
-    question: Is there any "survived" verdict that contradicts a FAIL gate logged in the cycle_history entries for Cycles B, C, or D?
+    question: Is there any "survived" verdict that contradicts a failed acceptance criterion logged in the decision_ledger entries for Cycles B, C, or D?
     evidence_key: null
     writes_to: null
   - id: E04
@@ -55,7 +55,7 @@ gates:
     depends_on: [E01, E02]
     condition: Every claim the analysis contract was designed to support has exactly one row in claim_survival_registry with a survival verdict, caveats where applicable, and a failure reason where applicable
   - id: E03-no-survived-contradicts-fail
-    condition: No "survived" verdict contradicts a FAIL gate logged in cycle_history for Cycles B, C, or D; any such contradiction downgrades the verdict to "survived with caveats" at minimum with the gap carried as a caveat
+    condition: No "survived" verdict contradicts a failed acceptance criterion logged in decision_ledger for Cycles B, C, or D; any such contradiction downgrades the verdict to "survived with caveats" at minimum with the gap carried as a caveat
   - id: E-boundary-respected
     depends_on: [E04, E05]
     condition: claim_boundary_final is equal to or narrower than upstream.claim_boundary_as_narrowed on scope, generalization_limit, verbs_allowed, and evidence_ceiling
@@ -69,7 +69,7 @@ research_questions:
 
 guidance:
   - The three survival verdicts are: survived (stable, adequate, defended, no material deviations -- passes to communicate without caveats), survived with caveats (conditional dimensions, marginal predictability, or non-fatal threats -- caveats are mandatory and cannot be dropped by communicate), did not survive (any fatal dimension -- passes to communicate only as an explicitly acknowledged limitation).
-  - If a gate failed earlier but the cycle still passed (for example via acknowledge_gap), the corresponding claim is "survived with caveats" at minimum with the gap carried as a caveat.
+  - If an acceptance criterion failed earlier but the cycle still passed (for example via acknowledge_gap), the corresponding claim is "survived with caveats" at minimum with the gap carried as a caveat.
   - If any claim requires widening the boundary to survive, it does not survive. Widening is never allowed within evaluate.
   - The interpretation synthesis belongs in evaluate. Audience framing, narrative suggestions, hedging language, and recommendations belong to communicate.
 
@@ -90,4 +90,4 @@ pcs_focus:
   items:
     - "P: Do survival verdicts align with what protocol's validation logic would predict for this evidence profile? Cite 02_protocol.yaml."
     - "C: Would reversing any single adjudication decision change a verdict from survived to survived-with-caveats (or vice versa)?"
-    - "S: Is every verdict traceable to specific cycle_history entries from Cycles B, C, and D with no assertion-only reasoning?"
+    - "S: Is every verdict traceable to specific decision_ledger entries from Cycles B, C, and D with no assertion-only reasoning?"

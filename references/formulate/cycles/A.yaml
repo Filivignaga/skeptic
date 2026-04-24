@@ -24,8 +24,8 @@ checklist:
     evidence_key: sample_rows                   # {filename: first_5_rows_as_records}
     writes_to: null
   - id: A03
-    question: What are the basic statistics and missing-value counts per column?
-    evidence_key: basic_stats_and_missing       # {filename: {column: {stat_summary, n_missing, pct_missing}}}
+    question: What is the dtype-aware profile for each loaded source, including numeric tails, categorical concentration and rare levels, datetime coverage, text length and empty/whitespace rates, ID uniqueness, and missingness?
+    evidence_key: profile_by_dtype              # {filename: {n_rows, n_cols, columns: {column: dtype-aware profile}, key_integrity: {column: uniqueness/duplicates/missingness}}}
     writes_to: null
   - id: A04
     question: For low-cardinality categorical columns, what are the value distributions?
@@ -61,6 +61,20 @@ gates:
   - id: A-no-red-flags
     depends_on: [A03, A04, A05]
     condition: No immediate structural red flags likely to derail formulation
+
+required_evidence:
+  - encoding
+  - schema
+  - sample_rows
+  - profile_by_dtype
+  - sha256
+
+acceptance_criteria:
+  - Source files load through the format-appropriate reader without silent row loss.
+  - Source metadata records format, reader, reader options, schema source, load warnings, encoding for text sources, and SHA-256.
+  - The dtype-aware profile is strong enough to reveal tails, rare levels, empty text, datetime gaps, ID collisions, and missingness risks when those structures exist.
+  - The approved framing is a stakeholder or scientific problem, not a method request.
+  - No splits, folds, or data-visibility partitions are created in formulate.
 
 format_aware_ingest:
   reference: ../data-formats.md
