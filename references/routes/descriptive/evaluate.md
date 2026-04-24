@@ -94,3 +94,7 @@ This is the route-specific guidance for Cycle D Phase 2.
 For each candidate error, assess plausibility given the data, design, and upstream audit trail. Document whether each is ruled out, plausible but unlikely, or plausible and concerning.
 
 **Expert falsification for descriptive questions:** Present the headline description alongside a plausible alternative description that could have emerged under a different but defensible set of analytic choices (different denominator, different aggregation level, different subgroup boundaries). Ask whether the real description makes more domain sense. If no domain expert is available, document the gap explicitly. The alternative description must come from actual sensitivity or challenger outputs in the analysis notebook, not from hypothetical scenarios.
+
+## Protected surface
+
+Route overlays may narrow this stage's surface. They may not rewrite or remove fields from the protected surface declared in `references/core-principles.md` §4.8 (decision register, reconciliation table / chain, claim-critical helper set). A route-specific requirement that shrinks the decision register, breaks the reconciliation arithmetic, or removes a helper is rejected regardless of route-specific rationale.

@@ -1,6 +1,7 @@
 cycle: F
 focus: Evaluation Assembly and Handoff
 mandatory: true
+subagents: [evaluator]   # F3: evaluation assembly and handoff packaging are mechanical; no domain-fact lookup changes gate outcomes
 
 upstream:
   - claim_survival_registry

@@ -1,6 +1,8 @@
+# C1: every required judgment gate below MUST dispatch AskUserQuestion; reply 'agent decides' is valid but the gate must be dispatched and recorded.
 cycle: B
 focus: Stability Adjudication
 mandatory: true
+subagents: [research, evaluator]   # F3: divergence classification and stability verdicts require domain and methods knowledge
 
 upstream:
   - upstream.analysis_contract
@@ -37,6 +39,10 @@ checklist:
     writes_to: null
   - id: B07
     question: For each claim the analysis contract was designed to support, what is the stability verdict (stable, conditionally stable, or unstable), and which specific notebook or script outputs from analyze ground the verdict?
+    # Threshold derivation rule: stability-verdict thresholds are locked in contract.perturbation_plan (analyze Cycle A); mode `agent_chosen` is forbidden.
+    # Evaluate applies the locked threshold with its derivation block; it does not re-select or re-derive the threshold here.
+    # Expected-exceedance set: the set of metrics expected to move under each perturbation is the transitive closure over contract.metric_graph
+    # (authored in analyze Cycle A). Reference it read-only; do not hand-author or extend the expected set in this cycle.
     evidence_key: null
     writes_to: stability_verdicts
   - id: B08
@@ -69,3 +75,21 @@ guidance:
   - Convergent results strengthen the claim; divergent results must be diagnosed (genuine instability, known method limitation, or execution artifact) before driving a verdict.
   - All challengers producing materially different results from the primary is NOT a backtracking trigger on its own. Backtracking is warranted only when divergence invalidates the primary conclusion across the claim boundary.
   - The three stability verdicts are: stable (conclusions survive every perturbation), conditionally stable (survives most, sensitive to specific axes -- caveats required), unstable (changes materially under reasonable perturbations -- claim must be downgraded or killed).
+  - Threshold lock: do not re-select or re-derive stability thresholds here. Use the values in contract.perturbation_plan with their derivation blocks. Mode agent_chosen is forbidden.
+  - metric_graph read-only: the expected exceedance set for each perturbation is derived from contract.metric_graph (transitive closure). Unexpected movers (metrics outside the closure set that changed) are flagged as findings; the closure set itself is not modified.
+
+# Evaluator checks per required gate:
+# (1) cycle_history[*].subagents.decisions[*].judgment_gate.gate_id matches the required gate_id
+# (2) judgment_gate.reply is a non-null string
+# (3) if reply == "agent decides", both agent_decision_if_delegated and agent_rationale are non-null
+# Any failure is a blocking defect.
+
+judgment_gates:
+  - gate_id: B06-divergence-classification
+    stage: evaluate
+    cycle: B
+    trigger: "B06 fires when at least one axis or challenger verdict is not mechanically determined by arithmetic (i.e., divergence class is ambiguous between unstable, limitation, and artifact)"
+    question_text: "Divergence classification for <axis_or_challenger_id>: agent proposes class=<unstable|limitation|artifact> based on B02-B05 evidence. Alternative class=<alt> would change the stability verdict. Confirm, choose an alternative, or reply 'agent decides'."
+    options_shape: "labeled_options: convergent | unstable | limitation | artifact; reply 'agent decides' is valid"
+    recorded_under: "cycle_history[*].subagents.decisions[*].judgment_gate"
+    required: true

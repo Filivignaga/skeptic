@@ -1,6 +1,7 @@
 cycle: D{n}                          # D1, D2, D3, ... assigned in order opened
 focus: "{short description of the follow-up topic, e.g. 'Disentangle likely measurement artifact in variable X from substantive variation'}"
 mandatory: false
+subagents: [research, evaluator]   # F3: safe default; set to [evaluator] if no research_question would change a gate outcome
 
 # Follow-up cycles run under the exact same 5-step cycle protocol as the
 # mandatory cycles A, B, C, and E. They run after Cycle C and before Cycle E,
@@ -50,6 +51,7 @@ gates:
   # Multi-dep gates use id: "D{n}-{short-name}" and depends_on: [D{n}01, D{n}02, ...].
   # At least one gate is required so the cycle has an enforceable exit beyond "items answered".
 
+# B1: numeric values in prose must cite a named evidence_key; see examine.md Numeric binding rule
 research_questions:
   - "{at most a handful; narrow to the follow-up topic}"
 

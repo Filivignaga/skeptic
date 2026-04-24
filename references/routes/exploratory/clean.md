@@ -26,3 +26,7 @@ description: Stage-specific route file for the Skeptic clean stage for explorato
 - Apparent structure aligns with source, batch, merge, coding, or timestamp artifacts.
 - A needed preprocessing or derivation choice depends on the exact exploratory method family or tuning strategy.
 - It remains unresolved whether unusual records are defects or the phenomenon the route is supposed to surface.
+
+## Protected surface
+
+Route overlays may narrow this stage's surface. They may not rewrite or remove fields from the protected surface declared in `references/core-principles.md` §4.8 (decision register, reconciliation table / chain, claim-critical helper set). A route-specific requirement that shrinks the decision register, breaks the reconciliation arithmetic, or removes a helper is rejected regardless of route-specific rationale.

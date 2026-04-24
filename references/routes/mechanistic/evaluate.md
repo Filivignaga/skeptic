@@ -71,3 +71,7 @@ description: Stage-specific route file for the Skeptic evaluate stage for mechan
 - Overfitting through structure: assess whether the model's structural complexity is justified by identifiability and data support, or whether the fit would degrade substantially under a simpler structure. Flexible structures that fit well but collapse under structural perturbation are overfitting.
 - Narrative coherence is not evidence: a biologically or physically compelling story about why the mechanism works does not count as validity evidence. Demand quantitative support (identifiability, parameter plausibility, simulation-based validation, boundary-condition behavior) for every element of the mechanism claim.
 - Regime extrapolation pressure: present the user with the boundary of the calibrated regime and ask whether the mechanism claim implies behavior beyond that boundary. If yes, assess whether out-of-regime predictions are testable or whether the claim must be explicitly restricted.
+
+## Protected surface
+
+Route overlays may narrow this stage's surface. They may not rewrite or remove fields from the protected surface declared in `references/core-principles.md` §4.8 (decision register, reconciliation table / chain, claim-critical helper set). A route-specific requirement that shrinks the decision register, breaks the reconciliation arithmetic, or removes a helper is rejected regardless of route-specific rationale.

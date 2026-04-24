@@ -1,6 +1,7 @@
 cycle: D
 focus: Stage Prohibitions and Backtracking Triggers
 mandatory: true
+subagents: [evaluator]   # F3: prohibitions and backtracking triggers are derived mechanically from protocol commitments
 
 upstream:
   - data_usage.mode

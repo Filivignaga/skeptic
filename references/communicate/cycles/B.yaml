@@ -1,10 +1,12 @@
 cycle: B
 focus: Audience and Delivery Framing
 mandatory: true
+subagents: [research, evaluator]   # F3: audience conventions and delivery framing require domain and communication knowledge
 
 upstream:
-  - upstream_snapshot.approved_question
-  - upstream_snapshot.claim_boundary
+  # A1: read upstream facts directly from the named source YAML at cycle start; do not copy into this YAML
+  - 01_formulation.yaml:contract.approved_question
+  - 01_formulation.yaml:claim_boundary
   - plan.claims_to_communicate
   - plan.null_result_mode
 

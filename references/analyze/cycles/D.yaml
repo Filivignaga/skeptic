@@ -1,6 +1,7 @@
 cycle: D
 focus: Sensitivity and Challenger Execution
 mandatory: true
+subagents: [evaluator]   # F3: sensitivity and challenger execution is mechanical; thresholds are already locked in the contract
 
 upstream:
   - contract.perturbation_plan
@@ -30,7 +31,10 @@ checklist:
     writes_to: challenger_execution.per_challenger
   - id: D05
     question: What is the comparison table across primary, each perturbation axis, and each challenger, using like-for-like metrics and marking material differences without interpreting whether divergence constitutes instability?
-    evidence_key: comparison_table             # [{quantity, primary, per_axis: {}, per_challenger: {}, material_difference: bool, threshold_used: if any}]
+    # Threshold derivation rule: mode `agent_chosen` is forbidden. threshold_used must carry a derivation block pre-locked in contract.perturbation_plan.
+    # Expected-exceedance set derivation rule: for each perturbed variable the set of metrics expected to move is the transitive closure
+    # over contract.metric_graph -- not hand-authored. Do not author or widen the expected set here.
+    evidence_key: comparison_table             # [{quantity, primary, per_axis: {}, per_challenger: {}, material_difference: bool, threshold_used: {value, derivation: {mode, source, computation, value, approved_by, approved_at}}, expected_to_move: bool}]
     writes_to: comparison_table
   - id: D06
     question: If any perturbation or challenger could not execute, is the failure documented as an execution-viability problem with an En follow-up opened or an upstream reopen triggered?
@@ -75,3 +79,5 @@ guidance:
   - Every run records seeds and parameters; unseeded stochastic steps are absent or explicitly justified.
   - If a sensitivity or challenger run accesses a restricted artifact, treat it as a blocking defect and reopen protocol.
   - All-challengers-diverging is a finding for evaluate, not a trigger for revising the primary result.
+  - Threshold derivation: every numeric threshold_used in the comparison table must carry a derivation block locked in contract (Cycle A); mode agent_chosen is forbidden.
+  - Expected exceedances: the set of metrics expected to move under a perturbation to variable X is the transitive closure over contract.metric_graph. Do not hand-author this set in Cycle D; derive it mechanically. Metrics not in the closure set are unexpected movers and must be flagged.

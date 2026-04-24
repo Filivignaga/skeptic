@@ -142,3 +142,7 @@ Cycle C (Primary Execution) follows this order:
 7. Run model diagnostics: residual plots, influence measures, goodness-of-fit statistics. These are execution completeness checks, not result-quality gates.
 8. Record computational diagnostics: convergence status, iteration count, runtime, numerical warnings, effective sample size, effective number of parameters.
 9. Record seeds and full parameter state for exact reproduction.
+
+## Protected surface
+
+Route overlays may narrow this stage's surface. They may not rewrite or remove fields from the protected surface declared in `references/core-principles.md` §4.8 (decision register, reconciliation table / chain, claim-critical helper set). A route-specific requirement that shrinks the decision register, breaks the reconciliation arithmetic, or removes a helper is rejected regardless of route-specific rationale.

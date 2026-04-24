@@ -1,6 +1,8 @@
+# C1: every required judgment gate below MUST dispatch AskUserQuestion; reply 'agent decides' is valid but the gate must be dispatched and recorded.
 cycle: B
 focus: Data-Usage Mode Decision
 mandatory: true
+subagents: [research, evaluator]   # F3: data-usage mode selection and cutoff choices require domain knowledge and methods expertise
 
 upstream:
   - route.active
@@ -101,8 +103,13 @@ checklist:
     writes_to: [frozen_artifacts.required, frozen_artifacts.artifacts]
   - id: B06
     question: If frozen artifacts are created, what is the deterministic creation logic (seed, cutoffs, row or group identifier logic), restriction rules, access rules, and SHA-256 for each artifact?
+    # Cutoff derivation rule: mode `agent_chosen` is forbidden. Numeric cutoffs (temporal boundary, group partition threshold, holdout fraction)
+    # must carry a derivation block. Allowed modes: empirical (derived from data time-ordering, quantile, or deployment gap),
+    # declared_external_standard, upstream_ratio, user_specified.
+    # The agent may propose a cutoff value; it must be user-approved before the artifact is frozen.
+    # Structural-binary predicates (row count >= 1, null-count = 0 on declared non-nullable columns) are exempt.
     skip_when: frozen_artifacts.required is false
-    evidence_key: frozen_artifact_manifest       # list of {path, deterministic_logic, seed, cutoffs, row_or_group_identifier_logic, restriction_rules, access_rules, sha256, n_rows_or_groups}
+    evidence_key: frozen_artifact_manifest       # list of {path, deterministic_logic, seed, cutoffs: [{name, value, derivation: {mode, source, computation, value, approved_by: user, approved_at}}], row_or_group_identifier_logic, restriction_rules, access_rules, sha256, n_rows_or_groups}
     writes_to: [frozen_artifacts.artifacts, provenance.files]
   - id: B07
     question: If no frozen artifacts are required, what is the specific reason tied to the allowed claim and the chosen mode?
@@ -167,3 +174,27 @@ pcs_focus:
     - "P: Does the chosen data-usage mode match the real deployment or reporting context named in formulate?"
     - "C: Could a different defensible mode change the allowed claim boundary? If yes, is the divergence either absorbed by the rejection audit in B04a or captured by a narrowing entry?"
     - "S: Is the frozen-artifact creation logic reproducible deterministically from the documented seed and split rules?"
+
+# Evaluator checks per required gate:
+# (1) cycle_history[*].subagents.decisions[*].judgment_gate.gate_id matches the required gate_id
+# (2) judgment_gate.reply is a non-null string
+# (3) if reply == "agent decides", both agent_decision_if_delegated and agent_rationale are non-null
+# Any failure is a blocking defect.
+
+judgment_gates:
+  - gate_id: B04-data-usage-mode-chosen
+    stage: protocol
+    cycle: B
+    trigger: "Always fires before committing data_usage.mode; mode selection among 8 options fixes validation scope and claim boundary"
+    question_text: "Data-usage mode for this project: agent proposes <mode> based on B02 scoring. Alternatives are <alt1>, <alt2>. Each changes validation scope and claim boundary. Confirm, choose an alternative, or reply 'agent decides'."
+    options_shape: "labeled_options; reply 'agent decides' is valid"
+    recorded_under: "cycle_history[*].subagents.decisions[*].judgment_gate"
+    required: true
+  - gate_id: B06-frozen-artifact-parameters
+    stage: protocol
+    cycle: B
+    trigger: "B06 fires when frozen_artifacts.required is true; cutoff values, seed, temporal windows, and group-split criteria require user approval"
+    question_text: "Frozen-artifact parameters: agent proposes seed=<seed>, cutoffs=<cutoffs>, split_logic=<logic>. These values lock the validation scope. Confirm, adjust, or reply 'agent decides'."
+    options_shape: "value; reply 'agent decides' is valid"
+    recorded_under: "cycle_history[*].subagents.decisions[*].judgment_gate"
+    required: true

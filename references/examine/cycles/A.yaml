@@ -1,6 +1,7 @@
 cycle: A
 focus: Support and Distribution Audit
 mandatory: true
+subagents: [research, evaluator]   # F3: distribution interpretation and support gaps require domain knowledge
 
 upstream:
   - upstream.approved_question
@@ -16,16 +17,16 @@ upstream:
   - visibility.restricted_artifacts
 
 setup_side_effects:
-  - Read {docs_dir_name}/01_formulation.yaml, {docs_dir_name}/02_protocol.yaml, and {docs_dir_name}/03_cleaning.yaml once and copy the required fields into the examine canonical YAML's `upstream` block (approved_question, question_type, target_quantity, claim_boundary snapshot with effective verbs, active_route, protocol_mode, visibility_rules_summary, cleaned_artifact_list, protocol_created_artifact_list, leakage_rules_summary, examine_prohibitions, backtracking_triggers, carried_assumptions, carried_open_questions).
+  - Read {docs_dir_name}/01_formulation.yaml, {docs_dir_name}/02_protocol.yaml, and {docs_dir_name}/03_cleaning.yaml at cycle start; record their paths and SHA-256 digests in upstream_pointer.sources. Reference upstream facts in memory; do not copy fields into this YAML (A1).
   - Resolve the active route from 02_protocol.yaml (must match the confirmed question type in 01_formulation.yaml) and load `references/routes/{route}/examine.md` once; record the route file path in upstream.route_file.
-  - Derive the visibility set from 02_protocol.yaml and 03_cleaning.yaml: list visible_cleaned_artifacts, visible_protocol_artifacts, restricted_artifacts, and access levels per artifact. Held-out partitions that protocol does not authorize for examine remain in restricted_artifacts.
-  - Initialize {docs_dir_name}/04_examination.yaml with stage, schema_version, project, upstream, visibility, and status.current_cycle: A.
+  - Derive the visibility set from 02_protocol.yaml and 03_cleaning.yaml: store as visible_artifacts [{name, access_level}] and restricted_artifacts. Held-out partitions that protocol does not authorize for examine remain restricted. Record optional visibility_hash for drift detection (A3).
+  - Initialize {docs_dir_name}/04_examination.yaml with stage, schema_version, project, upstream_pointer, derived visibility, and status.current_cycle: A.
   - Create {scripts_dir_name}/04_examination.py with the shape specified in the stage entry.
 
 checklist:
   - id: A01
-    question: Which cleaned artifacts and protocol-created artifacts are visible to examine, what access level applies to each, and which named artifacts are restricted?
-    evidence_key: visibility_map             # {visible: [{name, access_level, dimensions}], restricted: [{name, reason}]}
+    question: Which cleaned and protocol-created artifacts are visible to this stage (per the visibility set derived from 02_protocol.yaml and 03_cleaning.yaml), what access level applies to each, and which named artifacts are restricted?
+    evidence_key: visibility_check           # A3: {visible_artifacts: [{name, access_level, dimensions}], restricted_artifacts: [{name, reason}]} -- derived from 02_protocol.yaml at cycle start; does not re-document protocol rationale
     writes_to: [visibility.visible_cleaned_artifacts, visibility.visible_protocol_artifacts, visibility.restricted_artifacts, visibility.access_notes, structure_profile.artifact_dimensions]
   - id: A02
     question: For each visible artifact and each question-critical structure, what is the support, coverage, observed range, sparsity, schema sanity, and count reconciliation against upstream expectations, including top and bottom rows, missing codes, sentinel values, and join-structure notes?

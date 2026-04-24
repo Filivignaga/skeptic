@@ -1,6 +1,7 @@
 cycle: A
 focus: Setup + Data Overview
 mandatory: true
+subagents: [research, evaluator]   # F3: data source and domain knowledge materially changes the data overview
 
 upstream:
   - project.name
@@ -66,6 +67,7 @@ format_aware_ingest:
   reference: ../data-formats.md
   rule: Identify each source file's format and apply the matching ingest checklist before loading. Record checklist results inside the relevant evidence.
 
+# B1: numeric values in prose must cite a named evidence_key; see formulate.md Numeric binding rule
 research_questions:
   - What domain context matters for understanding this dataset?
   - Are there known data quality issues or collection artifacts typical of this source type?

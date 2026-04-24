@@ -1,6 +1,10 @@
+# C1: every required judgment gate below MUST dispatch AskUserQuestion; reply 'agent decides' is valid but the gate must be dispatched and recorded.
 cycle: S
 focus: Stability and Transfer Diagnostics
 mandatory: true
+subagents: [research, evaluator]   # F3: partial -- Layer execution is mechanical, but research covers S01/S02 only (threshold standards + transfer-diagnostic conventions)
+# Note: research subagent is limited to S01/S02 questions (threshold derivation standards, transfer-diagnostic conventions).
+# S03-S05 are mechanical execution and driver identification; research adds no gate-changing value there.
 
 upstream:
   - reproducibility.clean_data_signature
@@ -11,7 +15,7 @@ upstream:
   - cleaning_decisions
   - preprocessing_decisions
   - derived_variables
-  - upstream_snapshot.data_usage_mode
+  # A1: read data_usage_mode directly from 02_protocol.yaml at cycle start; do not copy here
 
 setup_side_effects:
   - Extend {scripts_dir_name}/03_cleaning.py with a stability perturbation runner that sweeps high-impact judgment calls recorded in cleaning_decisions and preprocessing_decisions
@@ -20,7 +24,10 @@ setup_side_effects:
 checklist:
   - id: S01
     question: What instability thresholds apply to question-critical variables (maximum acceptable change in distribution, counts, or derived summaries under a perturbation), and are they approved?
-    evidence_key: instability_thresholds        # {variable: {metric, threshold, approval_state, rationale}}
+    # Threshold derivation rule: mode `agent_chosen` is forbidden. Every numeric threshold must carry a `derivation:` block
+    # with mode one of {empirical, declared_external_standard, upstream_ratio, user_specified}.
+    # Structural-binary predicates (hash equality, null-count = 0 on declared non-nullable columns, row count >= 1 at load) are exempt.
+    evidence_key: instability_thresholds        # {variable: {metric, threshold, derivation: {mode, source, computation, value, approved_by, approved_at}, approval_state, rationale}}
     writes_to: robustness.instability_thresholds
   - id: S02
     question: Are protocol-conditioned transfer diagnostics relevant and visible for this stage (restricted partitions the protocol allows inspecting for this purpose, temporal or group artifacts, external or secondary artifacts, later validation artifacts the protocol allows checking now)?
@@ -36,13 +43,12 @@ checklist:
     evidence_key: layer2_perturbations          # {performed: bool, reason, interactions: [{variables, metric, baseline, perturbed, delta, threshold, exceeded}]}
     writes_to: robustness.layer2_performed
   - id: S05
-    question: Which variables are the main unstable ones, which judgment calls are the main risk drivers, and is any instability severe enough to require reopening a D-series or G-series follow-up?
-    evidence_key: instability_drivers           # {unstable_variables, risk_driving_judgment_calls, reopen_followup_recommendation}
-    writes_to: [robustness.unstable_variables, robustness.risk_driving_judgment_calls]
-  - id: S06
-    question: What is the one-paragraph robustness summary across transfer diagnostics, Layer 1, optional Layer 2, and the disposition (proceed, reopen a cycle, or acknowledge a documented risk) for each flagged issue?
-    evidence_key: robustness_summary            # {summary, dispositions: [{flagged_issue, disposition: proceed|reopen|acknowledge_risk, reason}]}
-    writes_to: robustness.summary
+    question: Which variables are the main unstable ones, which judgment calls are the main risk drivers, is any instability severe enough to require reopening a D-series or G-series follow-up, and what is the explicit disposition (proceed, reopen a cycle, or acknowledge a documented risk with a reason) for every flagged issue from transfer diagnostics, Layer 1, and optional Layer 2?
+    # F2/Block G narrowing: disposition-per-flagged-issue requirement moved here from deleted S06.
+    evidence_key: instability_drivers           # {unstable_variables, risk_driving_judgment_calls, reopen_followup_recommendation, dispositions: [{flagged_issue, disposition: proceed|reopen|acknowledge_risk, reason}]}
+    writes_to: [robustness.unstable_variables, robustness.risk_driving_judgment_calls, robustness.summary]
+  # F2: S06 (robustness_summary) deleted -- prose derivable from S01-S05 structured fields.
+  # The useful disposition-per-flagged-issue requirement has been absorbed into S05 (Block G narrowing).
 
 gates:
   - id: S01-thresholds-approved
@@ -53,9 +59,8 @@ gates:
     depends_on: [S03, S04]
     condition: Layer 1 perturbations cover high-impact judgment calls and include at least one competing cleaning policy per question-critical variable; Layer 2 is either performed with results or skipped with a concrete reason
   - id: S05-drivers-identified
-    condition: Unstable variables and risk-driving judgment calls are named, and a reopen-or-proceed recommendation exists
-  - id: S06-dispositions-written
-    condition: Every flagged issue from transfer, Layer 1, or Layer 2 has an explicit disposition (proceed, reopen, or acknowledge_risk) with a reason
+    condition: Unstable variables and risk-driving judgment calls are named; a reopen-or-proceed recommendation exists; and every flagged issue from transfer, Layer 1, or Layer 2 has an explicit disposition (proceed, reopen, or acknowledge_risk) with a reason (F2/Block G: disposition requirement absorbed from deleted S06)
+  # F2: S06-dispositions-written gate deleted along with S06 checklist item.
 
 research_questions:
   - What instability thresholds are commonly used for this kind of cleaning and preprocessing, and how are they chosen?
@@ -76,4 +81,34 @@ step4_additions:
     - layer2_summary_or_skip_reason
     - main_unstable_variables
     - main_risk_drivers
-    - robustness_summary_paragraph
+    - dispositions_per_flagged_issue   # F2: replaces robustness_summary_paragraph (absorbed from deleted S06 into S05)
+
+# Evaluator checks per required gate:
+# (1) cycle_history[*].subagents.decisions[*].judgment_gate.gate_id matches the required gate_id
+# (2) judgment_gate.reply is a non-null string
+# (3) if reply == "agent decides", both agent_decision_if_delegated and agent_rationale are non-null
+# Any failure is a blocking defect.
+
+judgment_gates:
+  - gate_id: S01-thresholds-approved
+    stage: clean
+    cycle: S
+    trigger: "Always fires before any Layer 1 perturbation run; instability thresholds for question-critical variables must be user-approved before the cycle checks against them"
+    question_text: "Instability threshold for <metric_name> on <variable_class>: agent proposes <threshold> (derivation: <mode>, source: <source>). Alternatives: <a> (stricter, more reopens), <b> (looser, wider tolerance). Reply with a value, a range, or 'agent decides'."
+    options_shape: "value|range; reply 'agent decides' is valid"
+    recorded_under: "cycle_history[*].subagents.decisions[*].judgment_gate"
+    required: true
+
+robustness:
+  metric_graph:  # read-only reference to contract.metric_graph authored in analyze/cycles/A.yaml; do not re-author here
+  instability_thresholds:
+    <metric_name>:
+      metric: <absolute_change_in_mean_or_other_statistic>
+      threshold: <value>
+      derivation:
+        mode: empirical            # empirical | declared_external_standard | upstream_ratio | user_specified
+        source: <descriptor>       # e.g. "2x bootstrap std of <metric> over 1000 resamples of visible cleaned data"
+        computation: "<one-line description, empirical only>"
+        value: <value>
+        approved_by: user          # user | auto_mode_reasoning
+        approved_at: <ISO timestamp>

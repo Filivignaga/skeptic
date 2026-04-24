@@ -1,26 +1,28 @@
 cycle: A
 focus: Intake Audit and Communication Plan
 mandatory: true
+subagents: [evaluator]   # F3: intake audit and communication plan derivation are mechanical; audience-specific research belongs to Cycle B
 
 upstream:
-  - upstream_snapshot.approved_question        # carried in from 01_formulation.yaml via setup
-  - upstream_snapshot.claim_survival_registry  # carried in from 06_evaluation.yaml via setup
+  # A1: read upstream facts directly from 01_formulation.yaml, 02_protocol.yaml, 05_analysis.yaml, 06_evaluation.yaml at cycle start; do not copy into this YAML
+  - upstream_pointer.sources                   # paths and sha256 of upstream YAMLs
 
 setup_side_effects:
   - Verify every upstream artifact listed under Required Inputs exists and parses. Abort with a concrete failure list if any precondition is violated.
   - Create {projects_root}/{project-name}/deliverables/ if it does not already exist.
-  - Initialize {docs_dir_name}/07_communication.yaml with stage, schema_version, project (including project.started_at as ISO timestamp), status.current_cycle A, and an upstream_snapshot scaffold populated from 01_formulation.yaml, 02_protocol.yaml, 05_analysis.yaml, and 06_evaluation.yaml.
+  - Reference upstream YAML(s) at cycle start; do not copy fields into this YAML (A1). Record paths and SHA-256 digests in upstream_pointer.sources.
+  - Initialize {docs_dir_name}/07_communication.yaml with stage, schema_version, project (including project.started_at as ISO timestamp), status.current_cycle A, and upstream_pointer.
   - Create {scripts_dir_name}/07_communication.py with the shape specified in the stage entry.
 
 checklist:
   - id: A01
     question: What is the approved question, question type, target quantity, final claim boundary, and active route from the upstream artifacts?
-    evidence_key: upstream_contract          # {approved_question, question_type, target_quantity, claim_boundary, active_route, decision_context}
-    writes_to: [upstream_snapshot.approved_question, upstream_snapshot.question_type, upstream_snapshot.target_quantity, upstream_snapshot.claim_boundary, upstream_snapshot.active_route, upstream_snapshot.decision_context]
+    evidence_key: upstream_contract          # A1: {approved_question, question_type, target_quantity, claim_boundary, active_route, decision_context} -- read from upstream YAMLs in memory; do not copy into this YAML
+    writes_to: null                          # A1: upstream facts live in source files; record only the communication plan fields below
   - id: A02
     question: Does the evaluate communicate handoff contain all required sections (claim survival registry, per-dimension summaries for stability/predictability/validity, mandatory limitations, unresolved risks, handoff discipline)?
     evidence_key: handoff_completeness_scan  # {required_sections: [...], present: [...], missing: [...], missing_fields: [...]}
-    writes_to: upstream_snapshot.handoff_discipline
+    writes_to: null
   - id: A03
     question: How many claims survived, survived with caveats, and did not survive?
     evidence_key: claim_counts               # {survived: n, survived_with_caveats: n, did_not_survive: n}
@@ -28,11 +30,11 @@ checklist:
   - id: A04
     question: For each claim in the evaluate claim survival registry, what is its claim_id, statement, verdict, caveats, and one-line evidence summary?
     evidence_key: claim_inventory            # [{claim_id, statement, verdict, caveats, evidence_summary}]
-    writes_to: upstream_snapshot.claim_survival_registry
+    writes_to: null                          # A1: claim_survival_registry lives in 06_evaluation.yaml; communicate reads it in memory
   - id: A05
     question: What mandatory limitations exist in the evaluate handoff, what is the source of each, and are all non-droppable?
     evidence_key: limitation_inventory       # [{description, source, droppable}]
-    writes_to: upstream_snapshot.mandatory_limitations
+    writes_to: null                          # A1: mandatory_limitations live in 06_evaluation.yaml; communicate reads in memory
   - id: A06
     question: Did zero claims survive (including survived-with-caveats), requiring activation of the null-result path?
     evidence_key: null_result_trigger        # {zero_survived: bool, rationale}

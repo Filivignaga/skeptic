@@ -1,12 +1,14 @@
 cycle: D
 focus: Uncertainty and Evidence Presentation
 mandatory: true
+subagents: [research, evaluator]   # F3: uncertainty presentation conventions and evidence framing require domain and communication knowledge
 
 upstream:
+  # A1: read upstream facts directly from the named source YAML at cycle start; do not copy into this YAML
   - audience.technical_level
   - translations
-  - upstream_snapshot.mandatory_limitations
-  - upstream_snapshot.unresolved_risks
+  - 06_evaluation.yaml:mandatory_limitations
+  - 06_evaluation.yaml:unresolved_risks
 
 setup_side_effects: []
 

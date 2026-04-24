@@ -98,3 +98,7 @@ Cycle C (Primary Execution) follows this order:
 6. Record computational diagnostics: convergence, optimization iterations, numerical warnings, effective sample size after weighting, extreme weight diagnostics, runtime.
 7. Execute falsification suite: all pre-specified tests. Report results without interpretation.
 8. Record all outputs: point estimate, CI, standard error, effective N, all diagnostics, all falsification results, random seeds, software versions.
+
+## Protected surface
+
+Route overlays may narrow this stage's surface. They may not rewrite or remove fields from the protected surface declared in `references/core-principles.md` §4.8 (decision register, reconciliation table / chain, claim-critical helper set). A route-specific requirement that shrinks the decision register, breaks the reconciliation arithmetic, or removes a helper is rejected regardless of route-specific rationale.

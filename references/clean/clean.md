@@ -29,7 +29,7 @@ Optional companion artifacts (written during Cycle R or beyond):
 | Path | Role |
 |------|------|
 | `{scripts_dir_name}/clean_constraints.json` | Declared and derived constraints produced by `clean_data`. See `../constraint-spec.md`. |
-| `{scripts_dir_name}/preprocess_constraints.json` | Declared and derived constraints produced by `preprocess_data` when Cycle E or F ran. Otherwise an explicit no-additional-constraints file. |
+| `{scripts_dir_name}/preprocess_constraints.json` | Declared and derived constraints produced by `preprocess_data` when the C closeout preprocessing decisions or Cycle F ran. Otherwise an explicit no-additional-constraints file. |
 | `{data_dir_name}/silver/` | Cleaned outputs when they differ from raw inputs. Each artifact has a documented schema and known limitations. |
 
 The canonical YAML is the single source of truth. If the rendered markdown disagrees with the YAML, the YAML wins.
@@ -56,6 +56,22 @@ If upstream outputs are incomplete, contradictory, or missing required restricti
 
 Write only fields that apply to the project. Omit fields that would be null; readers treat a missing key as "not applicable." The schema below names every possible field; a concrete project will populate a subset.
 
+### Protected surface
+
+The following are protected by contract for this stage:
+
+- Decision register (`cleaning_decisions[]` in this stage): chosen policy, rationale class, named alternatives, reversibility, population effect, claim consequence -- every field required for every judgment call.
+- Population reconciliation table (`row_count_reconciliation`): the raw -> cleaned arithmetic must close.
+- Claim narrowing log (`claim_boundary_updates.narrowing_log`): append-only.
+- Dataset fitness register (`dataset_fitness_reviews`).
+- Reproducibility helpers (`clean_data`, `preprocess_data`): named, rerunnable, signatures cover every recorded transform.
+- Claim-critical variable inventory (`question_critical_variables`).
+- Stage-close status block in README.
+
+A refactor of cycles or checklist items is permitted only when every entry in the decision register remains expressible with its full required fields, the reconciliation arithmetic still closes, the helper signatures still cover every recorded transform, and the claim-support chain is not weakened. A refactor that drops a required field, omits a judgment call from the register, breaks the reconciliation arithmetic, or removes a helper without transferring its obligations is a defect in the spec itself and must be rejected regardless of line-count savings.
+
+Field names are illustrative; the protected concepts are abstract (see core-principles.md §4.8).
+
 ```yaml
 stage: clean
 schema_version: 3
@@ -65,7 +81,7 @@ project:
   started_at:                       # ISO timestamp
 
 status:
-  current_cycle:                    # A|B|C|D1|...|E|F|G1|...|R|S|null
+  current_cycle:                    # A|B|C|D1|...|F|G1|...|R|S|null  (F1: Cycle E removed; preprocessing decisions in C closeout)
   completed_cycles: []
   skipped_cycles: {}                # {cycle_letter: reason} for conditional cycles (e.g., F)
   locked_at: null                   # set at stage close; presence = locked
@@ -74,34 +90,31 @@ route:
   active:                           # descriptive|exploratory|inferential|predictive|causal|mechanistic
   route_file:                       # references/routes/{active}/clean.md
 
-upstream_snapshot:                  # facts read from 01_formulation.yaml and 02_protocol.yaml
-  approved_question:
-  question_type:
-  target_quantity:
-  claim_boundary: {}                # compact copy: claim_type, scope, evidence_ceiling, generalization_limit
-  operationalization: {}
-  unit_of_analysis:
-  key_assumptions: []
-  data_usage_mode:
-  leakage_rules: []
-  forbidden_variable_classes: []
-  clean_prohibitions: []
-  validation_logic_reserved: []
-  backtracking_triggers: []
-  protocol_required_artifacts: []
+upstream_pointer:                   # A1: reference upstream YAMLs at cycle start; do not copy fields here
+  sources:
+    - path: <docs_dir>/<formulation_file>
+      content_sha256: <hex>
+    - path: <docs_dir>/<protocol_file>
+      content_sha256: <hex>
+  note: "Read fields directly from source files; do not copy here."
+  visibility_hash:                  # optional scalar for integrity auditing of the derived visibility set
 
 precondition_check:
   formulation_sections_present: []
   protocol_sections_present: []
   readme_present:
-  raw_hash_verification: {}         # {filename: {expected, observed, match}}
+  raw_hash_verification: {}         # A2: {filename: {expected, observed, match}} -- hash value not propagated; only match verdict recorded here
   required_artifacts_present: {}    # {artifact: true|false|missing_reason}
 
+# A3 visibility derivation: the visibility set is computed at cycle-start from 02_protocol.yaml
+# (data_usage, frozen_artifacts, evidence_rules) and stored as:
+#   clean.visibility.visible_artifacts: [{name, access_level}]
+# with an optional visibility_hash: scalar for integrity auditing.
+# Do not re-document protocol rationale here; read from 02_protocol.yaml at cycle start.
 visibility:
-  visible_raw_files: []
-  visible_protocol_artifacts: []
+  visible_artifacts: []             # [{name, access_level}]  -- derived from 02_protocol.yaml at cycle start
   restricted_artifacts: []
-  access_levels: {}                 # {artifact: allowed_operations}
+  visibility_hash:                  # optional scalar for drift detection
 
 data_contract:
   raw_artifacts: []
@@ -117,6 +130,7 @@ question_critical_variables: []     # [{term, operationalization, columns_or_art
 
 cleaning_decisions: []              # [{cycle, issue, policy, rationale, rationale_source, alternatives, reversibility, population_shift, claim_consequence, code_reference}]
 preprocessing_decisions: []         # same shape, plus fit_scope
+                                    # A5: when N columns share the same decision, rationale, reversibility, and fit_scope, record one entry with columns: [col_1, ..., col_N] instead of one entry per column. Per-column entries are required only when any field differs between columns.
 derived_variables: []               # [{name, formula, stage_core_class, rationale, meaning, missingness, distribution, interpretation_risk}]
 
 row_count_reconciliation:           # populated once Cycle C resolves material row actions
@@ -154,13 +168,15 @@ pcs_review: null                    # set at stage close
 Each `cycle_history` entry:
 
 ```yaml
-- cycle:                            # A|B|C|D1|...|E|F|G1|...|R|S
+- cycle:                            # A|B|C|D1|...|F|G1|...|R|S  (F1: Cycle E removed)
   iteration:                        # 1-based per cycle letter
   unanswered: []                    # checklist IDs not answered; empty = all answered
-  script_evidence: {}               # compact summary only: 4-8 one-line bullets, or one-line value per evidence_key. No full JSON, no DataFrames, no arrays, no per-column schema.
+  script_evidence: {}               # A7: compact summary only: 4-8 one-line bullets, or one-line value per evidence_key. No full JSON, no DataFrames, no arrays, no per-column schema.
+                                    # Compliant:     - raw_hash_verification: match=true (expected=<hex12>, observed=<hex12>)
+                                    # Non-compliant: - The script found that the raw hash matched, and also confirmed 12 dtype issues, and loaded 43819 rows successfully...
   subagents:
-    research_sources: []            # [{url, claim}] -- only sources that materially shaped a decision this iteration
-    decisions: []                   # [{what, why, pcs: P|C|S|null, source: int?}] -- operational choices where a reasonable alternative existed (distinct from the top-level `decision:` verdict below; `source` is an optional index into research_sources)
+    research_sources: []            # [{log_id, url, claim}] -- only sources that materially shaped a decision this iteration; log_id is the primary key into {docs_dir_name}/research_log.jsonl
+    decisions: []                   # [{what, why, pcs: P|C|S|null, source: str?}] -- operational choices where a reasonable alternative existed; `source` is a log_id string when a research log entry drove the call
     rejected_alternatives: []       # [{option, reason, pcs: P|C|S|null}] -- paths considered and dropped (the PCS Stability counterfactual record)
     open_risks: []                  # [str] -- unresolved concerns downstream stages must carry forward
     blocking_failures:              # int (0 = PASS, >0 = FAIL)
@@ -174,7 +190,11 @@ The main model reads both subagent replies, distills them, and writes the result
 
 ```yaml
 pcs_review:
-  verbatim:
+  digest:                           # A6: structured per-lens verdict; full subagent reply stays in memory or pcs_review.json
+    - lens:                         # Predictability|Computability|Stability|<route-specific>
+      verdict:                      # holds_up|uncertain|risky
+      key_finding:                  # one sentence
+      recommendation:               # one sentence or null
   disposition:                      # satisfied|valid_concern|disagree_override
   disposition_reason:
 ```
@@ -192,15 +212,16 @@ Rules:
 |-------|-------|-----------|
 | A | Structural audit | Yes |
 | B | Integrity diagnostics | Yes |
-| C | Cleaning resolution | Yes |
+| C | Cleaning resolution + preprocessing decisions closeout | Yes |
 | D1, D2, ... | Cleaning follow-ups | Conditional |
-| E | Preprocessing | Yes |
 | F | Derived variables and related downstream-safe transforms | Conditional |
 | G1, G2, ... | Preprocessing and derived-variable follow-ups | Conditional |
 | R | Reproducibility | Yes |
 | S | Stability and transfer diagnostics | Yes |
 
-Cycle F runs only when derived variables or similarly downstream-safe transformations are justified by the approved question and protocol. Skipping F must be recorded in `status.skipped_cycles`. Cycles E, F, and G+ may force a new D-series follow-up if a representation decision turns out to be an unresolved cleaning issue.
+Mandatory cycles: **A, B, C, F (conditional), R, S**. Cycle E has been merged into Cycle C's closeout (F1): preprocessing decisions -- including deferred-transform records (formerly E04) and fit-scope decisions (formerly E05) -- are now recorded as `preprocessing_decisions[]` entries at the close of Cycle C. See C.yaml `preprocessing_decisions_closeout` comment for required fields and scope checks.
+
+Cycle F runs only when derived variables or similarly downstream-safe transformations are justified by the approved question and protocol. Skipping F must be recorded in `status.skipped_cycles`. Cycles F and G+ may force a new D-series follow-up if a representation decision turns out to be an unresolved cleaning issue.
 
 ## Per-cycle Reference Files
 
@@ -243,7 +264,7 @@ This protocol applies to every cycle, mandatory or follow-up.
    - Run the precondition gate: verify `01_formulation.yaml`, `02_protocol.yaml`, `{readme_name}`, at least one raw file, and every protocol-required artifact exist. Recompute SHA-256 for each raw file and compare to `provenance.files.{filename}.sha256` in `01_formulation.yaml`. Any mismatch is a blocking defect; stop until raw data is restored or formulate is reopened.
    - Verify `01_formulation.yaml` carries an approved question, question type, target quantity, claim boundary, unit of analysis, operationalization, and key assumptions. Verify `02_protocol.yaml` carries question type, active route, data usage mode, visibility rules, frozen-artifact status, leakage rules, forbidden variable classes, clean prohibitions, validation logic, and backtracking triggers. Missing or contradictory fields block the stage.
    - Derive the active visibility set and record it under `visibility`: visible raw files, visible protocol artifacts, restricted artifacts, access levels.
-   - Initialize `03_cleaning.yaml` with `stage`, `schema_version`, `project` (including `project.started_at`), `status.current_cycle: A`, `route`, `upstream_snapshot`, `precondition_check`, and `visibility`. Seed `question_critical_variables` from `contract.operationalization` in `01_formulation.yaml`.
+   - Initialize `03_cleaning.yaml` with `stage`, `schema_version`, `project` (including `project.started_at`), `status.current_cycle: A`, `route`, `upstream_pointer` (source paths and SHA-256 digests of `01_formulation.yaml` and `02_protocol.yaml`; do not copy fields from those files into this YAML), `precondition_check`, and the derived visibility set. Reference upstream YAML(s) at cycle start; do not copy fields into this YAML. Seed `question_critical_variables` from `contract.operationalization` in `01_formulation.yaml`.
    - Create `03_cleaning.py` with the shape specified below.
 4. Every cycle after A: confirm the route context still resolves to the same route. If the route context becomes ambiguous, reread `01_formulation.yaml`, `02_protocol.yaml`, and the same route file before proceeding. Identify which visible artifacts the current cycle is allowed to inspect; if unclear, stop and reopen `protocol`.
 5. Every cycle: extend `03_cleaning.py` by writing or updating the cycle's function (`run_cycle_a`, `run_cycle_b`, ...). The function must produce every non-null `evidence_key` named in the cycle's checklist.
@@ -260,7 +281,9 @@ Script rules:
 - Heavy data (arrays, full DataFrames) is summarized, not dumped. Evidence packets stay compact.
 - Per-file provenance (schema, encoding, sha256) is emitted only the first time a file is recorded -- typically Cycle A iter 1. After it lands in `provenance.files`, neither the stdout packet nor `cycle_history[*].script_evidence` re-emits those fields; downstream cycles reference those files by filename.
 - Seeds are set inside the function whenever stochastic steps run, and the seed is echoed into the evidence packet.
-- No generic helpers at module scope beyond those named in the Script shape above (including the Cycle R `clean_data` and `preprocess_data` helpers). Any helper introduced for a cycle lives inside that cycle's function and is removed once the cycle passes.
+- No generic helpers at module scope beyond those declared in `references/script-primitives.md` and the Script shape above (including the Cycle R `clean_data` and `preprocess_data` helpers). Primitive-registry helpers are the explicit exception to the cycle-local rule because they must be called identically across cycles. Any other helper introduced for a cycle lives inside that cycle's function and is removed once the cycle passes.
+
+Every stage exposes a fixed set of project-side primitives declared in `references/script-primitives.md`. Cycle functions call these helpers; they do not reimplement I/O, dtype interpretation, or constraint verification.
 
 ### Step 2: Human Review
 
@@ -274,7 +297,15 @@ Auto mode: apply the self-review loop from `../auto-mode.md`. Self-correct withi
 
 ### Step 3: Subagent Review
 
-Dispatch two subagents in parallel.
+Read the `subagents:` flag from the active cycle YAML (top-level field).
+
+Decision tree:
+```
+subagents: [research, evaluator]  --> dispatch both in parallel (below)
+subagents: [evaluator]            --> dispatch the evaluator alone; skip the research subagent block
+```
+
+If `[research, evaluator]`, dispatch both in parallel. If `[evaluator]`, dispatch the evaluator alone.
 
 Research subagent:
 
@@ -313,6 +344,10 @@ Agent(
   inline after the claim it supports. Organize findings by question. Focus on
   facts that materially change cleaning judgments, semantic interpretation,
   or protocol compliance.
+
+  Record every source you cite as a new line in `{docs_dir}/research_log.jsonl`
+  matching the schema in clean.md (Research log section). Do not inline URLs
+  or free-form citations into cycle_history. Use `log_id` pointers.
   """
 )
 ```
@@ -360,6 +395,7 @@ Agent(
   without documentation, leakage risks, restricted-artifact misuse, silent
   drift toward model-family-specific preparation, fit-scope leakage into
   reserved artifacts.
+  DEFECT SCAN (A7): Each `cycle_history[*].script_evidence` entry must be one line with a single `evidence_key: value` pair. Multi-clause prose is a non-blocking defect.
   If after genuinely adversarial scrutiny you find zero defects, state
   "No defects found" and name at least three specific failure modes you
   tested and ruled out. Do not fabricate defects.
@@ -403,8 +439,8 @@ When both subagents return, the model parses three counts from the evaluation ou
 Digest the subagent replies into `cycle_history[*].subagents`; the replies themselves stay in memory. Admit something to `subagents` when a future reader needs it to reconstruct why this path was chosen.
 
 Include:
-- `research_sources`: URLs that actually tipped a call, each paired with a one-line claim. Drop sources that merely confirmed obvious baseline facts or rephrased what was already known.
-- `decisions`: operational choices where a reasonable alternative existed. Tag each with its PCS axis (`P`, `C`, `S`, or `null` when not PCS-relevant). Set `source` to the index into `research_sources` when a specific source drove the call. Default choices (reading a CSV with `read_csv`, computing sha256 with hashlib) are not decisions.
+- `research_sources`: Sources that actually tipped a call, each as `{log_id, url, claim}` where `log_id` matches the entry in `{docs_dir_name}/research_log.jsonl`. Drop sources that merely confirmed obvious baseline facts or rephrased what was already known.
+- `decisions`: operational choices where a reasonable alternative existed. Tag each with its PCS axis (`P`, `C`, `S`, or `null` when not PCS-relevant). Set `source` to the `log_id` string when a specific research log entry drove the call. Default choices (reading a CSV with `read_csv`, computing sha256 with hashlib) are not decisions.
 - `rejected_alternatives`: paths actively weighed and dropped, with the reason and PCS axis. This is the stability counterfactual record.
 - `open_risks`: one line each. Unresolved concerns downstream stages must carry forward.
 
@@ -459,7 +495,7 @@ Append one entry to `cycle_history`. Required fields:
 
 - `cycle`, `iteration`
 - `unanswered` (list of checklist IDs that could not be answered; empty list when all were answered)
-- `script_evidence` (compact summary only: 4-8 one-line bullets, or one-line value per `evidence_key` from the cycle YAML). Do not re-emit the full JSON, full DataFrames, or full arrays; after Cycle A iter 1, do not re-emit file schema, encoding, or sha256 -- those are immutable and live in `provenance.files`.
+- `script_evidence` (compact summary only: 4-8 one-line bullets, or one-line value per `evidence_key` from the cycle YAML). Do not re-emit the full JSON, full DataFrames, or full arrays; after Cycle A iter 1, do not re-emit file schema, encoding, or sha256 -- those are immutable and live in `provenance.files`. A7 rule: each entry is one line. Compliant: `- raw_hash_verification: match=true (expected=<hex12>, observed=<hex12>)`. Non-compliant: `- The script found that the raw hash matched, and also confirmed 12 dtype issues, and loaded 43819 rows successfully...`
 - `subagents.research_sources`, `subagents.decisions`, `subagents.rejected_alternatives`, `subagents.open_risks`, `subagents.blocking_failures` (populate each only with entries that materially shaped this iteration; empty lists are valid)
 - `decision`
 
@@ -477,11 +513,39 @@ Set `status.current_cycle` to the next cycle letter (or keep for another iterati
 
 Re-parse `03_cleaning.yaml` to confirm validity.
 
+### Numeric binding rule
+
+Every integer, decimal, percentage, category set literal (`{...}` or `[...]`), date literal (ISO-like), or unit-suffixed value in any YAML prose field must trace to a named `evidence_key` in the owning cycle's script output. Cite either as a sibling `evidence_key: <key>` on the same list element, or inline as `(source: <cycle_id>.<evidence_key>)`. Exempt fields: `sha256`, `schema_version`, cycle-ID strings, ISO-date metadata (`started_at`, `locked_at`, `last_updated`), `random_seeds`, `auto_mode_state.json` counters. Unbound numeric tokens at cycle-close are blocking defects. The evaluation subagent scans for this.
+
+### Research log
+
+Append-only file: `{docs_dir_name}/research_log.jsonl`. One JSON object per line, schema:
+
+```json
+{
+  "log_id":             "<stage>-<cycle>-<int>",
+  "stage":              "clean",
+  "cycle":              "<cycle_letter_or_id>",
+  "iteration":          0,
+  "url":                "<absolute URL>",
+  "title":              "<page/paper title from fetch>",
+  "author_year":        "<Author YYYY or null>",
+  "claim":              "<one-sentence claim this source supports>",
+  "fetched_at":         "<ISO-8601 datetime of subagent fetch>",
+  "verified_at":        "<ISO-8601 datetime of main-model confirmation, or null>",
+  "verified_by":        "<research_subagent|main_model|evaluation_subagent>",
+  "http_status":        200,
+  "influenced_decision":"<decision ID, or null>"
+}
+```
+
+The main model must fetch and content-check every null-`verified_at` citation before the cycle closes; an unverified citation may not be the sole support for any `decisions[*]` entry. The evaluation subagent verifies every `log_id` resolves and that every citation used as a decision source has `verified_at: non-null`. The `cycle_history[*].subagents.research_sources` schema is `[{log_id, url, claim}]`; raw URL strings are not written into `cycle_history` without a matching `log_id`.
+
 ## Ending the Cycle Loop
 
 The loop ends when all of the following hold:
 
-- every mandatory cycle (A, B, C, E, R, S) has a closing `decision` of `pass` or an `override`
+- every mandatory cycle (A, B, C, R, S) has a closing `decision` of `pass` or an `override`
 - Cycle F is completed with `pass` or `override`, or recorded in `status.skipped_cycles` with a specific reason (e.g., "no derived variables justified by the approved question and protocol")
 - every approved D-series or G-series follow-up is resolved
 - the latest dataset fitness review returns no unresolved `no` or `unclear` answers
@@ -537,7 +601,7 @@ Agent(
 )
 ```
 
-Store the full output in `pcs_review.verbatim`.
+Digest per PCS lens. Each lens (Predictability, Computability, Stability, plus any route-specific lens) produces `{lens, verdict in {holds_up, uncertain, risky}, key_finding: str (one sentence), recommendation: str | null}`. Keep `disposition` and `disposition_reason`. Full subagent reply stays in memory or in a side file `pcs_review.json`; it does not enter the canonical YAML.
 
 - Interactive mode: present via `AskUserQuestion` with options `satisfied`, `valid_concern`, `disagree_override`. Wait for the user's answer before invoking any other tool.
 - Auto mode: apply `../auto-mode.md` stage-close rules.
@@ -552,7 +616,7 @@ After the PCS review clears or the user overrides it:
 
 1. Parse `03_cleaning.yaml` with a standard YAML loader. Repair if parsing fails.
 
-2. Render `03_cleaning.md` from the canonical YAML. Keep the report compact: one `##` section per populated top-level YAML key (`Data Contract`, `Question-Critical Variables`, `Visibility`, `Cleaning Decisions`, `Preprocessing Decisions`, `Derived Variables`, `Row Count Reconciliation`, `Dataset Fitness Reviews`, `Reproducibility`, `Robustness`, `Claim Boundary Updates`, `Cycle Summary` with one line per cycle, `PCS Assessment`). Omit sections whose YAML keys are empty or absent. Reference the subagent verbatims through the YAML; the markdown is a rendered summary.
+2. Render `03_cleaning.md` from the canonical YAML. Keep the report compact: one `##` section per populated top-level YAML key (`Data Contract`, `Question-Critical Variables`, `Visibility`, `Cleaning Decisions`, `Preprocessing Decisions`, `Derived Variables`, `Row Count Reconciliation`, `Dataset Fitness Reviews`, `Reproducibility`, `Robustness`, `Claim Boundary Updates`, `Cycle Summary` with one line per cycle, `PCS Assessment`). Omit sections whose YAML keys are empty or absent. Reference the subagent digest from `pcs_review.digest` through the YAML; the markdown is a rendered summary.
 
 3. Append a Cleaning Scorecard block to `03_cleaning.md`:
 
@@ -575,7 +639,7 @@ After the PCS review clears or the user overrides it:
    | Judgment calls total | {n} | cleaning_decisions + preprocessing_decisions |
    | Judgment calls stable under perturbation | {n}/{tested} | robustness.layer1_perturbations |
    | Transfer diagnostics | {pass / flagged / skipped: {reason}} | robustness.transfer_diagnostics_status |
-   | PCS verdict | {verbatim summary} | pcs_review.verbatim |
+   | PCS verdict | {per-lens digest: lens, verdict, key_finding} | pcs_review.digest |
    | PCS user decision | {satisfied / valid_concern / disagree_override: {reason}} | pcs_review.disposition |
    ```
 

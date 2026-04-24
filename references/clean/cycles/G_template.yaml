@@ -1,6 +1,7 @@
 cycle: G{n}                          # G1, G2, G3, ... assigned in order opened
 focus: "{short description of the unresolved preprocessing or derived-variable topic}"
 mandatory: false
+subagents: [research, evaluator]   # F3: safe default; set to [evaluator] if no research_question would change a gate outcome
 
 # G-series follow-ups run under the same 5-step cycle protocol as the mandatory
 # cycles. They are triggered when:
@@ -37,6 +38,7 @@ gates:
   # Multi-dep gates use id: "G{n}-{short-name}" and depends_on: [G{n}01, G{n}02, ...].
   # At least one gate is required so the cycle has an enforceable exit.
 
+# B1: numeric values in prose must cite a named evidence_key; see clean.md Numeric binding rule
 research_questions:
   - "{at most a handful; narrow to the unresolved representation topic}"
 

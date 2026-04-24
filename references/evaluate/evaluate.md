@@ -7,6 +7,12 @@ description: Use after formulate, protocol, clean, examine, and analyze to adjud
 
 IMPORTANT: Before executing, read `../core-principles.md`. `core-principles.md` is the architecture contract. If this file conflicts with it, `core-principles.md` wins.
 
+## Threshold Hygiene
+
+Evaluate applies thresholds; it does not select them. Every numeric pass/fail threshold used in evaluation (stability-verdict magnitudes in Cycle B, predictability screening threshold in Cycle C) must have been locked in `contract.perturbation_plan` or the equivalent contract field during analyze Cycle A. Evaluate reads those values with their `derivation:` blocks and applies them as-is. Re-selecting or widening a threshold at evaluate time is a blocking defect. Mode `agent_chosen` is forbidden at any stage. The expected-exceedance set for each perturbation is the transitive closure over `contract.metric_graph` (authored in analyze Cycle A, referenced read-only here); evaluate does not hand-author or extend this set. See core-principles.md section "Threshold hygiene" for the universal rule.
+
+Structural-binary predicates (hash equality, null-count = 0 on declared non-nullable columns, row count >= 1 at load) are exempt from the derivation requirement.
+
 ## Guiding Principle
 
 Evaluate adjudicates whether analysis outputs survive route-appropriate PCS checks. It receives the locked outputs from `analyze` and renders per-claim survival verdicts. `communicate` receives only claims that survived. If no claims survive, say so and route the project back upstream. Do not manufacture survivable claims from insufficient evidence.
@@ -80,7 +86,7 @@ upstream:                           # canonical snapshot read from prior-stage Y
   stakeholder_decision: {}          # from 01_formulation.yaml contract.decision_context
 
 reproducibility:
-  frozen_artifact_hashes: {}        # {path: {expected_sha256, observed_sha256, match: bool}}
+  frozen_artifact_hashes: {}        # A2: {path: {expected_sha256, observed_sha256, match: bool}} -- hash value is not propagated downstream; only the match verdict travels here
   recomputed_metrics: {}            # {analysis_output_name: {expected, observed, match: bool}}
 
 evaluation_plan:
@@ -124,10 +130,12 @@ Each `cycle_history` entry:
 - cycle:                            # A|B|C|D|E|F|G1|...
   iteration:                        # 1-based per cycle letter
   unanswered: []                    # checklist IDs not answered; empty = all answered
-  script_evidence: {}               # compact summary only: 4-8 one-line bullets, or one-line value per evidence_key. No full JSON, no DataFrames, no arrays, no per-column schema.
+  script_evidence: {}               # A7: compact summary only: 4-8 one-line bullets, or one-line value per evidence_key. No full JSON, no DataFrames, no arrays, no per-column schema.
+                                    # Compliant:     - raw_hash_verification: match=true (expected=<hex12>, observed=<hex12>)
+                                    # Non-compliant: - The script found that the raw hash matched, and also confirmed 12 dtype issues, and loaded 43819 rows successfully...
   subagents:
-    research_sources: []            # [{url, claim}] -- only sources that materially shaped a decision this iteration
-    decisions: []                   # [{what, why, pcs: P|C|S|null, source: int?}] -- operational choices where a reasonable alternative existed (distinct from the top-level `decision:` verdict below; `source` is an optional index into research_sources)
+    research_sources: []            # [{log_id, url, claim}] -- only sources that materially shaped a decision this iteration; log_id is the primary key into {docs_dir_name}/research_log.jsonl
+    decisions: []                   # [{what, why, pcs: P|C|S|null, source: str?}] -- operational choices where a reasonable alternative existed; `source` is a log_id string when a research log entry drove the call
     rejected_alternatives: []       # [{option, reason, pcs: P|C|S|null}] -- paths considered and dropped (the PCS Stability counterfactual record)
     open_risks: []                  # [str] -- unresolved concerns downstream stages must carry forward
     blocking_failures:              # int (0 = PASS, >0 = FAIL)
@@ -141,7 +149,11 @@ The main model reads both subagent replies, distills them, and writes the result
 
 ```yaml
 pcs_review:
-  verbatim:
+  digest:                           # A6: structured per-lens verdict; full subagent reply stays in memory or pcs_review.json
+    - lens:                         # Predictability|Computability|Stability|<route-specific>
+      verdict:                      # holds_up|uncertain|risky
+      key_finding:                  # one sentence
+      recommendation:               # one sentence or null
   disposition:                      # satisfied|valid_concern|disagree_override
   disposition_reason:
 ```
@@ -231,7 +243,15 @@ Auto mode: apply the self-review loop from `../auto-mode.md`. Self-correct withi
 
 ### Step 3: Subagent Review
 
-Dispatch two subagents in parallel.
+Read the `subagents:` flag from the active cycle YAML (top-level field).
+
+Decision tree:
+```
+subagents: [research, evaluator]  --> dispatch both in parallel (below)
+subagents: [evaluator]            --> dispatch the evaluator alone; skip the research subagent block
+```
+
+If `[research, evaluator]`, dispatch both in parallel. If `[evaluator]`, dispatch the evaluator alone.
 
 Research subagent:
 
@@ -266,6 +286,10 @@ Agent(
 
   Return concise findings organized by research question. Every citation must include
   its URL inline after the claim it supports.
+
+  Record every source you cite as a new line in `{docs_dir}/research_log.jsonl`
+  matching the schema in evaluate.md (Research log section). Do not inline URLs
+  or free-form citations into cycle_history. Use `log_id` pointers.
   """
 )
 ```
@@ -321,7 +345,9 @@ Agent(
   mode you tested and ruled out. Categories: re-executed analysis, new claims,
   widened claim boundary, post-hoc testing, audience framing, method comparison,
   unauthorized holdout access, unstated assumptions, unverifiable evidence,
-  construct validity drift. If after genuinely adversarial scrutiny you find zero
+  construct validity drift.
+  DEFECT SCAN (A7): Each `cycle_history[*].script_evidence` entry must be one line with a single `evidence_key: value` pair. Multi-clause prose is a non-blocking defect.
+  If after genuinely adversarial scrutiny you find zero
   defects, state "No defects found" and name at least three specific failure modes
   you tested and ruled out. Do not fabricate defects.
   - Defect 1: [description with evidence]
@@ -358,8 +384,8 @@ When both subagents return, the model parses three counts from the evaluation ou
 Digest the subagent replies into `cycle_history[*].subagents`; the replies themselves stay in memory. Admit something to `subagents` when a future reader needs it to reconstruct why this path was chosen.
 
 Include:
-- `research_sources`: URLs that actually tipped a call, each paired with a one-line claim. Drop sources that merely confirmed obvious baseline facts or rephrased what was already known.
-- `decisions`: operational choices where a reasonable alternative existed. Tag each with its PCS axis (`P`, `C`, `S`, or `null` when not PCS-relevant). Set `source` to the index into `research_sources` when a specific source drove the call. Default choices (reading a CSV with `read_csv`, computing sha256 with hashlib) are not decisions.
+- `research_sources`: Sources that actually tipped a call, each as `{log_id, url, claim}` where `log_id` matches the entry in `{docs_dir_name}/research_log.jsonl`. Drop sources that merely confirmed obvious baseline facts or rephrased what was already known.
+- `decisions`: operational choices where a reasonable alternative existed. Tag each with its PCS axis (`P`, `C`, `S`, or `null` when not PCS-relevant). Set `source` to the `log_id` string when a specific research log entry drove the call. Default choices (reading a CSV with `read_csv`, computing sha256 with hashlib) are not decisions.
 - `rejected_alternatives`: paths actively weighed and dropped, with the reason and PCS axis. This is the stability counterfactual record.
 - `open_risks`: one line each. Unresolved concerns downstream stages must carry forward.
 
@@ -408,7 +434,7 @@ Append one entry to `cycle_history`. Required fields:
 
 - `cycle`, `iteration`
 - `unanswered` (list of checklist IDs that could not be answered; empty list when all were answered)
-- `script_evidence` (compact summary only: 4-8 one-line bullets, or one-line value per `evidence_key` from the cycle YAML). Do not re-emit the full JSON, full DataFrames, or full arrays; after Cycle A iter 1, do not re-emit file schema, encoding, or sha256 -- those are immutable and live in `provenance.files`.
+- `script_evidence` (compact summary only: 4-8 one-line bullets, or one-line value per `evidence_key` from the cycle YAML). Do not re-emit the full JSON, full DataFrames, or full arrays; after Cycle A iter 1, do not re-emit file schema, encoding, or sha256 -- those are immutable and live in `provenance.files`. A7 rule: each entry is one line. Compliant: `- raw_hash_verification: match=true (expected=<hex12>, observed=<hex12>)`. Non-compliant: `- The script found that the raw hash matched, and also confirmed 12 dtype issues, and loaded 43819 rows successfully...`
 - `subagents.research_sources`, `subagents.decisions`, `subagents.rejected_alternatives`, `subagents.open_risks`, `subagents.blocking_failures` (populate each only with entries that materially shaped this iteration; empty lists are valid)
 - `decision`
 
@@ -425,6 +451,34 @@ Update every canonical-YAML field named in a checklist item's `writes_to`, but o
 Set `status.current_cycle` to the next cycle letter (or keep for another iteration). Append the closed cycle letter to `status.completed_cycles` only when the cycle passes or is closed by override.
 
 Re-parse `06_evaluation.yaml` to confirm validity.
+
+### Numeric binding rule
+
+Every integer, decimal, percentage, category set literal (`{...}` or `[...]`), date literal (ISO-like), or unit-suffixed value in any YAML prose field must trace to a named `evidence_key` in the owning cycle's script output. Cite either as a sibling `evidence_key: <key>` on the same list element, or inline as `(source: <cycle_id>.<evidence_key>)`. Exempt fields: `sha256`, `schema_version`, cycle-ID strings, ISO-date metadata (`started_at`, `locked_at`, `last_updated`), `random_seeds`, `auto_mode_state.json` counters. Unbound numeric tokens at cycle-close are blocking defects. The evaluation subagent scans for this.
+
+### Research log
+
+Append-only file: `{docs_dir_name}/research_log.jsonl`. One JSON object per line, schema:
+
+```json
+{
+  "log_id":             "<stage>-<cycle>-<int>",
+  "stage":              "evaluate",
+  "cycle":              "<cycle_letter_or_id>",
+  "iteration":          0,
+  "url":                "<absolute URL>",
+  "title":              "<page/paper title from fetch>",
+  "author_year":        "<Author YYYY or null>",
+  "claim":              "<one-sentence claim this source supports>",
+  "fetched_at":         "<ISO-8601 datetime of subagent fetch>",
+  "verified_at":        "<ISO-8601 datetime of main-model confirmation, or null>",
+  "verified_by":        "<research_subagent|main_model|evaluation_subagent>",
+  "http_status":        200,
+  "influenced_decision":"<decision ID, or null>"
+}
+```
+
+The main model must fetch and content-check every null-`verified_at` citation before the cycle closes; an unverified citation may not be the sole support for any `decisions[*]` entry. The evaluation subagent verifies every `log_id` resolves and that every citation used as a decision source has `verified_at: non-null`. The `cycle_history[*].subagents.research_sources` schema is `[{log_id, url, claim}]`; raw URL strings are not written into `cycle_history` without a matching `log_id`.
 
 ## Ending the Cycle Loop
 
@@ -492,7 +546,7 @@ Agent(
 )
 ```
 
-Store the full output in `pcs_review.verbatim`.
+Digest per PCS lens. Each lens (Predictability, Computability, Stability, plus any route-specific lens) produces `{lens, verdict in {holds_up, uncertain, risky}, key_finding: str (one sentence), recommendation: str | null}`. Keep `disposition` and `disposition_reason`. Full subagent reply stays in memory or in a side file `pcs_review.json`; it does not enter the canonical YAML.
 
 - Interactive mode: present via `AskUserQuestion` with options `satisfied`, `valid_concern`, `disagree_override`. Wait for the user's answer before invoking any other tool.
 - Auto mode: apply `../auto-mode.md` stage-close rules.

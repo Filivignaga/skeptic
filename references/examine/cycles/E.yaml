@@ -1,6 +1,7 @@
 cycle: E
 focus: Analysis Handoff Synthesis
 mandatory: true
+subagents: [evaluator]   # F3: synthesis of prior cycles into consolidated support matrix is mechanical assembly; no domain-fact lookup changes gate outcomes
 
 upstream:
   - upstream.approved_question

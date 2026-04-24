@@ -85,3 +85,7 @@ description: Stage-specific route file for the Skeptic evaluate stage for explor
 - Overreading check: for each surviving pattern, state the minimal factual claim the evidence supports. Then state the maximum interpretation someone might draw. The gap between the two is the overreading risk. Caveats must close that gap by bounding the claim to what the evidence licenses.
 - Cherry-picking audit: verify that the evaluation considered all perturbation axes and challengers from the analyze contract, not just those that confirmed the primary pattern. If any axis or challenger was excluded from adjudication, document why and carry the gap as a caveat.
 - Expert falsification: present the primary pattern alongside one plausible alternative pattern that could emerge under a different but defensible analytical path. Ask whether domain knowledge favors one over the other. If no domain expert is available, document the gap and carry it as a limitation.
+
+## Protected surface
+
+Route overlays may narrow this stage's surface. They may not rewrite or remove fields from the protected surface declared in `references/core-principles.md` §4.8 (decision register, reconciliation table / chain, claim-critical helper set). A route-specific requirement that shrinks the decision register, breaks the reconciliation arithmetic, or removes a helper is rejected regardless of route-specific rationale.

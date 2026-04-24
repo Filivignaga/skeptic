@@ -1,6 +1,9 @@
+# C1: every required judgment gate below MUST dispatch AskUserQuestion; reply 'agent decides' is valid but the gate must be dispatched and recorded.
+# These judgment gates fire before step4 user_approval; step4 approval confirms the record, not the original choice.
 cycle: D
 focus: Operationalization
 mandatory: true
+subagents: [research, evaluator]   # F3: operationalization choices are domain-knowledge-intensive and change gate outcomes
 
 upstream:
   - contract.question_type
@@ -86,6 +89,38 @@ guidance:
   - If no viable operationalization exists for a key term, flag it and force the user decision in Step 4.
   - The approved question wording must include operationalized definitions inline.
   - If the question is inferential or causal, `contract.hypothesis` must be populated (null, alt, treatment, outcome). For other types, omit `contract.hypothesis`.
+
+# Evaluator checks per required gate:
+# (1) cycle_history[*].subagents.decisions[*].judgment_gate.gate_id matches the required gate_id
+# (2) judgment_gate.reply is a non-null string
+# (3) if reply == "agent decides", both agent_decision_if_delegated and agent_rationale are non-null
+# Any failure is a blocking defect.
+
+judgment_gates:
+  - gate_id: D02-operationalization-chosen
+    stage: formulate
+    cycle: D
+    trigger: "D02 produces multiple candidate operationalizations for a key term; fires before committing contract.operationalization"
+    question_text: "Operationalization for <term>: agent proposes <candidate> (kind: <direct|derived|proxy>; tradeoff: <summary>). Alternatives are <alt1>, <alt2>. Each may change the claim boundary or top route. Confirm, choose an alternative, or reply 'agent decides'."
+    options_shape: "labeled_options; reply 'agent decides' is valid"
+    recorded_under: "cycle_history[*].subagents.decisions[*].judgment_gate"
+    required: true
+  - gate_id: D05-claim-boundary-type
+    stage: formulate
+    cycle: D
+    trigger: "D05 resolves claim_type and generalization_limit; fires before committing claim_boundary"
+    question_text: "Claim boundary for this project: agent proposes claim_type=<type>, scope=<scope>, generalization_limit=<limit>. Alternatives yield claim_type=<alt_type>. Confirm, adjust, or reply 'agent decides'."
+    options_shape: "labeled_options; reply 'agent decides' is valid"
+    recorded_under: "cycle_history[*].subagents.decisions[*].judgment_gate"
+    required: true
+  - gate_id: D07-route-candidates-ordered
+    stage: formulate
+    cycle: D
+    trigger: "D07 orders route candidates; fires before committing contract.route_candidates"
+    question_text: "Route ranking for this project: agent proposes <route1> > <route2> > <route3> based on D07 evidence. A different ordering changes the analysis protocol. Confirm, reorder, or reply 'agent decides'."
+    options_shape: "labeled_options; reply 'agent decides' is valid"
+    recorded_under: "cycle_history[*].subagents.decisions[*].judgment_gate"
+    required: true
 
 step4_additions:
   description: After the standard decision, propose a refined question with operationalized definitions inline. State all of the following before closing the cycle.

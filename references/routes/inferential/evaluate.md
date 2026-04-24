@@ -100,3 +100,7 @@ description: Stage-specific route file for the Skeptic evaluate stage for infere
 - Expert falsification: present the primary result alongside a plausible alternative that could have emerged under a different but defensible analytical path. Ask whether the primary makes more domain sense. If no expert is available, document the gap and state what expert input would resolve.
 - Representativeness review: verify that the final analyzed sample still maps to the target population after all exclusions, cleaning, weighting, and missing-data handling. If the effective population drifted from the approved target, the claim boundary must narrow or the claim does not survive.
 - Practical-significance review: determine whether the effect size is large enough to matter in the actual decision context, not merely large enough to reject the null.
+
+## Protected surface
+
+Route overlays may narrow this stage's surface. They may not rewrite or remove fields from the protected surface declared in `references/core-principles.md` §4.8 (decision register, reconciliation table / chain, claim-critical helper set). A route-specific requirement that shrinks the decision register, breaks the reconciliation arithmetic, or removes a helper is rejected regardless of route-specific rationale.

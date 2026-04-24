@@ -1,6 +1,8 @@
+# C1: every required judgment gate below MUST dispatch AskUserQuestion; reply 'agent decides' is valid but the gate must be dispatched and recorded.
 cycle: C
 focus: Question Type Classification
 mandatory: true
+subagents: [research, evaluator]   # F3: question type classification and claim-boundary setting require domain and methods knowledge
 
 upstream:
   - contract.audience
@@ -49,3 +51,19 @@ pcs_focus:
     - "P: Does the classified type match what Cycle A's prior art used for similar questions? Cite the closest comparable."
     - "C: Is the classification traceable to specific C01-C04 evidence entries?"
     - "S: Would the nearest alternative framing change the type?"
+
+# Evaluator checks per required gate:
+# (1) cycle_history[*].subagents.decisions[*].judgment_gate.gate_id matches the required gate_id
+# (2) judgment_gate.reply is a non-null string
+# (3) if reply == "agent decides", both agent_decision_if_delegated and agent_rationale are non-null
+# Any failure is a blocking defect.
+
+judgment_gates:
+  - gate_id: C01-question-type-classified
+    stage: formulate
+    cycle: C
+    trigger: "Always fires before locking contract.question_type; no mechanically correct answer exists among the six route types"
+    question_text: "Question type for this project: agent proposes <type> based on C01-C02 evidence. Alternatives are <alt1>, <alt2>. Each changes the downstream route and claim boundary. Confirm, choose an alternative, or reply 'agent decides'."
+    options_shape: "labeled_options; reply 'agent decides' is valid"
+    recorded_under: "cycle_history[*].subagents.decisions[*].judgment_gate"
+    required: true

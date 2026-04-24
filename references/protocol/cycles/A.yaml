@@ -1,6 +1,7 @@
 cycle: A
 focus: Handoff Audit from Formulate
 mandatory: true
+subagents: [evaluator]   # F3: handoff audit is mechanical field-presence verification; domain knowledge does not change gate outcomes
 
 upstream:
   - project.name

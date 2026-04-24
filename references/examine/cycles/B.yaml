@@ -1,6 +1,7 @@
 cycle: B
 focus: Structural Relationships and Heterogeneity
 mandatory: true
+subagents: [research, evaluator]   # F3: structural relationship interpretation and heterogeneity classification require domain knowledge
 
 upstream:
   - upstream.approved_question
@@ -57,6 +58,7 @@ gates:
     depends_on: [B02, B03, B04]
     condition: Every finding in relationships.dependence_findings and relationships.heterogeneity_findings that will influence analyze-stage decisions has at least one alternative view in B04 that confirms, weakens, or contradicts it.
 
+# B1: numeric values in prose must cite a named evidence_key; see examine.md Numeric binding rule
 research_questions:
   - What domain mechanisms, data-collection features, or measurement conventions could explain the visible relationships or subgroup differences?
   - Are the observed dependence or heterogeneity patterns consistent with known structure in similar data, or are they likely to be artifact-sensitive?

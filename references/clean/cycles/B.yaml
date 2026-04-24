@@ -1,6 +1,8 @@
+# C1: every required judgment gate below MUST dispatch AskUserQuestion; reply 'agent decides' is valid but the gate must be dispatched and recorded.
 cycle: B
 focus: Integrity Diagnostics
 mandatory: true
+subagents: [research, evaluator]   # F3: domain knowledge changes plausibility verdicts, sentinel value interpretations, and missing-vs-censored classifications
 
 upstream:
   - data_contract.raw_artifacts
@@ -34,11 +36,8 @@ checklist:
     question: What cross-variable consistency violations exist (paired fields, derived-from relationships, temporal ordering, numeric constraints)?
     evidence_key: cross_variable_violations     # list of {rule, columns_involved, violation_count, example_rows, domain_source: documented_rule|convention|inferred}
     writes_to: null
-  - id: B06
-    question: Were any restricted artifacts accessed, and if so, was that access inside a protocol-approved operation?
-    skip_when: visibility.restricted_artifacts is empty
-    evidence_key: restricted_artifact_audit     # {accessed: [{artifact, operation, protocol_approved: bool, evidence}], leakage_risk: none|low|medium|high, notes}
-    writes_to: null
+  # F2: B06 (restricted_artifact_audit) deleted -- A01-visibility-confirmed plus the evaluator defect scan already enforce this;
+  # B06 produced an audit record no downstream cycle conditioned on. Notes on restricted-artifact access belong in provenance.notes.
   - id: B07
     question: For each question-critical or high-risk field, are missing, structurally missing, and censored values distinguished according to the codebook and source rules?
     evidence_key: missing_vs_censored_audit     # {column: {missing_rule_applied, structurally_missing_rule_applied, censored_rule_applied, codebook_source, ambiguity}}
@@ -55,8 +54,7 @@ gates:
     condition: Duplicate-like patterns are classified before any cleaning action is chosen
   - id: B05-cross-variable-checked
     condition: Cross-variable consistency rules are drawn from documented domain sources or conventions, not invented for convenience
-  - id: B06-restricted-artifacts-respected
-    condition: No restricted artifact was accessed outside a protocol-approved operation; the skip_when path is taken only when visibility.restricted_artifacts is empty
+  # F2: B06-restricted-artifacts-respected gate deleted along with B06 checklist item.
   - id: B07-missing-censored-separated
     condition: Missing, structurally missing, and censored values are distinguished according to codebook and source rules for every question-critical and high-risk field
 
@@ -71,3 +69,19 @@ guidance:
   - The goal of this cycle is diagnosis, not premature resolution. Catalog every pattern with counts and example rows so Cycle C has a concrete basis for policy choices.
   - If an integrity issue is actually a protocol or formulation mismatch, flag it and plan to route upstream; masking it with a cleaning policy in Cycle C is a defect.
   - Missingness that carries meaning (indicator of a real event, structural zero, deliberate censoring) must be recorded as a meaning hypothesis, not quietly imputed in Cycle C.
+
+# Evaluator checks per required gate:
+# (1) cycle_history[*].subagents.decisions[*].judgment_gate.gate_id matches the required gate_id
+# (2) judgment_gate.reply is a non-null string
+# (3) if reply == "agent decides", both agent_decision_if_delegated and agent_rationale are non-null
+# Any failure is a blocking defect.
+
+judgment_gates:
+  - gate_id: B07-missing-vs-censored-classified
+    stage: clean
+    cycle: B
+    trigger: "B07 finds ambiguity in missing-vs-censored classification for at least one question-critical or high-risk field; fires before closing the cycle"
+    question_text: "Missing-vs-censored classification for <column>: agent proposes <classification> based on codebook and B03 missingness profile. Alternative classification <alt> would change the analyzable population. Confirm, choose an alternative, or reply 'agent decides'."
+    options_shape: "labeled_options: missing | structurally_missing | censored; reply 'agent decides' is valid"
+    recorded_under: "cycle_history[*].subagents.decisions[*].judgment_gate"
+    required: true

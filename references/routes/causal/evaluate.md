@@ -79,3 +79,7 @@ description: Stage-specific route file for the Skeptic evaluate stage for causal
 - **Treatment-version ambiguity:** Assess whether treatment as measured conflates distinct interventions with potentially different effects. If treatment versions are heterogeneous, the estimated effect is an average over versions that may not correspond to any single actionable intervention.
 - **Construct validity for causal claims:** Does the operationalized treatment correspond to the intervention the question asks about? Does the operationalized outcome capture the effect the question targets? Drift in either direction means the causal estimate answers a different question than the one approved.
 - **Expert falsification:** Present the real causal estimate alongside a plausible alternative estimate that could have emerged under a different but defensible identification strategy or adjustment set. Ask whether the real result makes more domain sense. If no domain expert is available, document the gap.
+
+## Protected surface
+
+Route overlays may narrow this stage's surface. They may not rewrite or remove fields from the protected surface declared in `references/core-principles.md` §4.8 (decision register, reconciliation table / chain, claim-critical helper set). A route-specific requirement that shrinks the decision register, breaks the reconciliation arithmetic, or removes a helper is rejected regardless of route-specific rationale.

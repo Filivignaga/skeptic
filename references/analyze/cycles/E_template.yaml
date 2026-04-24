@@ -1,6 +1,7 @@
 cycle: E{n}                          # E1, E2, E3, ... assigned in order opened
 focus: "{short description of the execution issue, e.g. 'Resolve convergence failure in primary execution under locked hyperparameters'}"
 mandatory: false
+subagents: [research, evaluator]   # F3: safe default; set to [evaluator] if no research_question would change a gate outcome
 
 # En cycles are narrow, execution-issue follow-ups opened only when Cycle C or
 # Cycle D surfaces a material execution-viability problem (convergence failure,
@@ -51,6 +52,7 @@ gates:
     condition: "The follow-up uses only contract-approved methods, visibility-approved artifacts, and pre-specified scope; no post-hoc perturbation axis or challenger is introduced; the claim boundary is not widened"
   # At least one gate that enforces the issue-specific exit condition is required.
 
+# B1: numeric values in prose must cite a named evidence_key; see analyze.md Numeric binding rule
 research_questions:
   - "{at most a handful; narrow to the specific execution issue}"
 

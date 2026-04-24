@@ -1,5 +1,9 @@
 """Skeleton for `{NN}_{stage}.py` project-side scripts.
 
+These four helpers are the formulate-stage instantiation of the primitive registry declared in
+`references/script-primitives.md`. `read_csv` is a thin wrapper around the shared `load_raw`
+helper; see the registry for the memoized full signature.
+
 Copy this file into the project's scripts directory as the stage's script
 (for example `01_formulation.py`) in Cycle A, then add one `run_cycle_*`
 function per cycle. The rules enforced by this skeleton are:

@@ -1,6 +1,7 @@
 cycle: C
 focus: Primary Execution
 mandatory: true
+subagents: [evaluator]   # F3: primary execution is mechanical recording of script outputs; no domain-fact lookup changes gate outcomes
 
 upstream:
   - contract

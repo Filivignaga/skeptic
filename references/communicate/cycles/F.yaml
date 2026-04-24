@@ -1,6 +1,7 @@
 cycle: F
 focus: Communication Assembly and Terminal Fidelity Audit
 mandatory: true
+subagents: [evaluator]   # F3: terminal fidelity audit is machine-checkable; no domain-fact lookup changes gate outcomes
 
 upstream:
   - translations

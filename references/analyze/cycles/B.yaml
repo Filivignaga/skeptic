@@ -1,6 +1,7 @@
 cycle: B
 focus: Assumption Verification
 mandatory: true
+subagents: [research, evaluator]   # F3: assumption verification requires domain and methods knowledge to classify violations
 
 upstream:
   - contract.method_family
@@ -21,7 +22,12 @@ checklist:
     writes_to: assumptions.required_checks
   - id: B02
     question: For each required assumption, what does the check on the actual cleaned, visible data report -- pass, marginal, or fail -- and what is the evidence?
-    evidence_key: assumption_results            # [{id, verdict: pass|marginal|fail, evidence: {statistic_or_diagnostic, value, threshold_if_any, plot_ref_if_any}}]
+    # Threshold derivation rule: mode `agent_chosen` is forbidden. Every numeric threshold_if_any must carry a derivation block.
+    # Structural-binary predicates (hash equality, null-count = 0 on declared non-nullable columns, row count >= 1 at load) are exempt.
+    # Thresholds (e.g. VIF cutoff, minimum effective n, balance p-value) must use one of:
+    #   empirical (computed from visible cleaned data before the check), declared_external_standard (e.g. VIF < 10 from published collinearity literature),
+    #   upstream_ratio (ratio of total n or a contract-declared metric), or user_specified (user-stated value in the locked contract).
+    evidence_key: assumption_results            # [{id, verdict: pass|marginal|fail, evidence: {statistic_or_diagnostic, value, threshold_if_any: {value, derivation: {mode, source, computation, value, approved_by, approved_at}}, plot_ref_if_any}}]
     writes_to: assumptions.results
   - id: B03
     question: If all assumptions passed, is the contract confirmed unchanged and ready for execution?

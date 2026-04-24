@@ -89,3 +89,7 @@ Cycle C (Primary Execution) follows this order:
 6. Apply standardization if specified. Produce both crude and standardized results.
 7. Produce summary graphics using the locked visualization grammar.
 8. Document completeness and coverage: actual vs. claimed reporting frame.
+
+## Protected surface
+
+Route overlays may narrow this stage's surface. They may not rewrite or remove fields from the protected surface declared in `references/core-principles.md` §4.8 (decision register, reconciliation table / chain, claim-critical helper set). A route-specific requirement that shrinks the decision register, breaks the reconciliation arithmetic, or removes a helper is rejected regardless of route-specific rationale.

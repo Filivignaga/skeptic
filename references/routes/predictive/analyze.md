@@ -111,3 +111,7 @@ Cycle D (Sensitivity and Challenger Execution) additionally:
 - Compare performance across the hyperparameter search space.
 - Execute pre-specified challengers structurally different from the primary.
 - Report raw metric values without stability verdicts.
+
+## Protected surface
+
+Route overlays may narrow this stage's surface. They may not rewrite or remove fields from the protected surface declared in `references/core-principles.md` §4.8 (decision register, reconciliation table / chain, claim-critical helper set). A route-specific requirement that shrinks the decision register, breaks the reconciliation arithmetic, or removes a helper is rejected regardless of route-specific rationale.

@@ -49,6 +49,7 @@ Every stage produces a compact, fixed artifact set. No notebooks. No stage-wide 
 | `{docs_dir_name}/{NN}_{stage}.yaml` | Canonical stage memory. Contract, state, claim boundary, protocol handoff, cycle history, PCS review. Created at stage start. Updated at the end of every cycle. Single source of truth for the stage. |
 | `{scripts_dir_name}/{NN}_{stage}.py` | Project-side analysis script. One function per cycle. Invoked one cycle at a time: `python {NN}_{stage}.py --cycle X`. Returns a JSON evidence packet on stdout. The script never writes the canonical YAML. Only the model writes the canonical YAML. |
 | `{docs_dir_name}/{NN}_{stage}.md` | Human-readable report. Rendered once at stage close from the canonical YAML. Derived, not canonical. |
+| `{docs_dir_name}/research_log.jsonl` | Append-only log of every research citation used by any stage. One record per `(stage, cycle, iteration, url, claim)`. Schema defined in each stage entry's Research log subsection. Canonical YAMLs carry `log_id` pointers only; raw URL strings do not appear in `cycle_history`. See §4.2. |
 | `{readme_name}` | Short stage-status block added at each stage close. |
 
 If the rendered markdown disagrees with the canonical YAML, the YAML wins.
@@ -319,6 +320,7 @@ Rules:
 - Per-file provenance (schema, encoding, sha256) is emitted only the first time a file is recorded -- typically Cycle A iter 1. After it lands in `provenance.files`, neither the stdout packet nor `cycle_history[*].script_evidence` re-emits those fields; downstream cycles reference those files by filename.
 - Seeds are set inside the function whenever stochastic steps run, and the seed value is echoed into the evidence packet.
 - After script execution, scan stdout and stderr for unhandled exceptions. Any unhandled exception is a blocking defect and must be fixed before continuing, unless the function body explicitly marks an expected failure with a `# expected_failure` comment.
+- No generic helpers at module scope beyond those declared in `references/script-primitives.md` and the Script shape named in the stage entry. Primitive-registry helpers (`sha256_of`, `detect_encoding`, `read_csv`, `load_raw`, `load_state`, `check_dtype_meaning`, `verify_constraint`) are the explicit exception to the cycle-local rule because they must be called identically across cycles. Any other helper introduced for a cycle lives inside that cycle's function and is removed once the cycle passes. See §4.6.
 
 ## Universal Rules
 
@@ -334,6 +336,58 @@ Rules:
 - Keep `cycle_history` entries to the schema defined in the stage entry file; that schema is exhaustive. Route findings without a schema home into `subagents.open_risks`, attach them to an existing `subagents.decisions[*]` or `subagents.rejected_alternatives[*]` entry, or leave them out.
 - Generated project documents must reference real project files. Every reference must point to a file that currently exists in the project.
 - Derive README summaries from the actual project filesystem state and verify them against artifacts on disk.
+- Obey the Canonical Discipline subsections below (§4.1 through §4.8). They are binding on every stage, cycle, route overlay, and subagent prompt.
+
+## Canonical Discipline
+
+These eight subsections govern how canonical YAMLs, evidence, thresholds, script helpers, checklists, and protected surface are written and audited across every stage. They cross-cut the stage-core; stage files may narrow but not contradict them.
+
+### 4.1 Single-source-of-truth discipline
+
+Each fact has exactly one canonical home. Facts from an upstream stage must be read at cycle-start and held in memory; they must not be copied into a new top-level block of the current stage's canonical YAML. The only permitted downstream record of an upstream fact is a compact verification verdict. A file hash recorded in `provenance.files` of the ingesting stage is never re-recorded as a value in any downstream YAML; only the `match: bool` result travels downstream. The visibility set for each stage is derived from `02_protocol.yaml` at cycle-start and stored as a compact artifact list, not a re-documentation of protocol rules. When multiple items share the same decision, rationale, and fit scope, collapse them into one record with a `columns:` or `items:` list; per-item duplication is prohibited. Subagent output is digested into `{lens, verdict, key_finding, recommendation}` per lens; full reply text never enters the canonical YAML. `cycle_history[*].script_evidence` entries are one-line bullets; multi-clause prose is a defect the evaluation subagent must flag.
+
+### 4.2 Machine-readable artifact integrity
+
+Canonical stage YAMLs hold only structured values or typed pointers to named evidence keys; narrative prose with embedded numeric or categorical claims is forbidden. Every integer, decimal, percentage, category set, or date literal in a YAML field must trace to a named `evidence_key` in the owning cycle's script output, cited as `(source: <cycle_id>.<evidence_key>)`. Research citations are stored as `log_id` pointers into `research_log.jsonl`; raw URL strings do not appear in `cycle_history`. Every citation in `research_log.jsonl` carries a `verified_at` timestamp before it may be the sole support for any `decisions[*]` entry. Facts without named, verifiable sources are blocking defects at cycle close.
+
+Exempt keys from the numeric-binding rule: `sha256`, `schema_version`, cycle-ID strings, ISO-date metadata fields (`started_at`, `locked_at`, `last_updated`), `random_seeds`, and `auto_mode_state.json` counters.
+
+### 4.3 Judgment gates
+
+A judgment gate is a choice that (a) has no mechanically correct answer derivable from protocol rules and the data alone, (b) selects among defensible options producing materially different downstream artifacts, and (c) is not corrected by any downstream subagent scan. At every judgment gate the agent must dispatch `AskUserQuestion` before committing the choice. A reply of `"agent decides"` is valid and permits the agent to proceed, but the gate must still be dispatched and the agent's chosen value plus a one-sentence rationale must land in the `judgment_gate` block of the relevant `cycle_history[*].subagents.decisions` entry. Mechanical choices — applying a locked rule, computing a hash, parsing a file — are not judgment gates. The distinction is structural, not difficulty-based.
+
+Mandatory gates per stage are declared in the owning cycle YAML's `judgment_gates:` block. Each entry carries `gate_id`, `trigger`, `question_text`, `options_shape`, `recorded_under`, `required`. The evaluation subagent checks: (1) a matching `judgment_gate.gate_id` exists in `cycle_history[*].subagents.decisions[*]`; (2) `judgment_gate.reply` is non-null; (3) if reply equals `"agent decides"`, `agent_decision_if_delegated` and `agent_rationale` are non-null. Any failure is a blocking defect.
+
+### 4.4 Threshold hygiene
+
+The agent must not select the numeric value it is being judged against. Every derivable numeric pass/fail threshold carries a `derivation:` field. Allowed modes:
+
+- `empirical` — computed from the data before the check runs; the computation is echoed in the evidence packet.
+- `declared_external_standard` — verbatim from a named published or regulatory standard.
+- `upstream_ratio` — expressed as a ratio of a named upstream canonical metric.
+- `user_specified` — user stated the value; carries `approved_by: user` and a timestamp or session reference.
+
+Mode `agent_chosen` is forbidden. User approval (or a logged auto-mode reasoning trace) precedes any gate that checks against the derived value. Thresholds that are structurally binary are exempt: hash equality, null count equals zero on declared non-nullable columns, row count greater than or equal to one at load.
+
+### 4.5 Dependency-aware expected sets
+
+When a cycle declares which metrics are expected to change under a perturbation, the expected set is the transitive closure over a declared `metric_graph:`, not authored by hand. The graph names each metric's inputs and dependency type (`arithmetic_complement`, `ratio`, `formula_parameter`, `shared_feature`, `indirect`). The graph is authored once at contract lock inside the analyze stage (`contract.metric_graph`), reviewed as part of user approval of the contract, and referenced read-only by all later perturbation cycles. Hand-authored expected sets are prohibited because they systematically omit arithmetic complements and coupled rates.
+
+### 4.6 Primitive registry
+
+Every stage script exposes a fixed set of project-side primitives defined in `references/script-primitives.md`: `sha256_of`, `detect_encoding`, `read_csv`, `load_raw`, `load_state`, `check_dtype_meaning`, `verify_constraint`. Cycle functions call these helpers; they do not reimplement I/O, dtype interpretation, or constraint verification. Bugs are fixed once in the helper. Any helper at module scope that is not in the primitive registry is a defect. The Stage Script Rule above incorporates this exception.
+
+### 4.7 Checklist legitimacy and subagent dispatch
+
+Every checklist item must satisfy at least one of: its evidence changes a gate outcome or `writes_to` value such that a downstream decision differs if the item is skipped; or it produces data-level script evidence the evaluation subagent uses adversarially to falsify a gate. Items that only assert filesystem facts, record style without affecting decisions, or produce narrative derivable from structured fields are bookkeeping — they belong in `provenance.notes` pointers, not in checklist IDs.
+
+Subagent dispatch is deterministic per cycle, not per stage. Each cycle YAML declares `subagents: [research, evaluator]` or `subagents: [evaluator]`. A cycle warrants the research subagent only when its `research_questions` include at least one question whose answer would change a specific gate outcome or judgment call. Cycles whose work is mechanical verification, execution recording, or results assembly run evaluator-only. The dispatching stage entry reads the flag; it does not hard-code the dispatch.
+
+### 4.8 Protected surface
+
+Every stage produces at least one register of judgment calls (decisions, alternatives, rationale class, population effect, claim consequence for every material choice), at least one reconciliation table or integrity chain (arithmetic or logical account closing the population or claim space), and, where the stage contributes executable transforms, at least one named rerunnable helper with a documented signature. These three categories — the decision register, the reconciliation table or chain, and the claim-critical helper set — are protected by contract, not by naming. A refactor that renames, restructures, or merges cycles is permitted when every entry in the decision register remains expressible with its full required fields, the reconciliation arithmetic still closes, the helper signatures still cover every recorded transform, and the claim-support chain from formulate through communicate is not weakened. A refactor that drops a required field, omits a judgment call from the register, breaks the reconciliation arithmetic, or removes a helper without transferring its obligations is a defect in the spec itself and must be rejected regardless of line-count savings.
+
+Route overlays may narrow the protected surface. They may not remove fields, break reconciliation arithmetic, or drop helpers from it.
 
 ## Source Data Encoding
 

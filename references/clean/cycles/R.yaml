@@ -1,6 +1,7 @@
 cycle: R
 focus: Reproducibility
 mandatory: true
+subagents: [evaluator]   # F3: reproducibility verification is mechanical; no domain-fact lookup would change a gate outcome
 
 upstream:
   - cleaning_decisions
@@ -12,15 +13,15 @@ upstream:
 
 setup_side_effects:
   - Extend {scripts_dir_name}/03_cleaning.py with clean_data(visible_inputs, **judgment_call_params) covering every cleaning transform recorded in cleaning_decisions (Cycles A through C and any D-series follow-ups)
-  - Extend {scripts_dir_name}/03_cleaning.py with preprocess_data(clean_outputs, **judgment_call_params, fit_params=None) covering every preprocessing and derived-variable transform recorded in preprocessing_decisions and derived_variables (Cycles E, F, and any G-series follow-ups); declare the helper as no-op with an explicit reason when Cycles E and F contributed no distinct transforms
+  - Extend {scripts_dir_name}/03_cleaning.py with preprocess_data(clean_outputs, **judgment_call_params, fit_params=None) covering every preprocessing and derived-variable transform recorded in preprocessing_decisions and derived_variables (Cycles C closeout, F, and any G-series follow-ups); declare the helper as no-op with an explicit reason when the C closeout and Cycle F contributed no distinct transforms
   - Extend run_cycle_r to rerun both helpers against the protocol-visible inputs and compare against the stage-produced cleaned and preprocessed outputs under a deterministic equality rule
   - Emit {scripts_dir_name}/clean_constraints.json with declared and derived constraints per ../constraint-spec.md
-  - Emit {scripts_dir_name}/preprocess_constraints.json, or an explicit no-additional-constraints file with a reason when Cycles E and F produced nothing new
+  - Emit {scripts_dir_name}/preprocess_constraints.json, or an explicit no-additional-constraints file with a reason when the C closeout and Cycle F produced nothing new
 
 checklist:
   - id: R01
-    question: Does clean_data(...) have a stable, documented signature that matches every cleaning transform recorded in cleaning_decisions, and does preprocess_data(...) match every preprocessing and derived-variable transform (or explicitly state none with a reason)?
-    evidence_key: helper_signatures             # {clean_data: {signature, inputs, judgment_call_params, outputs}, preprocess_data: {signature, inputs, judgment_call_params, fit_params, outputs, no_op_reason_if_any}}
+    question: Does clean_data(...) have a stable, documented signature that matches every cleaning transform recorded in cleaning_decisions -- specifically, does every cleaning_decisions[] entry have a corresponding named transform in clean_data (F2/Block G: absorbs C03 code-trace obligation)? Does preprocess_data(...) match every preprocessing and derived-variable transform from preprocessing_decisions[] and derived_variables[] (or explicitly state none with a reason)?
+    evidence_key: helper_signatures             # {clean_data: {signature, inputs, judgment_call_params, outputs, decisions_covered: [{issue_id, transform_name}]}, preprocess_data: {signature, inputs, judgment_call_params, fit_params, outputs, no_op_reason_if_any}}
     writes_to: [reproducibility.clean_data_signature, reproducibility.preprocess_data_signature]
   - id: R02
     question: When clean_data and preprocess_data are rerun against the protocol-visible inputs, do their outputs match the stage-produced cleaned and preprocessed outputs under a deterministic equality rule?
@@ -28,22 +29,20 @@ checklist:
     writes_to: reproducibility.snapshot_match
   - id: R03
     question: Do declared-error constraints all pass on clean_data and preprocess_data outputs, and what is the count of declared-warn and derived-info constraints per artifact?
+    # Implementation calls `verify_constraint(ser, constraint)` from the primitive registry; null-separation before membership/range is enforced by the helper.
     evidence_key: constraint_check              # {clean_constraints: {declared_error_passed, declared_error_total, declared_warn_passed, declared_warn_total, derived_info_count, failures: [{constraint, observed, expected}]}, preprocess_constraints: {same_shape_or_no_additional_constraints}}
     writes_to: [reproducibility.clean_constraints, reproducibility.preprocess_constraints]
-  - id: R04
-    question: Are the constraint files written to the expected locations and do they parse successfully?
-    evidence_key: constraint_files_present      # {clean_constraints_path, preprocess_constraints_path_or_no_additional_constraints_file, both_parse_successfully: bool}
-    writes_to: reproducibility.constraint_files
+  # F2: R04 (constraint_files_present) deleted -- filesystem assertion only; constraint file creation is a setup_side_effect
+  # and R03 already verifies constraint content. Constraint file paths remain in step4_additions as a closing note.
 
 gates:
   - id: R01-signatures-stable
-    condition: clean_data and preprocess_data have stable documented signatures covering every recorded cleaning, preprocessing, and derived-variable transform; preprocess_data is explicitly declared no-op with a reason when Cycles E and F contributed no distinct transforms
+    condition: clean_data and preprocess_data have stable documented signatures covering every recorded cleaning, preprocessing, and derived-variable transform; every cleaning_decisions[] entry has a corresponding named transform in clean_data (F2/Block G: compensates for C03 removal); preprocess_data is explicitly declared no-op with a reason when the C closeout and Cycle F contributed no distinct transforms
   - id: R02-rerun-matches
     condition: Rerun outputs match the stage-produced cleaned (and preprocessed, when applicable) outputs under the declared equality rule; a mismatch is a blocking defect until the helpers or the cleaned outputs are fixed
   - id: R03-declared-errors-pass
     condition: Every declared-error constraint passes on both clean_data and preprocess_data outputs; a failure is a blocking defect and must not be relabeled as declared-warn
-  - id: R04-constraint-files-present
-    condition: clean_constraints.json exists and parses; preprocess_constraints.json exists and parses, or the no-additional-constraints file is present with a reason
+  # F2: R04-constraint-files-present gate deleted along with R04 checklist item.
 
 research_questions:
   - What are accepted patterns for declaring deterministic equality across pipeline reruns for this kind of data?
@@ -55,6 +54,26 @@ guidance:
   - Declared-error constraint failures are hard defects. Relabeling a declared-error as declared-warn to paper over a failure is a defect of its own.
   - Keep helper signatures minimal and documented so examine and later stages can reuse them without reading the full script.
   - See ../constraint-spec.md for the declared-and-derived constraint file format.
+  - Constraint tolerance rule: any judgment-call constraint that admits a numeric tolerance (e.g. floating-point equality window,
+    range half-width, acceptable null fraction) must carry a `derivation:` block under the constraint entry.
+    Mode `agent_chosen` is forbidden. Allowed modes: empirical (computed from the data before the check), declared_external_standard,
+    upstream_ratio, user_specified. Structural-binary predicates (hash equality, null-count = 0 on declared non-nullable columns,
+    row count >= 1 at load) are exempt and do not carry derivation blocks.
+    # TODO (Block E scope): constraint-spec.md should carry the canonical tolerance derivation note; if Block E has not yet added it,
+    # that is Block E's responsibility -- do not add it to constraint-spec.md from here.
+  - Schema for a constraint with a derived tolerance:
+    # constraint:
+    #   name: <constraint_name>
+    #   type: <range|set_membership|...>
+    #   tolerance:
+    #     value: <numeric>
+    #     derivation:
+    #       mode: empirical            # empirical | declared_external_standard | upstream_ratio | user_specified
+    #       source: <descriptor>
+    #       computation: "<one-line description, empirical only>"
+    #       value: <value>
+    #       approved_by: user          # user | auto_mode_reasoning
+    #       approved_at: <ISO timestamp>
 
 step4_additions:
   description: After the standard decision, state each field listed below before closing the cycle. These populate reproducibility.* in the canonical YAML.

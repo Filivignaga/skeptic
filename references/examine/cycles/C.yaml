@@ -1,6 +1,8 @@
+# C1: every required judgment gate below MUST dispatch AskUserQuestion; reply 'agent decides' is valid but the gate must be dispatched and recorded.
 cycle: C
 focus: Anomalies, Contradictions, and Support Gaps
 mandatory: true
+subagents: [research, evaluator]   # F3: anomaly classification and backtracking decisions require domain knowledge
 
 upstream:
   - upstream.approved_question
@@ -54,6 +56,7 @@ gates:
     depends_on: [C05, C06]
     condition: The cycle resolves both the backtracking decision (including target when required) and the stop-rule decision (stop, continue, or open a narrow Dn follow-up) with stated reasons.
 
+# B1: numeric values in prose must cite a named evidence_key; see examine.md Numeric binding rule
 research_questions:
   - What domain explanations, collection artifacts, or measurement issues could explain the observed anomalies or contradictions?
   - Which sparse regions or unstable subgroup patterns are likely substantive versus procedural?
@@ -71,3 +74,19 @@ pcs_focus:
     - "P: Does the support characterization reflect what the visible data shows, or did framing choices overread first-pass patterns? Cite the specific A02 or B02 evidence that grounds the claim."
     - "C: Can another analyst reproduce each stability verdict in C03 from the canonical YAML and script alone?"
     - "S: For every analysis-contract-relevant pattern, does at least one reasonable alternative confirm or weaken it (not just repeat it)?"
+
+# Evaluator checks per required gate:
+# (1) cycle_history[*].subagents.decisions[*].judgment_gate.gate_id matches the required gate_id
+# (2) judgment_gate.reply is a non-null string
+# (3) if reply == "agent decides", both agent_decision_if_delegated and agent_rationale are non-null
+# Any failure is a blocking defect.
+
+judgment_gates:
+  - gate_id: C05-backtrack-decision
+    stage: examine
+    cycle: C
+    trigger: "C05 resolves the backtracking decision; fires whenever the verdict is not trivially 'continue' (i.e., when C01-C04 surface at least one serious bias, fragile pattern, or support gap that threatens the claim boundary)"
+    question_text: "Backtracking decision after examine C01-C04: agent proposes <backtrack | continue | reopen_protocol> based on <trigger_summary>. Each option has lasting consequences for the analysis contract. Confirm, choose an alternative, or reply 'agent decides'."
+    options_shape: "labeled_options: backtrack | continue | reopen_protocol; reply 'agent decides' is valid"
+    recorded_under: "cycle_history[*].subagents.decisions[*].judgment_gate"
+    required: true

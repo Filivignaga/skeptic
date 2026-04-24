@@ -1,6 +1,7 @@
 cycle: A
 focus: Intake Audit and Evaluation Plan
 mandatory: true
+subagents: [evaluator]   # F3: intake audit and plan derivation are mechanical; evaluation standards are already in the protocol and route file
 
 upstream:
   - project.name
@@ -15,8 +16,8 @@ setup_side_effects:
 
 checklist:
   - id: A01
-    question: What are the approved question, question type, target quantity, claim boundary as-narrowed, active route, protocol mode, validation logic, examination support registry, and formulate stakeholder decision context, restated from the upstream canonical YAMLs?
-    evidence_key: upstream_snapshot                 # {approved_question, question_type, target_quantity, claim_boundary_as_narrowed, protocol_mode, validation_logic, examine_support_registry, stakeholder_decision}
+    question: What are the approved question, question type, target quantity, claim boundary as-narrowed, active route, protocol mode, validation logic, examination support registry, and formulate stakeholder decision context, read from the upstream canonical YAMLs?
+    evidence_key: upstream_intake                   # A1: {approved_question, question_type, target_quantity, claim_boundary_as_narrowed, protocol_mode, validation_logic, examine_support_registry, stakeholder_decision} -- read from upstream YAMLs at cycle start; do not copy into this YAML
     writes_to: upstream
   - id: A02
     question: What is the full evaluation handoff from 05_analysis.yaml (contract summary, execution summary, deviation register, contract amendments, flags for evaluate) and is it loaded into evaluate state?
@@ -42,13 +43,11 @@ checklist:
     question: Are all primary outputs, sensitivity outputs, and challenger outputs named in the analysis contract present on disk or addressable through a documented reproducible path?
     evidence_key: output_inventory                  # {expected_outputs: [{name, path, present: bool}], missing: []}
     writes_to: null
-  - id: A08
-    question: For every entry in the analyze deviation register, does it preserve compliance with the formulation prohibited-use list (any deviation that enables a prohibited use is a BLOCKING defect)?
-    evidence_key: deviation_compliance_scan         # {deviations: [{id, enables_prohibited_use: bool, prohibited_use_ref, evidence}]}
-    writes_to: null
+  # F2: A08 (deviation_compliance_scan) deleted -- same check the evaluator performs adversarially during Cycles B/C/D defect scans.
+  # Prohibited-use compliance for deviations is enforced by the evaluation subagent's adversarial DEFECT SCAN in Cycles B, C, and D.
   - id: A09
     question: For each protocol-frozen artifact named in 02_protocol.yaml, does the observed SHA-256 match the expected SHA-256?
-    evidence_key: frozen_artifact_hashes            # {path: {expected_sha256, observed_sha256, match: bool}}
+    evidence_key: frozen_artifact_hashes            # A2: {path: {expected_sha256, observed_sha256, match: bool}} -- hash value not propagated downstream; only match verdict is recorded here
     writes_to: reproducibility.frozen_artifact_hashes
   - id: A10
     question: For each primary, sensitivity, and challenger output named in the analysis contract, does re-computing at least one key metric from the saved artifact match the value recorded in 05_analysis.yaml?
@@ -65,8 +64,7 @@ gates:
   - id: A-reproducibility-verified
     depends_on: [A09, A10]
     condition: Every protocol-frozen artifact hash matches and every re-computed key metric matches the value recorded in 05_analysis.yaml
-  - id: A08-deviations-compliant
-    condition: No deviation in the analyze deviation register enables a prohibited use declared in 01_formulation.yaml
+  # F2: A08-deviations-compliant gate deleted along with A08 checklist item.
 
 research_questions:
   - What evaluation standards are typical for this route and method family?

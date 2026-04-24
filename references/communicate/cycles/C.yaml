@@ -1,10 +1,12 @@
 cycle: C
 focus: Claim Translation and Caveat Calibration
 mandatory: true
+subagents: [research, evaluator]   # F3: claim translation accuracy and caveat calibration require domain and communication knowledge
 
 upstream:
-  - upstream_snapshot.claim_survival_registry
-  - upstream_snapshot.claim_boundary
+  # A1: read upstream facts directly from the named source YAML at cycle start; do not copy into this YAML
+  - 06_evaluation.yaml:claim_survival_registry
+  - 01_formulation.yaml:claim_boundary
   - audience.type
   - delivery.scaffolding
 

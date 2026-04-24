@@ -1,6 +1,8 @@
+# C1: every required judgment gate below MUST dispatch AskUserQuestion; reply 'agent decides' is valid but the gate must be dispatched and recorded.
 cycle: D
 focus: Threats to Validity
 mandatory: true
+subagents: [research, evaluator]   # F3: threat-to-validity classification and fatal verdict require domain and methods expertise
 
 upstream:
   - upstream.examine_support_registry
@@ -77,3 +79,19 @@ guidance:
   - For any bias domain rated serious or critical, state either a quantitative bound (E-value, Lash-style range, or direction-and-magnitude estimate) or an explicit deferral naming what data would allow bounding it. "Unknown" is acceptable only with a concrete deferral.
   - The three validity verdicts are: defended (threat assessed and ruled out), threatened (threat plausible; caveat required), fatal (threat strong enough to kill the claim or trigger backtracking).
   - Scale translation applies before verdicts. A statistically-notable effect on an uninterpretable scale is insufficient evidence for a survived verdict.
+
+# Evaluator checks per required gate:
+# (1) cycle_history[*].subagents.decisions[*].judgment_gate.gate_id matches the required gate_id
+# (2) judgment_gate.reply is a non-null string
+# (3) if reply == "agent decides", both agent_decision_if_delegated and agent_rationale are non-null
+# Any failure is a blocking defect.
+
+judgment_gates:
+  - gate_id: D04-fatal-validity-verdict
+    stage: evaluate
+    cycle: D
+    trigger: "D04 fires when at least one bias domain is rated critical or the overall validity verdict includes 'fatal'; a fatal verdict kills the claim or triggers backtracking"
+    question_text: "Validity verdict for <claim_id>: agent proposes verdict=<fatal|threatened|defended> for bias domain <domain> based on D02-D06 evidence. A fatal verdict kills the claim; threatened requires a caveat. Confirm, choose an alternative, or reply 'agent decides'."
+    options_shape: "labeled_options: defended | threatened | fatal; reply 'agent decides' is valid"
+    recorded_under: "cycle_history[*].subagents.decisions[*].judgment_gate"
+    required: true

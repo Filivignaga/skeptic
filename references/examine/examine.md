@@ -63,31 +63,24 @@ status:
   completed_cycles: []
   locked_at: null                   # set at stage close; presence = locked
 
-upstream:                           # snapshot copied once at Cycle A setup
-  formulation_yaml:                 # relative path
-  protocol_yaml:
-  cleaning_yaml:
-  approved_question:
-  question_type:
-  target_quantity:
-  claim_boundary:                   # {claim_type, scope, evidence_ceiling, generalization_limit, verbs_allowed_effective, verbs_forbidden_effective}
-  active_route:                     # descriptive|exploratory|inferential|predictive|causal|mechanistic
-  route_file:                       # references/routes/{route}/examine.md
-  protocol_mode:
-  visibility_rules_summary:
-  cleaned_artifact_list: []
-  protocol_created_artifact_list: []
-  leakage_rules_summary:
-  examine_prohibitions: []
-  backtracking_triggers: []
-  carried_assumptions: []
-  carried_open_questions: []
+upstream_pointer:                   # A1: source paths and SHA-256 digests only; read upstream facts in memory at cycle start
+  sources:
+    - path: <docs_dir>/<formulation_file>
+      content_sha256: <hex>
+    - path: <docs_dir>/<protocol_file>
+      content_sha256: <hex>
+    - path: <docs_dir>/<cleaning_file>
+      content_sha256: <hex>
+  note: "Read fields directly from source files; do not copy here."
+  route_file:                       # references/routes/{route}/examine.md -- set at cycle start
 
-visibility:                         # derived once at Cycle A setup; reused across cycles
-  visible_cleaned_artifacts: []     # [{name, access_level, notes}]
-  visible_protocol_artifacts: []    # [{name, access_level, notes}]
-  restricted_artifacts: []          # named artifacts that are out of bounds for examine
-  access_notes:                     # free-text clarifications when protocol visibility needs interpretation
+# A3 visibility derivation: computed at cycle-start from 02_protocol.yaml and 03_cleaning.yaml.
+# Stored as visible_artifacts [{name, access_level}]; optional visibility_hash for drift detection.
+# Do not re-document protocol rationale here.
+visibility:
+  visible_artifacts: []             # [{name, access_level}] -- derived from 02_protocol.yaml at cycle start
+  restricted_artifacts: []
+  visibility_hash:                  # optional scalar for drift detection
 
 support_registry:                   # built across A, B, C; finalized in E
   well_supported: []                # [{item, evidence_ref}]
@@ -148,10 +141,12 @@ Each `cycle_history` entry:
 - cycle:                            # A|B|C|E|D1|D2|...
   iteration:                        # 1-based per cycle letter
   unanswered: []                    # checklist IDs not answered; empty = all answered
-  script_evidence: {}               # compact summary only: 4-8 one-line bullets, or one-line value per evidence_key. No full JSON, no DataFrames, no arrays, no per-column schema.
+  script_evidence: {}               # A7: compact summary only: 4-8 one-line bullets, or one-line value per evidence_key. No full JSON, no DataFrames, no arrays, no per-column schema.
+                                    # Compliant:     - raw_hash_verification: match=true (expected=<hex12>, observed=<hex12>)
+                                    # Non-compliant: - The script found that the raw hash matched, and also confirmed 12 dtype issues, and loaded 43819 rows successfully...
   subagents:
-    research_sources: []            # [{url, claim}] -- only sources that materially shaped a decision this iteration
-    decisions: []                   # [{what, why, pcs: P|C|S|null, source: int?}] -- operational choices where a reasonable alternative existed (distinct from the top-level `decision:` verdict below; `source` is an optional index into research_sources)
+    research_sources: []            # [{log_id, url, claim}] -- only sources that materially shaped a decision this iteration; log_id is the primary key into {docs_dir_name}/research_log.jsonl
+    decisions: []                   # [{what, why, pcs: P|C|S|null, source: str?}] -- operational choices where a reasonable alternative existed; `source` is a log_id string when a research log entry drove the call
     rejected_alternatives: []       # [{option, reason, pcs: P|C|S|null}] -- paths considered and dropped (the PCS Stability counterfactual record)
     open_risks: []                  # [str] -- unresolved concerns downstream stages must carry forward
     blocking_failures:              # int (0 = PASS, >0 = FAIL)
@@ -165,7 +160,11 @@ The main model reads both subagent replies, distills them, and writes the result
 
 ```yaml
 pcs_review:
-  verbatim:
+  digest:                           # A6: structured per-lens verdict; full subagent reply stays in memory or pcs_review.json
+    - lens:                         # Predictability|Computability|Stability|<route-specific>
+      verdict:                      # holds_up|uncertain|risky
+      key_finding:                  # one sentence
+      recommendation:               # one sentence or null
   disposition:                      # satisfied|valid_concern|disagree_override
   disposition_reason:
 ```
@@ -222,10 +221,10 @@ This protocol applies to every cycle, mandatory or follow-up.
 1. Read `cycles/{cycle}.yaml`.
 2. Resolve the route and upstream snapshot:
    - Cycle A: read `01_formulation.yaml`, `02_protocol.yaml`, `03_cleaning.yaml`, and `README.md`. Resolve exactly one active route from `02_protocol.yaml` (must match the confirmed question type in `01_formulation.yaml`). Load `references/routes/{route}/examine.md` once and keep it in context for the rest of the stage. If the route cannot be resolved or the expected route file is missing, stop and reopen `protocol`.
-   - First cycle entered in a fresh session (not Cycle A), or first cycle after a backtrack reopens the stage: read `04_examination.yaml` once to load the upstream snapshot, visibility, prior findings, and prior `cycle_history`; reload the route file named in `upstream.route_file`.
+   - First cycle entered in a fresh session (not Cycle A), or first cycle after a backtrack reopens the stage: read `04_examination.yaml` once to load the upstream_pointer, visibility, prior findings, and prior `cycle_history`; also reread the three upstream YAMLs and the route file named in `upstream_pointer.route_file`.
    - Every other case (continuing the same chat session): skip the re-reads; the canonical YAML and route context are already in context from the cycle that just wrote it. If route context becomes ambiguous mid-stage, reread `01_formulation.yaml`, `02_protocol.yaml`, `03_cleaning.yaml`, and the route file before proceeding.
-3. Cycle A only: create `04_examination.yaml` with `stage`, `schema_version`, `project`, the full `upstream` snapshot copied from the three upstream YAMLs, the derived `visibility` set (which cleaned artifacts and protocol-created artifacts `examine` may inspect, which are restricted, and what access level applies to each), and `status.current_cycle: A`. Create `04_examination.py` with the shape specified below.
-4. Every cycle: extend `04_examination.py` by writing or updating the cycle's function (`run_cycle_a`, `run_cycle_b`, ...). The function must produce every non-null `evidence_key` named in the cycle's checklist. Operate only on artifacts in `visibility.visible_cleaned_artifacts` and `visibility.visible_protocol_artifacts`.
+3. Cycle A only: create `04_examination.yaml` with `stage`, `schema_version`, `project`, `upstream_pointer` (source paths and SHA-256 digests of the three upstream YAMLs; do not copy upstream fields into this YAML -- reference them in memory at cycle start), the derived `visibility` set (stored as `visible_artifacts [{name, access_level}]` and `restricted_artifacts`; optionally `visibility_hash`), and `status.current_cycle: A`. Create `04_examination.py` with the shape specified below.
+4. Every cycle: extend `04_examination.py` by writing or updating the cycle's function (`run_cycle_a`, `run_cycle_b`, ...). The function must produce every non-null `evidence_key` named in the cycle's checklist. Operate only on artifacts in `visibility.visible_artifacts` and restricted artifacts stay out of bounds.
 5. Run `python {scripts_dir_name}/04_examination.py --cycle {cycle}`. Capture stdout.
 6. Parse stdout as JSON. Use the parsed dict as this cycle's candidate evidence for Step 2 and Step 3; Step 5 records a compact summary in `cycle_history[*].script_evidence`. The script has already mirrored the same JSON to `{scripts_dir_name}/stdout/cycle_{cycle}.json` for external inspection; do not copy it into the canonical YAML.
 7. Scan stderr and stdout for unhandled exceptions. Any unhandled exception is a blocking defect and must be fixed before continuing. Functions that intentionally demonstrate failure must be explicitly flagged with a `# expected_failure` comment.
@@ -239,7 +238,9 @@ Script rules:
 - Heavy data (arrays, full DataFrames) is summarized, not dumped. Evidence packets stay compact.
 - Per-file provenance (schema, encoding, sha256) is emitted only the first time a file is recorded -- typically Cycle A iter 1. After it lands in `provenance.files`, neither the stdout packet nor `cycle_history[*].script_evidence` re-emits those fields; downstream cycles reference those files by filename.
 - Seeds are set inside the function if any stochastic step runs (representative subsampling, resampled perturbations).
-- No generic helpers at module scope beyond those named in the Script shape above. Any helper introduced for a cycle lives inside that cycle's function and is removed once the cycle passes.
+- No generic helpers at module scope beyond those declared in `references/script-primitives.md` and the Script shape above. Primitive-registry helpers are the explicit exception to the cycle-local rule because they must be called identically across cycles. Any other helper introduced for a cycle lives inside that cycle's function and is removed once the cycle passes.
+
+Every stage exposes a fixed set of project-side primitives declared in `references/script-primitives.md`. Cycle functions call these helpers; they do not reimplement I/O, dtype interpretation, or constraint verification.
 
 ### Step 2: Human Review
 
@@ -253,7 +254,15 @@ Auto mode: apply the self-review loop from `../auto-mode.md`. Self-correct withi
 
 ### Step 3: Subagent Review
 
-Dispatch two subagents in parallel.
+Read the `subagents:` flag from the active cycle YAML (top-level field).
+
+Decision tree:
+```
+subagents: [research, evaluator]  --> dispatch both in parallel (below)
+subagents: [evaluator]            --> dispatch the evaluator alone; skip the research subagent block
+```
+
+If `[research, evaluator]`, dispatch both in parallel. If `[evaluator]`, dispatch the evaluator alone.
 
 Research subagent:
 
@@ -289,6 +298,10 @@ Agent(
   Return concise findings with sources, organized by research question. Focus on
   information that changes support characterization, fragility assessment, or
   analysis constraints.
+
+  Record every source you cite as a new line in `{docs_dir}/research_log.jsonl`
+  matching the schema in examine.md (Research log section). Do not inline URLs
+  or free-form citations into cycle_history. Use `log_id` pointers.
   """
 )
 ```
@@ -333,6 +346,7 @@ Agent(
   protocol-visibility violations, touches of restricted artifacts, support
   claims not backed by evidence, drift into final analysis, widened scope
   against the active route file.
+  DEFECT SCAN (A7): Each `cycle_history[*].script_evidence` entry must be one line with a single `evidence_key: value` pair. Multi-clause prose is a non-blocking defect.
   If after genuinely adversarial scrutiny you find zero defects, state
   "No defects found" and name at least three specific failure modes you
   tested and ruled out. Do not fabricate defects.
@@ -378,8 +392,8 @@ When both subagents return, the model parses three counts from the evaluation ou
 Digest the subagent replies into `cycle_history[*].subagents`; the replies themselves stay in memory. Admit something to `subagents` when a future reader needs it to reconstruct why this path was chosen.
 
 Include:
-- `research_sources`: URLs that actually tipped a call, each paired with a one-line claim. Drop sources that merely confirmed obvious baseline facts or rephrased what was already known.
-- `decisions`: operational choices where a reasonable alternative existed. Tag each with its PCS axis (`P`, `C`, `S`, or `null` when not PCS-relevant). Set `source` to the index into `research_sources` when a specific source drove the call. Default choices (reading a CSV with `read_csv`, computing sha256 with hashlib) are not decisions.
+- `research_sources`: Sources that actually tipped a call, each as `{log_id, url, claim}` where `log_id` matches the entry in `{docs_dir_name}/research_log.jsonl`. Drop sources that merely confirmed obvious baseline facts or rephrased what was already known.
+- `decisions`: operational choices where a reasonable alternative existed. Tag each with its PCS axis (`P`, `C`, `S`, or `null` when not PCS-relevant). Set `source` to the `log_id` string when a specific research log entry drove the call. Default choices (reading a CSV with `read_csv`, computing sha256 with hashlib) are not decisions.
 - `rejected_alternatives`: paths actively weighed and dropped, with the reason and PCS axis. This is the stability counterfactual record.
 - `open_risks`: one line each. Unresolved concerns downstream stages must carry forward.
 
@@ -428,7 +442,7 @@ Append one entry to `cycle_history`. Required fields:
 
 - `cycle`, `iteration`
 - `unanswered` (list of checklist IDs that could not be answered; empty list when all were answered)
-- `script_evidence` (compact summary only: 4-8 one-line bullets, or one-line value per `evidence_key` from the cycle YAML). Do not re-emit the full JSON, full DataFrames, or full arrays; after Cycle A iter 1, do not re-emit file schema, encoding, or sha256 -- those are immutable and live in `provenance.files`.
+- `script_evidence` (compact summary only: 4-8 one-line bullets, or one-line value per `evidence_key` from the cycle YAML). Do not re-emit the full JSON, full DataFrames, or full arrays; after Cycle A iter 1, do not re-emit file schema, encoding, or sha256 -- those are immutable and live in `provenance.files`. A7 rule: each entry is one line. Compliant: `- visibility_check: 3 visible artifacts, 0 restricted`. Non-compliant: `- The script found that the raw hash matched, and also confirmed 12 dtype issues, and loaded 43819 rows successfully...`
 - `subagents.research_sources`, `subagents.decisions`, `subagents.rejected_alternatives`, `subagents.open_risks`, `subagents.blocking_failures` (populate each only with entries that materially shaped this iteration; empty lists are valid)
 - `decision`
 
@@ -445,6 +459,34 @@ Update every canonical-YAML field named in a checklist item's `writes_to`, but o
 Set `status.current_cycle` to the next cycle letter (or keep for another iteration). Append the closed cycle letter to `status.completed_cycles` only when the cycle passes or is closed by override.
 
 Re-parse `04_examination.yaml` to confirm validity.
+
+### Numeric binding rule
+
+Every integer, decimal, percentage, category set literal (`{...}` or `[...]`), date literal (ISO-like), or unit-suffixed value in any YAML prose field must trace to a named `evidence_key` in the owning cycle's script output. Cite either as a sibling `evidence_key: <key>` on the same list element, or inline as `(source: <cycle_id>.<evidence_key>)`. Exempt fields: `sha256`, `schema_version`, cycle-ID strings, ISO-date metadata (`started_at`, `locked_at`, `last_updated`), `random_seeds`, `auto_mode_state.json` counters. Unbound numeric tokens at cycle-close are blocking defects. The evaluation subagent scans for this.
+
+### Research log
+
+Append-only file: `{docs_dir_name}/research_log.jsonl`. One JSON object per line, schema:
+
+```json
+{
+  "log_id":             "<stage>-<cycle>-<int>",
+  "stage":              "examine",
+  "cycle":              "<cycle_letter_or_id>",
+  "iteration":          0,
+  "url":                "<absolute URL>",
+  "title":              "<page/paper title from fetch>",
+  "author_year":        "<Author YYYY or null>",
+  "claim":              "<one-sentence claim this source supports>",
+  "fetched_at":         "<ISO-8601 datetime of subagent fetch>",
+  "verified_at":        "<ISO-8601 datetime of main-model confirmation, or null>",
+  "verified_by":        "<research_subagent|main_model|evaluation_subagent>",
+  "http_status":        200,
+  "influenced_decision":"<decision ID, or null>"
+}
+```
+
+The main model must fetch and content-check every null-`verified_at` citation before the cycle closes; an unverified citation may not be the sole support for any `decisions[*]` entry. The evaluation subagent verifies every `log_id` resolves and that every citation used as a decision source has `verified_at: non-null`. The `cycle_history[*].subagents.research_sources` schema is `[{log_id, url, claim}]`; raw URL strings are not written into `cycle_history` without a matching `log_id`.
 
 ## Ending the Cycle Loop
 
@@ -513,7 +555,7 @@ Agent(
 )
 ```
 
-Store the full output in `pcs_review.verbatim`.
+Digest per PCS lens. Each lens (Predictability, Computability, Stability, plus any route-specific lens) produces `{lens, verdict in {holds_up, uncertain, risky}, key_finding: str (one sentence), recommendation: str | null}`. Keep `disposition` and `disposition_reason`. Full subagent reply stays in memory or in a side file `pcs_review.json`; it does not enter the canonical YAML.
 
 - Interactive mode: present via `AskUserQuestion` with options `satisfied`, `valid_concern`, `disagree_override`. Wait for the user's answer before invoking any other tool.
 - Auto mode: apply `../auto-mode.md` stage-close rules.

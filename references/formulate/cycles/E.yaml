@@ -1,6 +1,7 @@
 cycle: E
 focus: Collection and Biases
 mandatory: true
+subagents: [research, evaluator]   # F3: bias taxonomy and representativeness evidence require domain knowledge that changes gate outcomes
 
 upstream:
   - contract.approved_question

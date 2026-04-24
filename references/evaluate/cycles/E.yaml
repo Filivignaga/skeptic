@@ -1,6 +1,7 @@
 cycle: E
 focus: Claim Survival Determination
 mandatory: true
+subagents: [evaluator]   # F3: claim survival derivation is mechanical application of adjudication verdicts; no domain-fact lookup changes gate outcomes
 
 upstream:
   - stability_verdicts

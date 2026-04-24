@@ -1,6 +1,8 @@
+# C1: every required judgment gate below MUST dispatch AskUserQuestion; reply 'agent decides' is valid but the gate must be dispatched and recorded.
 cycle: B
 focus: Data Understanding
 mandatory: true
+subagents: [research, evaluator]   # F3: domain knowledge changes data understanding, variable identification, and missing-data classification
 
 upstream:
   - provenance.files
@@ -48,3 +50,19 @@ guidance:
   - Record the chosen interpretation in contract.operationalization with rationale, and list rejected interpretations in rejected_alternatives.
   - The "ideal dataset" gap is not a failure signal by itself. Record it so `protocol` and later stages can reason about it.
   - contract.key_assumptions may be appended from any checklist item when an assumption surfaces that later stages must respect.
+
+# Evaluator checks per required gate:
+# (1) cycle_history[*].subagents.decisions[*].judgment_gate.gate_id matches the required gate_id
+# (2) judgment_gate.reply is a non-null string
+# (3) if reply == "agent decides", both agent_decision_if_delegated and agent_rationale are non-null
+# Any failure is a blocking defect.
+
+judgment_gates:
+  - gate_id: B04-interpretation-choice
+    stage: formulate
+    cycle: B
+    trigger: "B04 surfaces at least one materially different interpretation for a concept or column"
+    question_text: "Interpretation ambiguity for <column_or_concept>: candidate interpretations are <A>, <B>. Each produces a materially different operationalization. Which do you choose, or reply 'agent decides'?"
+    options_shape: "labeled_options; reply 'agent decides' is valid"
+    recorded_under: "cycle_history[*].subagents.decisions[*].judgment_gate"
+    required: false

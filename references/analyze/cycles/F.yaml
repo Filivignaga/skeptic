@@ -1,6 +1,7 @@
 cycle: F
 focus: Results Assembly, Reproducibility, and Evaluate Handoff
 mandatory: true
+subagents: [evaluator]   # F3: results assembly and reproducibility re-run are mechanical; no domain-fact lookup changes gate outcomes
 
 upstream:
   - contract

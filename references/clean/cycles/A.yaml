@@ -1,29 +1,21 @@
 cycle: A
 focus: Structural Audit
 mandatory: true
+subagents: [research, evaluator]   # F3: domain knowledge changes how artifacts, identifiers, and missing values are interpreted
 
 upstream:
   - project.name
-  - contract.approved_question
-  - contract.question_type
-  - contract.claim_boundary
-  - contract.operationalization
-  - protocol.route
-  - protocol.data_usage_mode
-  - protocol.visibility_rules
-  - protocol.clean_prohibitions
-  - protocol.forbidden_variable_classes
-  - protocol.leakage_rules
-  - protocol.validation_logic_reserved
-  - protocol.required_artifacts
+  # A1: read all upstream facts directly from 01_formulation.yaml and 02_protocol.yaml at cycle start; do not copy into this YAML
+  - upstream_pointer.sources                   # paths and sha256 of upstream YAMLs
 
 setup_side_effects:
   - Resolve the active route from 01_formulation.yaml and 02_protocol.yaml; reopen protocol on contradiction
   - Load references/routes/{route}/clean.md once and keep it in memory for the stage
   - Verify 01_formulation.yaml, 02_protocol.yaml, {readme_name}, at least one raw file, and every protocol-required artifact exist
   - Recompute SHA-256 for each raw file and compare to provenance.files.{filename}.sha256 recorded in 01_formulation.yaml
-  - Derive the active visibility set (visible raw files, visible protocol artifacts, restricted artifacts, access levels)
-  - Initialize {docs_dir_name}/03_cleaning.yaml with stage, schema_version, project (including project.started_at), status.current_cycle A, route, upstream_snapshot, precondition_check, and visibility
+  - Reference upstream YAML(s) at cycle start; do not copy fields into this YAML (A1)
+  - Derive the active visibility set from 02_protocol.yaml (data_usage, frozen_artifacts, evidence_rules); store as visible_artifacts [{name, access_level}] plus optional visibility_hash (A3)
+  - Initialize {docs_dir_name}/03_cleaning.yaml with stage, schema_version, project (including project.started_at), status.current_cycle A, route, upstream_pointer (source paths + sha256 only), precondition_check, and the derived visibility set
   - Seed question_critical_variables from contract.operationalization in 01_formulation.yaml
   - Create {scripts_dir_name}/03_cleaning.py with the shape specified in the stage entry
 
@@ -33,11 +25,12 @@ checklist:
     evidence_key: precondition_check            # {formulation_fields_present, protocol_fields_present, readme_present, raw_file_count, required_artifacts: {artifact: present|missing_reason}, hash_verification: {filename: {expected, observed, match}}}
     writes_to: precondition_check
   - id: A01
-    question: Which artifacts did this stage load, what are their dimensions, and which are restricted from inspection under the derived visibility set?
-    evidence_key: visibility_snapshot           # {visible_raw_files: [{path, n_rows, n_cols}], visible_protocol_artifacts: [{path, role}], restricted_artifacts: [{path, restriction_reason}], access_levels: {artifact: allowed_operations}}
+    question: Which artifacts are visible to this stage (per the visibility set derived from 02_protocol.yaml), what are their dimensions, and which named artifacts are restricted?
+    evidence_key: visibility_check              # A3: {visible_artifacts: [{name, access_level, dimensions}], restricted_artifacts: [{name, reason}]} -- derives from 02_protocol.yaml at cycle start; does not re-document protocol rationale
     writes_to: visibility
   - id: A02
     question: For each visible artifact, what are the column dtypes, and do any columns carry a type that contradicts their apparent meaning?
+    # Implementation calls `check_dtype_meaning(series, expected_meaning)` from the primitive registry; do not write inline dtype comparisons.
     evidence_key: schema_and_type_issues        # {filename: {columns: [{name, dtype, apparent_meaning, type_meaning_mismatch: bool, notes}]}}
     writes_to: null
   - id: A03
@@ -61,10 +54,8 @@ checklist:
     question: What is the explicit data contract (raw artifacts, cleaned artifacts, tidy-data rules, codebook location and required contents, missing-vs-censored rule, raw-to-clean recipe)?
     evidence_key: null
     writes_to: [data_contract.raw_artifacts, data_contract.cleaned_artifacts, data_contract.tidy_rules, data_contract.codebook_location, data_contract.codebook_contents, data_contract.missing_vs_censored_rule, data_contract.raw_to_clean_recipe]
-  - id: A08
-    question: Are structural conventions (column naming, merged fields, identifier rules, unit handling) explicit, internally consistent, and compatible with the tidy-data rules above?
-    evidence_key: structural_conventions_audit  # {conventions: [{name, description, applied_to, internally_consistent: bool, tidy_compatible: bool, notes}]}
-    writes_to: data_contract.structural_conventions
+  # F2: A08 (structural_conventions_audit) deleted -- naming-convention style check; no downstream cycle gates on it.
+  # Structural convention notes belong in provenance.notes or the data_contract prose; they do not warrant a checklist ID.
 
 gates:
   - id: A00-preconditions-verified
@@ -82,8 +73,7 @@ gates:
     condition: Planned actions respect the question type, the protocol contract, and the active route-file restrictions; all three respect fields are yes with no violations
   - id: A07-data-contract-defined
     condition: Raw artifacts, cleaned artifacts, tidy-data rules, codebook location and contents, missing-vs-censored rule, and raw-to-clean recipe are all populated
-  - id: A08-conventions-consistent
-    condition: Structural conventions are internally consistent and compatible with the tidy-data rules
+  # F2: A08-conventions-consistent gate deleted along with A08 checklist item.
 
 research_questions:
   - What domain or source documentation clarifies the meaning, units, codes, or timestamp semantics of the visible fields?

@@ -1,6 +1,9 @@
+# C1: every required judgment gate below MUST dispatch AskUserQuestion; reply 'agent decides' is valid but the gate must be dispatched and recorded.
+# These judgment gates fire before step4 user_approval; step4 approval confirms the record, not the original choice.
 cycle: A
 focus: Contract Lock
 mandatory: true
+subagents: [research, evaluator]   # F3: method family selection, perturbation axes, and assumption-failure policy require methods expertise
 
 upstream:
   # Read-only inputs from upstream stages (sourced outside 05_analysis.yaml)
@@ -32,8 +35,8 @@ setup_side_effects:
   - Verify each upstream artifact parses and contains the fields analyze depends on. If any are missing, contradictory, or force widening of the claim boundary, stop and reopen the affected upstream stage.
   - Resolve exactly one active_route from 01_formulation.yaml plus 02_protocol.yaml. If they contradict or do not collapse to one route for analyze, stop and reopen protocol.
   - Load references/routes/{active_route}/analyze.md once; keep in memory for all cycles in this stage.
-  - Record sha256 of each upstream artifact read into provenance.upstream_artifacts.
-  - Derive the active visibility set from 02_protocol.yaml and 03_cleaning.yaml and record it in provenance.visibility_set (visible_cleaned, visible_protocol_created, restricted, access_level_per_artifact). Held-out artifacts are not visible unless protocol authorizes them for analyze.
+  - A2: record a compact hash verdict {expected_sha256, observed_sha256, match: bool} for each upstream artifact into provenance.upstream_artifacts; hash values do not propagate downstream -- only the match verdict is recorded.
+  - A3: derive the active visibility set from 02_protocol.yaml and 03_cleaning.yaml; store as provenance.visibility.visible_artifacts [{name, access_level}] and provenance.visibility.restricted_artifacts. Optional provenance.visibility.visibility_hash for drift detection. Held-out artifacts are not visible unless protocol authorizes them for analyze.
   - Initialize {docs_dir_name}/05_analysis.yaml with stage, schema_version, project (project.name, project.started_at as ISO timestamp), status.current_cycle set to A, and status.active_route.
   - Create {scripts_dir_name}/05_analysis.py with the shape specified in the stage entry.
 
@@ -51,14 +54,36 @@ checklist:
     evidence_key: null
     writes_to: contract.primary_specification
   - id: A04
-    question: What accuracy metric applies, and how does it match the route overlay requirement?
+    question: What accuracy metric applies, and how does it match the route overlay requirement? The metric value or screening threshold must carry a derivation block with mode one of {empirical, declared_external_standard, upstream_ratio, user_specified}; mode agent_chosen is forbidden.
     skip_when: route overlay does not require an accuracy metric
     evidence_key: null
     writes_to: contract.accuracy_metric
+    # accuracy_metric schema (when used):
+    #   name: <metric_name>
+    #   threshold: <value>
+    #   derivation:
+    #     mode: empirical            # empirical | declared_external_standard | upstream_ratio | user_specified
+    #     source: <descriptor>
+    #     computation: "<one-line description, empirical only>"
+    #     value: <value>
+    #     approved_by: user          # user | auto_mode_reasoning
+    #     approved_at: <ISO timestamp>
   - id: A05
-    question: What perturbation plan is locked -- axes, types, and scope -- and how does each axis probe route-relevant instability?
+    question: What perturbation plan is locked -- axes, types, and scope -- and how does each axis probe route-relevant instability? Any numeric material-difference threshold per axis must carry a derivation block; mode agent_chosen is forbidden.
     evidence_key: null
     writes_to: contract.perturbation_plan
+    # perturbation_plan threshold schema (per axis, when a numeric threshold applies):
+    #   axes:
+    #     - name: <axis_name>
+    #       threshold:
+    #         value: <value>
+    #         derivation:
+    #           mode: empirical            # empirical | declared_external_standard | upstream_ratio | user_specified
+    #           source: <descriptor>
+    #           computation: "<one-line description, empirical only>"
+    #           value: <value>
+    #           approved_by: user          # user | auto_mode_reasoning
+    #           approved_at: <ISO timestamp>
   - id: A06
     question: What challenger alternatives are pre-specified, and for each one, what structural difference from the primary makes it a genuine stress test rather than cosmetic variation?
     evidence_key: null
@@ -96,6 +121,20 @@ checklist:
     question: For each contract field covered by the loaded route overlay, which overlay requirement or prohibition is in effect and how does the contract satisfy it?
     evidence_key: null
     writes_to: contract.route_overlay_requirements
+  - id: A15
+    question: What is the complete metric_graph for this analysis -- naming every raw variable and derived metric with its inputs and dependency type (ratio, arithmetic_complement, formula_parameter, shared_feature, indirect)? This graph is authored once here and referenced read-only by all later perturbation cycles.
+    evidence_key: null
+    writes_to: contract.metric_graph
+    # metric_graph schema:
+    #   <raw_variable>:
+    #     inputs: []
+    #   <derived_metric>:
+    #     inputs: [<raw_variable>, <other_input>]
+    #     dependency_type: ratio   # ratio | arithmetic_complement | formula_parameter | shared_feature | indirect
+    #   <complement>:
+    #     inputs: [<derived_metric>]
+    #     dependency_type: arithmetic_complement
+    # The expected exceedance set for a perturbation to variable X is the transitive closure of metrics whose inputs chain reaches X.
 
 gates:
   - id: A01-precise
@@ -119,6 +158,8 @@ gates:
   - id: A-overlay-aligned
     depends_on: [A02, A03, A04, A05, A06, A09, A12, A14]
     condition: Every contract field covered by the loaded route overlay carries an explicit entry stating the overlay requirement or prohibition and how the contract satisfies it
+  - id: A15-metric-graph-authored
+    condition: contract.metric_graph is populated with at least one node per question-critical variable, each input chain is traceable, and every arithmetic complement relationship is declared explicitly
 
 research_questions:
   - What method families are standard for this question type, route, and data profile given the examination support registry, and which are admissible under the protocol contract?
@@ -133,6 +174,39 @@ guidance:
   - Route overlays may add route-specific fields (causal adds identification strategy; mechanistic adds structural model; predictive adds hyperparameter search space). Capture overlay-specific fields under contract.route_overlay_requirements rather than inventing new top-level contract fields.
   - Competing operationalizations surfaced in formulate must be stability-tested at the contract level. If any reasonable alternative would change method family or active route, append a narrowing entry to claim_boundary.narrowing_log_additions.
   - If A13 or A14 forces narrowing, record the rationale in claim_boundary.narrowing_log_additions. Do not widen elsewhere to compensate.
+
+# Evaluator checks per required gate:
+# (1) cycle_history[*].subagents.decisions[*].judgment_gate.gate_id matches the required gate_id
+# (2) judgment_gate.reply is a non-null string
+# (3) if reply == "agent decides", both agent_decision_if_delegated and agent_rationale are non-null
+# Any failure is a blocking defect.
+# These judgment gates fire before step4 user_approval; step4 approval confirms the record, not the original choice.
+
+judgment_gates:
+  - gate_id: A02-method-family-selected
+    stage: analyze
+    cycle: A
+    trigger: "Always fires before committing contract.method_family; method family selection has no mechanically correct answer and changes the estimand, perturbation space, and assumption set"
+    question_text: "Method family for this contract: agent proposes <method_family> based on examination support registry and route overlay. Alternatives are <alt1>, <alt2>. Each changes the perturbation space and assumption set. Confirm, choose an alternative, or reply 'agent decides'."
+    options_shape: "labeled_options; reply 'agent decides' is valid"
+    recorded_under: "cycle_history[*].subagents.decisions[*].judgment_gate"
+    required: true
+  - gate_id: A05-perturbation-axes-locked
+    stage: analyze
+    cycle: A
+    trigger: "Always fires before committing contract.perturbation_plan; perturbation axes determine which instabilities the analysis must survive"
+    question_text: "Perturbation plan: agent proposes axes=<axes_list>, types=<types>, scope=<scope>. Including or excluding <candidate_axis> changes which route-relevant instabilities are tested. Confirm, adjust, or reply 'agent decides'."
+    options_shape: "labeled_options; reply 'agent decides' is valid"
+    recorded_under: "cycle_history[*].subagents.decisions[*].judgment_gate"
+    required: true
+  - gate_id: A07-assumption-failure-policy
+    stage: analyze
+    cycle: A
+    trigger: "Always fires before committing contract.assumption_failure_policy; the policy (backtrack_only vs amendment_allowed) determines whether narrowing fallbacks are pre-approved"
+    question_text: "Assumption-failure policy: agent proposes <backtrack_only | amendment_allowed> with fallbacks=<fallback_list>. Choosing amendment_allowed pre-authorizes specific narrowing paths; backtrack_only locks the contract. Confirm, choose an alternative, or reply 'agent decides'."
+    options_shape: "labeled_options: backtrack_only | amendment_allowed; reply 'agent decides' is valid"
+    recorded_under: "cycle_history[*].subagents.decisions[*].judgment_gate"
+    required: true
 
 step4_additions:
   description: After the standard decision, present the fully drafted analysis contract to the user for explicit approval. Record the approval timestamp and channel in contract.user_approval before setting status.current_cycle to B.
@@ -151,6 +225,7 @@ step4_additions:
     - examination_support_alignment
     - route_overlay_requirements
     - backtracking_triggers
+    - metric_graph_with_all_dependency_types   # A15: authored here; referenced read-only in D, evaluate B, clean S
   user_approval: required
 
 pcs_focus:

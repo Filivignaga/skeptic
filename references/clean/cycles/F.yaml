@@ -1,14 +1,12 @@
 cycle: F
 focus: Derived Variables and Related Downstream-Safe Transforms
 mandatory: false
+subagents: [research, evaluator]   # F3: research warrants dispatch -- derived variable definitions are judgment calls with domain dependency
 
 upstream:
   - cleaning_decisions
   - preprocessing_decisions
-  - upstream_snapshot.approved_question
-  - upstream_snapshot.claim_boundary
-  - upstream_snapshot.forbidden_variable_classes
-  - upstream_snapshot.leakage_rules
+  # A1: read approved_question, claim_boundary, forbidden_variable_classes, leakage_rules directly from upstream YAMLs at cycle start; do not copy here
 
 setup_side_effects: []
 
@@ -17,10 +15,8 @@ checklist:
     question: Is each proposed derived variable justified by the approved question and protocol, and does it fit exactly one of the three stage-core classes (formulation-approved derived metric, protocol-explicit structural transform, low-regret measurement-fidelity fix)?
     evidence_key: derived_justification         # list of {name, purpose, stage_core_class: formulation_approved|protocol_explicit|low_regret_measurement_fidelity, evidence, question_relevance, protocol_relevance}
     writes_to: derived_variables
-  - id: F02
-    question: Is each derived variable compatible with the question type, protocol contract, active route file, forbidden variable classes, and leakage rules?
-    evidence_key: derived_compatibility         # list of {name, question_type_compatible, protocol_compatible, route_file_compatible, forbidden_classes_respected, leakage_rules_respected, notes}
-    writes_to: null
+  # F2: F02 (derived_compatibility) deleted -- F01 establishes the stage-core class and protocol relevance; F02 restated it.
+  # Compatibility with question type, protocol, route file, forbidden classes, and leakage rules is now part of F01's evidence_key.
   - id: F03
     question: For each retained derived variable, what is the formula, rationale, meaning, missingness, distribution summary, and interpretation risk?
     evidence_key: derived_profile               # list of {name, formula, rationale, meaning, missingness, distribution_summary, interpretation_risk}
@@ -29,8 +25,7 @@ checklist:
 gates:
   - id: F01-derived-justified
     condition: Every retained derived variable fits exactly one of the three stage-core classes and names its question and protocol relevance
-  - id: F02-route-safe
-    condition: Every retained derived variable is compatible with question type, protocol, and the active route file, and respects forbidden variable classes and leakage rules
+  # F2: F02-route-safe gate deleted along with F02 checklist item.
   - id: F03-derived-validated
     condition: Every retained derived variable carries a formula, rationale, meaning, missingness, distribution summary, and interpretation risk
 

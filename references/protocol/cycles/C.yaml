@@ -1,6 +1,8 @@
+# C1: every required judgment gate below MUST dispatch AskUserQuestion; reply 'agent decides' is valid but the gate must be dispatched and recorded.
 cycle: C
 focus: Evidence, Validation, and Risk Rules
 mandatory: true
+subagents: [research, evaluator]   # F3: validation logic and leakage verdict require domain and methods knowledge
 
 upstream:
   - route.active
@@ -52,6 +54,21 @@ checklist:
     writes_to: evidence_rules.structure
   - id: C06
     question: What validation logic must later stages satisfy, chosen from denominator_integrity, resampling_stability, holdout_scoring, temporal_backtesting, group_transfer_checks, external_corroboration, placebo_falsification, overlap_sensitivity, simulation_based_validation? Include the rationale grounding each choice in the claim boundary.
+    # Threshold derivation rule: any numeric threshold within validation_logic (significance alpha, minimum overlap fraction, acceptable error band)
+    # must carry a derivation block with mode one of {declared_external_standard, upstream_ratio, user_specified}; mode `agent_chosen` is forbidden.
+    # User must approve the declared value before this cycle closes; record approved_by: user and approved_at.
+    # Schema for a numeric threshold within a validation_logic check:
+    #   validation_logic:
+    #     <check_name>:
+    #       required: true
+    #       threshold:                 # e.g. alpha, minimum_overlap, acceptable_rmse_ratio
+    #         value: <numeric>
+    #         derivation:
+    #           mode: declared_external_standard   # declared_external_standard | upstream_ratio | user_specified
+    #           source: <descriptor>
+    #           value: <value>
+    #           approved_by: user
+    #           approved_at: <ISO timestamp>
     evidence_key: null
     writes_to: evidence_rules.validation_logic
   - id: C07
@@ -105,3 +122,43 @@ pcs_focus:
     - "P: Do the required validation checks match the reality check the claim actually requires, rather than a template attached to the question type?"
     - "C: Could another analyst implement every listed required_check without re-deriving protocol rules?"
     - "S: Does the nearest alternative framing of validation_logic change the allowed claim boundary? If yes, append a narrowing entry to 01_formulation.yaml:claim_boundary.narrowing_log."
+
+# Evaluator checks per required gate:
+# (1) cycle_history[*].subagents.decisions[*].judgment_gate.gate_id matches the required gate_id
+# (2) judgment_gate.reply is a non-null string
+# (3) if reply == "agent decides", both agent_decision_if_delegated and agent_rationale are non-null
+# Any failure is a blocking defect.
+
+judgment_gates:
+  - gate_id: C01-leakage-verdict
+    stage: protocol
+    cycle: C
+    trigger: "Always fires before committing evidence_rules.leakage.relevance; verdict class (central/possible_limited/irrelevant) changes what fields are forbidden downstream"
+    question_text: "Leakage relevance for this project: agent proposes verdict=<verdict> based on C01 scan. Alternative verdict=<alt> would <change/preserve> the forbidden-class enumeration. Confirm, choose an alternative, or reply 'agent decides'."
+    options_shape: "labeled_options: central | possible_limited | irrelevant; reply 'agent decides' is valid"
+    recorded_under: "cycle_history[*].subagents.decisions[*].judgment_gate"
+    required: true
+  - gate_id: C02-forbidden-classes-enumerated
+    stage: protocol
+    cycle: C
+    trigger: "C02 produces the forbidden variable classes list; fires before committing evidence_rules.leakage.forbidden_variable_classes"
+    question_text: "Forbidden variable classes: agent proposes <class_list>. Including or excluding <candidate_class> changes what the analysis may condition on. Confirm, adjust, or reply 'agent decides'."
+    options_shape: "labeled_options; reply 'agent decides' is valid"
+    recorded_under: "cycle_history[*].subagents.decisions[*].judgment_gate"
+    required: true
+  - gate_id: C04-confounding-centrality
+    stage: protocol
+    cycle: C
+    trigger: "C04 resolves confounding centrality; fires before committing evidence_rules.confounding_identification"
+    question_text: "Confounding or identification centrality for this project: agent proposes <central|secondary|not_relevant> based on claim_type=<type> and unit_of_analysis=<unit>. An alternative verdict changes the required adjustment strategy. Confirm, choose an alternative, or reply 'agent decides'."
+    options_shape: "labeled_options: central | secondary | not_relevant; reply 'agent decides' is valid"
+    recorded_under: "cycle_history[*].subagents.decisions[*].judgment_gate"
+    required: true
+  - gate_id: C06-validation-logic-locked
+    stage: protocol
+    cycle: C
+    trigger: "C06 specifies the validation logic list; fires before committing evidence_rules.validation_logic"
+    question_text: "Validation logic for this project: agent proposes checks=<check_list>. Including or excluding <candidate_check> changes what later stages must execute. Confirm, adjust, or reply 'agent decides'."
+    options_shape: "labeled_options; reply 'agent decides' is valid"
+    recorded_under: "cycle_history[*].subagents.decisions[*].judgment_gate"
+    required: true

@@ -195,6 +195,10 @@ State schema validation and read-back verification:
 
 If the run is interrupted, resume from this state rather than guessing.
 
+## Per-Cycle Subagent Dispatch
+
+Per-cycle subagent dispatch is deterministic from the active cycle YAML's `subagents:` flag (`[research, evaluator]` or `[evaluator]`). Auto mode honors the flag; it does not second-guess the dispatch. Check 7 (stage-close verification) references the protected surface declared in `core-principles.md`.
+
 ## Autonomous Cycle Protocol
 
 This protocol replaces the interactive Step 2 and Step 4 flow.

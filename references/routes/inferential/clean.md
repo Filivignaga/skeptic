@@ -27,3 +27,7 @@ description: Stage-specific route file for the Skeptic clean stage for inferenti
 - Duplicate or linkage resolution changes whether units are independent, repeated, clustered, or otherwise design-relevant.
 - Missingness is concentrated enough across inferentially relevant groups that simple deletion would change the population claim.
 - Resolving a cleaning issue would require choosing among competing inferential assumptions instead of repairing data fidelity.
+
+## Protected surface
+
+Route overlays may narrow this stage's surface. They may not rewrite or remove fields from the protected surface declared in `references/core-principles.md` §4.8 (decision register, reconciliation table / chain, claim-critical helper set). A route-specific requirement that shrinks the decision register, breaks the reconciliation arithmetic, or removes a helper is rejected regardless of route-specific rationale.

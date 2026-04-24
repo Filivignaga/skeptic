@@ -28,3 +28,7 @@ description: Stage-specific route file for the Skeptic clean stage for causal qu
 - Repeated records reveal longitudinal treatment history, clustering, or interference stronger than `protocol` allowed.
 - Critical candidate confounders become unusable after cleaning.
 - Resolving a cleaning issue would require choosing among competing estimands or identification strategies.
+
+## Protected surface
+
+Route overlays may narrow this stage's surface. They may not rewrite or remove fields from the protected surface declared in `references/core-principles.md` §4.8 (decision register, reconciliation table / chain, claim-critical helper set). A route-specific requirement that shrinks the decision register, breaks the reconciliation arithmetic, or removes a helper is rejected regardless of route-specific rationale.

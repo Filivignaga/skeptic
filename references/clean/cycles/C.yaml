@@ -1,36 +1,28 @@
+# C1: every required judgment gate below MUST dispatch AskUserQuestion; reply 'agent decides' is valid but the gate must be dispatched and recorded.
 cycle: C
 focus: Cleaning Resolution
 mandatory: true
+subagents: [research, evaluator]   # F3: research warrants dispatch -- cleaning policies turn on domain knowledge and measurement meaning
 
 upstream:
   - data_contract.raw_artifacts
   - data_contract.cleaned_artifacts
   - data_contract.missing_vs_censored_rule
-  - visibility.visible_raw_files
-  - visibility.visible_protocol_artifacts
+  - visibility.visible_artifacts
   - question_critical_variables
-  - upstream_snapshot.claim_boundary
-  - upstream_snapshot.clean_prohibitions
-  - upstream_snapshot.forbidden_variable_classes
+  # A1: read claim_boundary, clean_prohibitions, forbidden_variable_classes directly from upstream YAMLs at cycle start; do not copy here
 
 setup_side_effects: []
 
 checklist:
+  # A4: C01-C04 collapse -- emit one composite record per issue instead of four parallel lists.
+  # Each entry covers: issue_id, issue_description, policy_options [{option, preserves, destroys}],
+  # chosen_policy, rationale, rationale_source, alternatives, reversibility, code_reference,
+  # population_shift {before, after, interpretation}. All fields required by cleaning_decisions[]
+  # must still be present per record (Block G narrowing preserved).
   - id: C01
-    question: For each material issue surfaced in Cycles A and B, what are the real policy options (keep, drop, impute, replace with sentinel, flag, split into subpopulations, route back upstream), and what does each option preserve or destroy?
-    evidence_key: policy_options                # list of {issue_id, issue_description, options: [{option, preserves, destroys}]}
-    writes_to: null
-  - id: C02
-    question: For each chosen policy, what is the rationale, which rationale class does it come from (measurement meaning, domain knowledge, data-generating process, protocol rule, transferability evidence), and what are the named alternatives?
-    evidence_key: chosen_policies               # list of {issue_id, policy, rationale, rationale_source, alternatives, reversibility: reversible|partially_reversible|irreversible}
-    writes_to: cleaning_decisions
-  - id: C03
-    question: For each material action, which function or cell in {scripts_dir_name}/03_cleaning.py implements it, and is the transformation traceable to the rationale recorded in C02?
-    evidence_key: action_code_trace             # list of {issue_id, function_or_cell, matches_rationale: bool, notes}
-    writes_to: cleaning_decisions               # updates each decision's code_reference
-  - id: C04
-    question: For each material action, what changed (rows, values, fields, analyzable population), and does the row-count reconciliation (raw_rows minus ordered exclusions equals cleaned_rows) match the actual cleaned artifact row count?
-    evidence_key: row_count_and_population      # {raw_rows, exclusions: [{reason, rows_removed}], cleaned_rows, arithmetic_match: bool, population_shift_per_action: [{issue_id, before, after, interpretation}]}
+    question: For each material issue surfaced in Cycles A and B, produce one composite record containing: the real policy options (with what each preserves and destroys), the chosen policy, its rationale and rationale class (measurement meaning, domain knowledge, data-generating process, protocol rule, transferability evidence), named alternatives, reversibility class, the implementing code reference in {scripts_dir_name}/03_cleaning.py, and the population shift (before, after, interpretation). Does the row-count reconciliation close (raw_rows minus ordered exclusions equals cleaned_rows)?
+    evidence_key: cleaning_issue_records        # A4: list of {issue_id, issue_description, policy_options: [{option, preserves, destroys}], chosen_policy, rationale, rationale_source, alternatives, reversibility, code_reference, population_shift: {before, after, interpretation}}
     writes_to: [cleaning_decisions, row_count_reconciliation]
   - id: C05
     question: For each material action, what is the claim consequence (none, narrower coverage, changed interpretation, or backtracking required), and does any action require appending a narrowing entry to claim_boundary_updates.narrowing_log?
@@ -47,13 +39,10 @@ checklist:
     writes_to: null
 
 gates:
-  - id: C01-policies-defined
-    condition: Every material issue from Cycles A and B carries at least two real policy options and a stated tradeoff between them
-  - id: C02-policies-chosen
-    condition: Every chosen policy carries a named rationale drawn from measurement meaning, domain knowledge, data-generating process, protocol rule, or transferability evidence, plus named alternatives and a reversibility class
-  - id: C03-transforms-auditable
-    condition: Every material transformation is implemented in {scripts_dir_name}/03_cleaning.py and traceable to its C02 rationale
-  - id: C04-row-count-reconciled
+  # A4: gates updated to match composite evidence record shape
+  - id: C01-composite-records-complete
+    condition: Every material issue from Cycles A and B has a composite record with policy_options (at least two, each with preserves/destroys), chosen_policy, rationale, rationale_source, named alternatives, reversibility class, code_reference traceable to the implementing function in {scripts_dir_name}/03_cleaning.py, and population_shift
+  - id: C01-row-count-reconciled
     condition: Row-count arithmetic (raw_rows minus ordered exclusions equals cleaned_rows) matches the actual cleaned artifact row count; any discrepancy is a blocking defect
   - id: C05-claim-impact-stated
     condition: Every material action has an explicit claim consequence; narrowing entries are appended to claim_boundary_updates.narrowing_log where applicable
@@ -81,3 +70,36 @@ pcs_focus:
     - "P: Do cleaning policies match the data-generating process rather than convenience? Cite the rationale source for each material decision."
     - "C: Is every material transformation implemented in {scripts_dir_name}/03_cleaning.py code that another analyst can rerun from the canonical YAML and the raw files alone?"
     - "S: Would any single judgment call, reversed, change the analyzable population enough to alter the claim boundary?"
+
+# F1 closeout: preprocessing decisions recorded here (Cycle E deleted; E04/E05 absorbed into C closeout per Block G narrowing).
+# Required fields per preprocessing_decisions[] entry:
+#   columns (list or single column name), transform, rationale, rationale_class
+#   (measurement_meaning|domain_knowledge|data_generating_process|protocol_rule|transferability_evidence),
+#   reversibility (reversible|partially_reversible|irreversible),
+#   fit_scope_decision (fit_from_visible_only|no_fit_required|deferred),
+#   deferred_to (null|route_file|analyze),
+#   claim_consequence (none|narrower|changed_interpretation|backtracking_required).
+# A5: when N columns share the same decision, rationale, reversibility, and fit_scope, record one entry with columns: [col_1, ..., col_N].
+# Scope checks (formerly E01/E02/E03/E05/E06) applied here:
+#   - Every preprocessing step must respect the question, protocol mode, visibility rules, forbidden variable classes, and leakage rules.
+#   - Category, numeric, date, and time transforms must be meaning-preserving; uncertain cases deferred to a D-series follow-up.
+#   - Fitting scope of any fit-from-data transform limited to protocol-allowed visible artifacts (no reserved validation, future, or restricted artifacts).
+#   - Categorical expansion reference levels and omitted-category conventions documented when applicable.
+# Cycle R obligation: every preprocessing_decisions[] entry must eventually map to a transform in preprocess_data(...).
+
+# Evaluator checks per required gate:
+# (1) cycle_history[*].subagents.decisions[*].judgment_gate.gate_id matches the required gate_id
+# (2) judgment_gate.reply is a non-null string
+# (3) if reply == "agent decides", both agent_decision_if_delegated and agent_rationale are non-null
+# Any failure is a blocking defect.
+
+judgment_gates:
+  - gate_id: C01-irreversible-exclusion-above-threshold
+    stage: clean
+    cycle: C
+    trigger: "C01 records any irreversible exclusion whose row_fraction exceeds the project-declared row-fraction threshold (itself user-approved before the gate fires)"
+    question_text: "Irreversible exclusion for issue <issue_id>: proposed policy removes <row_fraction> of rows (threshold is <user_approved_threshold>). This exceeds the project threshold. Confirm exclusion, choose an alternative policy, or reply 'agent decides'."
+    options_shape: "labeled_options; reply 'agent decides' is valid"
+    recorded_under: "cycle_history[*].subagents.decisions[*].judgment_gate"
+    required: true
+    note: "The row-fraction threshold itself must be user-approved (or recorded with agent_decision_if_delegated) before this gate can evaluate; it is not hard-coded in the spec."

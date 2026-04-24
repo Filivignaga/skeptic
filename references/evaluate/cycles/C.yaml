@@ -1,6 +1,8 @@
+# C1: every required judgment gate below MUST dispatch AskUserQuestion; reply 'agent decides' is valid but the gate must be dispatched and recorded.
 cycle: C
 focus: Predictability Adjudication
 mandatory: true
+subagents: [research, evaluator]   # F3: predictability verdicts require domain and methods knowledge for adequate/marginal/inadequate classification
 
 upstream:
   - upstream.validation_logic
@@ -28,6 +30,9 @@ checklist:
     writes_to: null
   - id: C05
     question: For each claim the analysis contract was designed to support, what is the predictability verdict (adequate, marginal, or inadequate), and which reality-check outputs ground it?
+    # Threshold derivation rule: the predictability screening threshold is locked in the analysis contract (analyze Cycle A); mode `agent_chosen` is forbidden.
+    # Evaluate applies the locked threshold; it does not re-select or re-derive it here. If no numeric threshold exists in the contract, the verdict
+    # is qualitative and must still be grounded in contract-specified reality-check criteria rather than in post-hoc numeric choices.
     evidence_key: null
     writes_to: predictability_verdicts
 
@@ -53,3 +58,19 @@ guidance:
   - Predictability is not always held-out prediction. It is the route-appropriate reality check named in protocol. Descriptive, exploratory, inferential, causal, and mechanistic routes each have their own natural checks (see the loaded route file).
   - The three predictability verdicts are: adequate (reality check passed; result reemerges), marginal (partially passed; some aspects hold, others weaker), inadequate (failed; result does not reemerge).
   - If held-out data must be unsealed, verify protocol authorizes unsealing for this stage before executing the check. Unauthorized unsealing is a BLOCKING defect and forces reopening protocol.
+
+# Evaluator checks per required gate:
+# (1) cycle_history[*].subagents.decisions[*].judgment_gate.gate_id matches the required gate_id
+# (2) judgment_gate.reply is a non-null string
+# (3) if reply == "agent decides", both agent_decision_if_delegated and agent_rationale are non-null
+# Any failure is a blocking defect.
+
+judgment_gates:
+  - gate_id: C05-predictability-verdict
+    stage: evaluate
+    cycle: C
+    trigger: "C05 fires when the predictability verdict for at least one claim is marginal or inadequate (adequate verdicts grounded entirely in C02-C04 evidence are mechanically determined and do not require this gate)"
+    question_text: "Predictability verdict for <claim_id>: agent proposes verdict=<marginal|inadequate> based on reality-check comparison in C03-C04. Verdict class determines caveat severity and claim survival. Confirm, choose an alternative, or reply 'agent decides'."
+    options_shape: "labeled_options: adequate | marginal | inadequate; reply 'agent decides' is valid"
+    recorded_under: "cycle_history[*].subagents.decisions[*].judgment_gate"
+    required: true

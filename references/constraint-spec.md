@@ -61,8 +61,14 @@ Row-wise constraint families (range, set membership, regex, nullable) support an
 For declared domain constraints: default `tolerance: 1.0` (hard gate) unless the domain question or cycle decisions justify a softer threshold. For declared judgment-call constraints where some violation is expected: set explicitly with rationale in the decision log. For derived constraints: `tolerance` is always omitted (they describe what was observed, not what should be).
 
 **Edge case rules for tolerance:**
-- Denominator is always non-null rows for the checked column(s). Null handling is delegated to a separate nullable constraint.
+- Denominator is always non-null rows for the checked column(s). Null handling is delegated to a separate nullable constraint. Implementation calls `verify_constraint(ser, constraint)` from the primitive registry (`references/script-primitives.md`); null-separation before membership/range checks is enforced by the helper — do not write inline `isin` or range comparisons that conflate null with non-membership.
 - On small datasets (<30 applicable rows), `tolerance` rounds to the nearest whole row using `floor(element_count * (1 - tolerance))` as the max allowed failures. Document this in the verification cell output.
+
+**Tolerance derivation requirement:** Any numeric tolerance used in a Verification Cell must carry a `derivation:` field under the constraint entry. Allowed modes: `empirical` (computed from the data before the check), `declared_external_standard`, `upstream_ratio`, `user_specified`. Mode `agent_chosen` is forbidden. Structural-binary predicates (hash equality, null-count = 0 on declared non-nullable columns, row count >= 1 at load) are exempt and do not carry derivation blocks.
+
+**Semantic dtype checking:** Schema constraints that check column dtypes must use semantic dtype families, not literal dtype strings. Implementation calls `check_dtype_meaning(series, expected_meaning)` from the primitive registry. Recognized families: `numeric`, `string`, `categorical`, `date`, `boolean`, `identifier`. Literal string comparisons (`"object"` vs `"float64"`) fail silently on pandas 3.x StringDtype, ArrowDtype, nullable int, and categorical columns and are prohibited.
+
+**Protected surface:** The `clean_data` / `preprocess_data` signatures and the declared-error/warn/info constraint families are part of the protected surface; refactors must preserve them.
 
 ## File Format
 
