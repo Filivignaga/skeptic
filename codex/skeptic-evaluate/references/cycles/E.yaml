@@ -23,7 +23,7 @@ guidance:
   belong to communicate.
 step4_additions:
   description: Before closing Cycle E, present the full claim_survival_registry for explicit user approval (interactive mode)
-    or log the registry and defer human approval to stage-close review under auto-mode.md (auto mode).
+    or log the registry and defer human approval to stage-close review under the `--auto` rule in SKILL.md (auto mode).
   items:
   - claim_adjudication_table
   - survival_verdicts_per_claim

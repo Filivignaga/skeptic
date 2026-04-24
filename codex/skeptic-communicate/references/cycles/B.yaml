@@ -15,7 +15,7 @@ research_questions:
 guidance:
 - Audience identification is the user's call in both modes. Step 2 must dispatch AskUserQuestion with three audience questions
   (who is the audience, what is their technical level and decision context, what format do they expect); auto mode uses the
-  audience prompt specified in auto-mode.md.
+  audience prompt specified in the `--auto` rule in SKILL.md.
 - All layers share the same claims, boundary, and mandatory limitations. Depth varies; substance does not.
 - The five mandatory sections fix the scaffolding: Question, Findings, Confidence, Limitations, Methods Summary.
 - If the audience differs materially from the stakeholder named in formulate's decision_context, record the mismatch and flag

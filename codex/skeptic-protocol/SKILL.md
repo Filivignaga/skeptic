@@ -6,7 +6,7 @@ description: Skeptic protocol and project rules. Use after formulate to lock the
 
 ## Codex Invocation
 
-Use this skill for `skeptic protocol`. If the user writes `skeptic protocol --auto`, run this same stage in auto mode: read `references/auto-mode.md` and apply its autonomous cycle protocol only to the `protocol` stage. This folder is self-contained for this stage.
+Use this skill for `skeptic protocol`. If the user writes `skeptic protocol --auto`, run all cycles for the `protocol` stage without asking cycle-by-cycle questions; make autonomous pass/iterate decisions from the stage acceptance criteria and stop only for missing required inputs, blocking environment failures, or user-owned choices that cannot be inferred.
 
 # /skeptic:protocol - Project Rules of the Game
 
@@ -247,7 +247,7 @@ Interactive mode:
 3. If at least one such item exists, dispatch `AskUserQuestion` with 1-3 questions targeting them. Otherwise proceed directly to Step 3.
 4. When AskUserQuestion was dispatched, record the user's answers as `user_observations` in the pending decision_ledger entry. Pass them into Step 3 subagent prompts via the `User observations:` field.
 
-Auto mode: apply the self-review loop from `references/auto-mode.md`. Self-correct within the configured budget, then proceed unless an escalation trigger fires.
+Auto mode: apply the self-review loop from `the `--auto` rule in this SKILL.md`. Self-correct within the configured budget, then proceed unless an escalation trigger fires.
 
 ### Step 3: Subagent Review
 
@@ -380,7 +380,7 @@ Exclude PASS notes, subagent summaries, restatements of required evidence, sourc
 
 When both subagents return:
 
-1. Verify each result is non-empty and contains its required sections. If malformed, escalate to the user (interactive) or follow `references/auto-mode.md` (auto).
+1. Verify each result is non-empty and contains its required sections. If malformed, escalate to the user (interactive) or follow `the `--auto` rule in this SKILL.md` (auto).
 2. Parse `Unanswered items`, `Blocking defects`, `Failed criteria` from the evaluation output.
 3. Compute `blocking_failures = unanswered + blocking_defects + failed_criteria`.
 4. Apply the decision matrix.
@@ -401,7 +401,7 @@ Always available regardless of `blocking_failures`:
 
 Interactive mode: present the synthesized assessment and the allowed actions via `AskUserQuestion`. Wait for the user's answer before invoking any other tool.
 
-Auto mode: apply the autonomous decision protocol from `references/auto-mode.md`.
+Auto mode: apply the autonomous decision protocol from `the `--auto` rule in this SKILL.md`.
 
 If later work discovers the rules cannot be locked without better upstream evidence, choose `reformulate`, `data_insufficient`, or `archive`.
 
@@ -434,7 +434,7 @@ The loop ends when all of the following hold:
 - every approved follow-up cycle is resolved
 - every frozen artifact that Cycle B said was required has been created and recorded in `frozen_artifacts.artifacts` and `provenance.files`
 - interactive mode: the user explicitly approves the protocol contract (route, data-usage mode, frozen artifacts, evidence rules, prohibitions, backtracking triggers)
-- auto mode: the stage approval checkpoint in `references/auto-mode.md` completes
+- auto mode: the stage approval checkpoint in `the `--auto` rule in this SKILL.md` completes
 
 Finalization requires explicit stage-close discipline. Do not finalize because the stage "seems clear enough."
 
@@ -482,7 +482,7 @@ Agent(
 Digest the review into `pcs_review`: record `overall`, `blocking_findings`, `material_risks`, `material_findings`, `disposition`, and `disposition_reason`. Do not store the full review text unless a FAIL or override makes literal audit text necessary; if retained, store only a pointer in `full_review_pointer`.
 
 - Interactive mode: present via `AskUserQuestion` with options `satisfied`, `valid_concern`, `disagree_override`. Wait for the user's answer before invoking any other tool.
-- Auto mode: apply `references/auto-mode.md` stage-close rules.
+- Auto mode: apply `the `--auto` rule in this SKILL.md` stage-close rules.
 
 Record the chosen disposition and reason in `pcs_review.disposition` and `pcs_review.disposition_reason`.
 

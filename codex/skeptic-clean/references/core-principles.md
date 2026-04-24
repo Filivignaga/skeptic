@@ -125,12 +125,12 @@ Likely evaluator-only cycles include mechanical artifact audits, reproducibility
 Skeptic supports two execution modes:
 
 - `interactive`: the user reviews outputs and decides cycle by cycle.
-- `auto`: the `/skeptic:auto` runtime defined in `references/auto-mode.md`.
+- `auto`: the `/skeptic:auto` runtime defined in `the `--auto` rule in SKILL.md`.
 
 Mode-selection rules:
 
-- if `/skeptic:auto` is active, load and follow `references/auto-mode.md`.
-- if a stage file conflicts with `references/auto-mode.md` on runtime control flow, `references/auto-mode.md` wins.
+- if `/skeptic:auto` is active, load and follow `the `--auto` rule in SKILL.md`.
+- if a stage file conflicts with `the `--auto` rule in SKILL.md` on runtime control flow, `the `--auto` rule in SKILL.md` wins.
 - stage files still define what each stage must check, log, and protect.
 
 Auto mode keeps the same rigor:

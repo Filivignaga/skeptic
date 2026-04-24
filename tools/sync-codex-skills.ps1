@@ -57,7 +57,8 @@ function Convert-BodyForCodex {
   $converted = $Body
   $converted = $converted -replace '\.\./core-principles\.md', 'references/core-principles.md'
   $converted = $converted -replace '\.\./script-contract\.md', 'references/script-contract.md'
-  $converted = $converted -replace '\.\./auto-mode\.md', 'references/auto-mode.md'
+  $converted = $converted -replace '\.\./auto-mode\.md', 'the `--auto` rule in this SKILL.md'
+  $converted = $converted -replace 'references/auto-mode\.md', 'the `--auto` rule in this SKILL.md'
   if ($Stage) {
     $converted = $converted -replace "\.\./routes/\{route\}/$Stage\.md", 'references/routes/{route}.md'
     $converted = $converted -replace "\.\./routes/\{active\}/$Stage\.md", 'references/routes/{active}.md'
@@ -82,7 +83,7 @@ function Add-StageAutoInstruction {
 
 ## Codex Invocation
 
-Use this skill for `skeptic __STAGE__`. If the user writes `skeptic __STAGE__ --auto`, run this same stage in auto mode: read `references/auto-mode.md` and apply its autonomous cycle protocol only to the `__STAGE__` stage. This folder is self-contained for this stage.
+Use this skill for `skeptic __STAGE__`. If the user writes `skeptic __STAGE__ --auto`, run all cycles for the `__STAGE__` stage without asking cycle-by-cycle questions; make autonomous pass/iterate decisions from the stage acceptance criteria and stop only for missing required inputs, blocking environment failures, or user-owned choices that cannot be inferred.
 
 '@
   $instruction = $instruction.Replace('__STAGE__', $Stage)
@@ -108,11 +109,13 @@ function Convert-StandaloneReferenceText {
   }
   $converted = $converted -replace '\.\./\.\./core-principles\.md', '../core-principles.md'
   $converted = $converted -replace '\.\./\.\./script-contract\.md', '../script-contract.md'
-  $converted = $converted -replace '\.\./\.\./auto-mode\.md', '../auto-mode.md'
+  $converted = $converted -replace '\.\./\.\./auto-mode\.md', 'the `--auto` rule in SKILL.md'
   $converted = $converted -replace '\.\./\.\./routes/', '../routes/'
   $converted = $converted -replace '\.\./core-principles\.md', 'core-principles.md'
   $converted = $converted -replace '\.\./script-contract\.md', 'script-contract.md'
-  $converted = $converted -replace '\.\./auto-mode\.md', 'auto-mode.md'
+  $converted = $converted -replace '\.\./auto-mode\.md', 'the `--auto` rule in SKILL.md'
+  $converted = $converted -replace 'references/auto-mode\.md', 'the `--auto` rule in SKILL.md'
+  $converted = $converted -replace '\bauto-mode\.md\b', 'the `--auto` rule in SKILL.md'
   $converted = $converted -replace '\.\./routes/\{route\}/', 'routes/{route}/'
   $converted = $converted -replace '\.\./routes/\{active\}/', 'routes/{active}/'
   return $converted
@@ -159,7 +162,7 @@ function Copy-CommonReferences {
   $refs = Join-Path $SkillDir 'references'
   New-Item -ItemType Directory -Force -Path $refs | Out-Null
 
-  foreach ($file in @('core-principles.md', 'script-contract.md', 'auto-mode.md')) {
+  foreach ($file in @('core-principles.md', 'script-contract.md')) {
     Copy-Item -LiteralPath (Join-Path $RepoRoot "references\$file") -Destination (Join-Path $refs $file) -Force
   }
 }
