@@ -1,0 +1,109 @@
+cycle: A
+focus: Support and Distribution Audit
+mandatory: true
+upstream:
+- upstream.approved_question
+- upstream.question_type
+- upstream.active_route
+- upstream.route_file
+- upstream.claim_boundary
+- upstream.protocol_mode
+- upstream.visibility_rules_summary
+- upstream.cleaned_artifact_list
+- visibility.visible_cleaned_artifacts
+- visibility.visible_protocol_artifacts
+- visibility.restricted_artifacts
+setup_side_effects:
+- Read {docs_dir_name}/01_formulation.yaml, {docs_dir_name}/02_protocol.yaml, and {docs_dir_name}/03_cleaning.yaml once and
+  copy the required fields into the examine canonical YAML's `upstream` block (approved_question, question_type, target_quantity,
+  claim_boundary snapshot with effective verbs, active_route, protocol_mode, visibility_rules_summary, cleaned_artifact_list,
+  protocol_created_artifact_list, leakage_rules_summary, examine_prohibitions, backtracking_triggers, carried_assumptions,
+  carried_open_questions).
+- Resolve the active route from 02_protocol.yaml (must match the confirmed question type in 01_formulation.yaml) and load
+  `references/routes/{route}/examine.md` once; record the route file path in upstream.route_file.
+- Derive the visibility set from 02_protocol.yaml and 03_cleaning.yaml: list visible_cleaned_artifacts, visible_protocol_artifacts,
+    restricted_artifacts, and access levels per artifact. Held-out partitions that protocol does not authorize for examine
+    remain in restricted_artifacts.
+- ? Initialize {docs_dir_name}/04_examination.yaml with stage, schema_version, project, upstream, visibility, and status.current_cycle
+  : A.
+- Create {scripts_dir_name}/04_examination.py with the shape specified in the stage entry.
+research_questions:
+- What domain ranges, support expectations, or coverage patterns matter for interpreting the visible structures?
+- Do observed sparse regions, subgroup absences, or range limits reflect domain reality, measurement design, or likely extraction
+  artifacts?
+- Which observed support limitations are routine for this data source, and which are genuine warnings for the approved question?
+- If a visible artifact is large or dense, what representative subsample is sufficient for first-pass manual inspection without
+  hiding important structure?
+guidance:
+- Use the cleaned artifacts as the input state. If a mismatch with 03_cleaning.yaml appears, close the cycle with decision
+  reopen_clean.
+- Keep A02 universal: describe structure, support, and coverage of question-critical fields regardless of whether the question
+    has a target variable. Response-versus-predictor framing belongs to analyze (and only for predictive routes).
+- When a subsample is used in A05, record seed, method, and a reconciliation check against the full artifact so the script
+  remains reproducible.
+- When listing well/weakly/unsupported items in A04, cite the specific A02 (or A03) evidence refs that ground each line.
+required_evidence:
+- id: A01
+  question: Which cleaned artifacts and protocol-created artifacts are visible to examine, what access level applies to each,
+    and which named artifacts are restricted?
+  evidence_key: visibility_map
+  evidence_shape: '{visible: [{name, access_level, dimensions}], restricted: [{name, reason}]}'
+- id: A02
+  question: For each visible artifact and each question-critical structure, what is the support, coverage, observed range,
+    sparsity, schema sanity, and count reconciliation against upstream expectations, including top and bottom rows, missing
+    codes, sentinel values, and join-structure notes?
+  evidence_key: distribution_and_coverage
+  evidence_shape: '{artifact: {distributions: {column: summary}, schema_sanity, count_reconciliation, startup_observations:
+    {top_rows_seen, bottom_rows_seen, missing_codes_seen, sentinels_seen, join_structure_notes}}}'
+- id: A03
+  question: What subgroup, time, cluster, hierarchy, or panel presence exists in the visible data, and is each dimension balanced,
+    thin, or absent?
+  evidence_key: subgroup_presence
+  evidence_shape: '{dimension: {levels, balance, thin_or_missing_levels, evidence}}'
+  skip_when: no subgroups, time windows, clusters, or hierarchies are relevant to the approved question
+- id: A04
+  question: Based on Cycle A observations, which aspects of the approved question look well supported, weakly supported, and
+    unsupported in the visible data, with explicit evidence refs?
+  evidence_key: null
+- id: A05
+  question: When a visible artifact is large or dense, has a representative subsample been selected for first-pass inspection,
+    by what method, and do its counts reconcile against the full artifact?
+  evidence_key: subsample_use
+  evidence_shape: '{artifact: {used: bool, method, size, seed, reconciled_against_full: bool, evidence}}'
+  skip_when: no visible artifact is large or dense enough to require subsampling for first-pass inspection
+writes:
+  A01:
+  - visibility.visible_cleaned_artifacts
+  - visibility.visible_protocol_artifacts
+  - visibility.restricted_artifacts
+  - visibility.access_notes
+  - structure_profile.artifact_dimensions
+  A02:
+  - structure_profile.distributions_and_coverage
+  - structure_profile.schema_and_reconciliation
+  - structure_profile.startup_checks
+  A03: structure_profile.subgroup_presence
+  A04:
+  - support_registry.well_supported
+  - support_registry.weakly_supported
+  - support_registry.unsupported
+  A05: structure_profile.subsample_use
+acceptance_criteria:
+- id: A01-visibility-confirmed
+  condition: Visibility is explicit and positive -- at least one visible artifact is named with its access level and dimensions,
+    restricted artifacts are listed, and no held-out partition is treated as visible unless protocol authorizes it.
+- id: A-scope-respected
+  depends_on:
+  - A01
+  - A02
+  - A03
+  - A04
+  - A05
+  condition: Every inspection performed in this cycle operates only on artifacts listed in visibility.visible_cleaned_artifacts
+    or visibility.visible_protocol_artifacts, stays inside the approved question, and honors the route file's restrictions.
+- id: A-support-characterized-without-overclaim
+  depends_on:
+  - A02
+  - A04
+  condition: A04's well/weakly/unsupported lists are each grounded in A02 evidence (or A03 when relevant) and use language
+    consistent with the claim boundary's effective allowed verbs.

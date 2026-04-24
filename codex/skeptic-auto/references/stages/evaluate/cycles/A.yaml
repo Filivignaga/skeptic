@@ -1,0 +1,109 @@
+cycle: A
+focus: Intake Audit and Evaluation Plan
+mandatory: true
+upstream:
+- project.name
+setup_side_effects:
+- Read {docs_dir_name}/01_formulation.yaml, 02_protocol.yaml, 03_cleaning.yaml, 04_examination.yaml, 05_analysis.yaml and
+  {readme_name}
+- Resolve the active route from contract.question_type in 01_formulation.yaml cross-checked against 02_protocol.yaml; stop
+  and reopen protocol if they diverge
+- Load references/routes/{route}/evaluate.md once; keep in memory across cycles
+- Initialize {docs_dir_name}/06_evaluation.yaml with stage, schema_version, project, status.current_cycle: A, route.active_route,
+    and route.route_file_loaded
+- Create {scripts_dir_name}/06_evaluation.py with the shape specified in the stage entry
+research_questions:
+- What evaluation standards are typical for this route and method family?
+- What divergence magnitudes are considered concerning versus routine for this method applied to similar data profiles?
+- Are there known evaluation pitfalls specific to this analysis approach?
+- What hash-verification and metric-recompute patterns catch the most common reproducibility failures in this class of analysis?
+guidance:
+- Cycle A maps the territory before adjudication. Inventory and plan only; do not render stability, predictability, or validity
+  verdicts.
+- Every flag in the analyze handoff belongs to exactly one downstream cycle (B, C, or D). If a flag cannot be assigned, escalate
+  to the user rather than drop it.
+- Divergence triage classes are provisional: notable and major axes will be adjudicated in Cycle B. A provisional classification
+    is not a verdict.
+- Reproducibility failures (hash mismatch or metric mismatch) block the stage until resolved. If an artifact cannot be reproduced,
+  route back to analyze.
+- Record every route-specific check the route file requires, mapped to the cycle that will execute it.
+required_evidence:
+- id: A01
+  question: What are the approved question, question type, target quantity, claim boundary as-narrowed, active route, protocol
+    mode, validation logic, examination support registry, and formulate stakeholder decision context, restated from the upstream
+    canonical YAMLs?
+  evidence_key: upstream_snapshot
+  evidence_shape: '{approved_question, question_type, target_quantity, claim_boundary_as_narrowed, protocol_mode, validation_logic,
+    examine_support_registry, stakeholder_decision}'
+- id: A02
+  question: What is the full evaluation handoff from 05_analysis.yaml (claim inventory, contract summary, execution summary,
+    deviation register, contract amendments, flags for evaluate) and is it loaded into evaluate state?
+  evidence_key: analyze_handoff
+  evidence_shape: '{claim_inventory, contract_summary, execution_summary, deviation_register, contract_amendments, flags_for_evaluate}'
+- id: A03
+  question: For every flag in the analyze evaluation handoff, what is the flag, which claim does it affect, and which evaluation
+    cycle (B, C, or D) will address it?
+  evidence_key: null
+- id: A04
+  question: For each perturbation axis and each challenger, what is the magnitude of divergence from the primary result and
+    the triage class (minor, notable, or major)?
+  evidence_key: divergence_triage
+  evidence_shape: '{axis_or_challenger_id: {magnitude, class}}'
+- id: A05
+  question: What evaluation plan is derived from the protocol validation logic, the analysis contract perturbation axes and
+    challengers, and the claim ceiling?
+  evidence_key: null
+- id: A06
+  question: What route-specific checks does the loaded route file require, and how are they mapped to cycles B, C, and D?
+  evidence_key: null
+- id: A07
+  question: Are all primary outputs, sensitivity outputs, and challenger outputs named in the analysis contract present on
+    disk or addressable through a documented reproducible path?
+  evidence_key: output_inventory
+  evidence_shape: '{expected_outputs: [{name, path, present: bool}], missing: []}'
+- id: A08
+  question: For every entry in the analyze deviation register, does it preserve compliance with the formulation prohibited-use
+    list (any deviation that enables a prohibited use is a BLOCKING defect)?
+  evidence_key: deviation_compliance_scan
+  evidence_shape: '{deviations: [{id, enables_prohibited_use: bool, prohibited_use_ref, evidence}]}'
+- id: A09
+  question: For each protocol-frozen artifact named in 02_protocol.yaml, does the observed SHA-256 match the expected SHA-256?
+  evidence_key: frozen_artifact_hashes
+  evidence_shape: '{path: {expected_sha256, observed_sha256, match: bool}}'
+- id: A10
+  question: For each primary, sensitivity, and challenger output named in the analysis contract, does re-computing at least
+    one key metric from the saved artifact match the value recorded in 05_analysis.yaml?
+  evidence_key: recomputed_metrics
+  evidence_shape: '{analysis_output_name: {metric_name, expected, observed, match: bool}}'
+writes:
+  A01: upstream
+  A02:
+  - upstream.analysis_contract
+  - upstream.flags_for_evaluate
+  A03: evaluation_plan.flag_coverage_map
+  A04: evaluation_plan.divergence_triage
+  A05:
+  - evaluation_plan.perturbation_axes
+  - evaluation_plan.challengers
+  A06: evaluation_plan.route_specific_checks
+  A09: reproducibility.frozen_artifact_hashes
+  A10: reproducibility.recomputed_metrics
+acceptance_criteria:
+- id: A-handoff-complete
+  depends_on:
+  - A01
+  - A02
+  condition: Upstream snapshot and analyze evaluation handoff are both loaded with all required fields populated
+- id: A-plan-derived
+  depends_on:
+  - A05
+  - A06
+  condition: Evaluation plan is traceable to specific upstream contract elements (validation logic, perturbation axes, challengers,
+    route checks), not invented ad hoc
+- id: A-reproducibility-verified
+  depends_on:
+  - A09
+  - A10
+  condition: Every protocol-frozen artifact hash matches and every re-computed key metric matches the value recorded in 05_analysis.yaml
+- id: A08-deviations-compliant
+  condition: No deviation in the analyze deviation register enables a prohibited use declared in 01_formulation.yaml

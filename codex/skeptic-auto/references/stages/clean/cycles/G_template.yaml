@@ -1,0 +1,22 @@
+cycle: G{n}
+focus: '{short description of the unresolved preprocessing or derived-variable topic}'
+mandatory: false
+upstream:
+- '{list canonical-YAML fields that must be set before the follow-up runs, e.g. preprocessing_decisions, derived_variables}'
+research_questions:
+- '{at most a handful; narrow to the unresolved representation topic}'
+guidance:
+- Keep the follow-up narrow. One representation topic per cycle.
+- If the issue is really about upstream data quality or semantic validity, route it back to a D-series follow-up instead of
+  keeping it here.
+- Close the follow-up as pass, acknowledge_gap, data_insufficient, reopen_protocol, reopen_formulate, or archive under the
+  standard decision matrix.
+required_evidence:
+- id: G{n}01
+  question: '{question derived from the specific unresolved representation topic}'
+  evidence_key: '{key name, or null if judgment-driven}'
+writes:
+  G{n}01: '{canonical-YAML field, list of fields, or null}'
+acceptance_criteria:
+- id: G{n}01-{short-name}
+  condition: '{condition that closes the unresolved representation topic}'

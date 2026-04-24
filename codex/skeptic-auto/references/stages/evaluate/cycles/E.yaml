@@ -1,0 +1,108 @@
+cycle: E
+focus: Claim Survival Determination
+mandatory: true
+upstream:
+- stability_verdicts
+- predictability_verdicts
+- validity_verdicts
+- upstream.claim_boundary_as_narrowed
+- upstream.stakeholder_decision
+research_questions:
+- How are PCS-style claim verdicts typically structured in published veridical data science work?
+- What precedents exist for downgrading claims based on partial instability or marginal predictability?
+- What conventions exist for distinguishing claims that survived from claims that survived with caveats?
+guidance:
+- The three survival verdicts are: survived (stable, adequate, defended, no material deviations -- passes to communicate without
+    caveats), survived with caveats (conditional dimensions, marginal predictability, or non-fatal threats -- caveats are
+    mandatory and cannot be dropped by communicate), did not survive (any fatal dimension -- passes to communicate only as
+    an explicitly acknowledged limitation).
+- If an acceptance criterion failed earlier but the cycle still passed (for example via acknowledge_gap), the corresponding
+  claim is "survived with caveats" at minimum with the gap carried as a caveat.
+- If any claim requires widening the boundary to survive, it does not survive. Widening is never allowed within evaluate.
+- The interpretation synthesis belongs in evaluate. Audience framing, narrative suggestions, hedging language, and recommendations
+  belong to communicate.
+step4_additions:
+  description: Before closing Cycle E, present the full claim_survival_registry for explicit user approval (interactive mode)
+    or log the registry and defer human approval to stage-close review under auto-mode.md (auto mode).
+  items:
+  - claim_adjudication_table
+  - survival_verdicts_per_claim
+  - caveats_per_survived_with_caveats_claim
+  - dead_claims_with_reasons
+  - final_claim_boundary
+  - narrowing_log_entry_if_narrowed
+  - overall_interpretation_synthesis
+  - decision_alignment_statement
+  user_approval: required
+pcs_focus:
+  items:
+  - 'P: Do survival verdicts align with what protocol''s validation logic would predict for this evidence profile? Cite 02_protocol.yaml.'
+  - 'C: Would reversing any single adjudication decision change a verdict from survived to survived-with-caveats (or vice
+    versa)?'
+  - 'S: Is every verdict traceable to specific decision_ledger entries from Cycles B, C, and D with no assertion-only reasoning?'
+required_evidence:
+- id: E01
+  question: Is a claim adjudication table built with one row per claim the analysis contract was designed to support, with
+    columns for claim description, stability verdict, predictability verdict, validity verdict, deviation impact, and overall
+    survival verdict?
+  evidence_key: claim_adjudication_table
+  evidence_shape: 'list of {claim_id, description, stability, predictability, validity, deviation_impact: none|minor|material,
+    survival_verdict}'
+- id: E02
+  question: For each claim, is the survival logic applied correctly -- survived (all dimensions pass, no material deviations),
+    survived with caveats (one or more conditional dimensions, caveats explicitly stated), did not survive (any dimension
+    fatal) -- and are caveats recorded where applicable plus dead-claim reasons recorded where applicable?
+  evidence_key: null
+- id: E03
+  question: Is there any "survived" verdict that contradicts a failed acceptance criterion logged in the decision_ledger entries
+    for Cycles B, C, or D?
+  evidence_key: null
+- id: E04
+  question: Does every claim respect upstream.claim_boundary_as_narrowed (no widened scope, no loosened generalization_limit,
+    no verbs outside verbs_allowed, no ceiling-exceeding evidence)?
+  evidence_key: null
+- id: E05
+  question: What is the final claim boundary as it stands after evaluation, and is it equal to or narrower than upstream.claim_boundary_as_narrowed
+    on every axis?
+  evidence_key: null
+- id: E06
+  question: If the final claim boundary is narrower than the one that entered evaluate, what entry is appended to claim_boundary_final.narrowing_log
+    (cycle, prior, new, rationale)?
+  evidence_key: null
+  skip_when: claim boundary did not narrow in evaluate
+- id: E07
+  question: Is the claim survival registry produced in the canonical YAML and presented to the user (or auto-mode equivalent)
+    for explicit approval?
+  evidence_key: null
+- id: E08
+  question: What concise overall interpretation synthesis ties stability, predictability, validity, and examine-stage support
+    together without audience framing or recommendations?
+  evidence_key: null
+- id: E09
+  question: Do the surviving claims speak to the stakeholder decision and candidate actions named in upstream.stakeholder_decision,
+    or has the claim drifted to a different decision?
+  evidence_key: null
+writes:
+  E01: claim_survival_registry
+  E02: claim_survival_registry
+  E05: claim_boundary_final
+  E06: claim_boundary_final.narrowing_log
+acceptance_criteria:
+- id: E-every-claim-verdicted
+  depends_on:
+  - E01
+  - E02
+  condition: Every claim the analysis contract was designed to support has exactly one row in claim_survival_registry with
+    a survival verdict, caveats where applicable, and a failure reason where applicable
+- id: E03-no-survived-contradicts-fail
+  condition: No "survived" verdict contradicts a failed acceptance criterion logged in decision_ledger for Cycles B, C, or
+    D; any such contradiction downgrades the verdict to "survived with caveats" at minimum with the gap carried as a caveat
+- id: E-boundary-respected
+  depends_on:
+  - E04
+  - E05
+  condition: claim_boundary_final is equal to or narrower than upstream.claim_boundary_as_narrowed on scope, generalization_limit,
+    verbs_allowed, and evidence_ceiling
+- id: E09-decision-alignment
+  condition: Surviving claims speak to the stakeholder decision and candidate actions named in upstream.stakeholder_decision;
+    drift to a different decision is explicitly flagged as a caveat or blocks the survived verdict
