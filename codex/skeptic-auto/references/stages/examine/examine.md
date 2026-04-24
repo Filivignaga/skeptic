@@ -72,7 +72,7 @@ upstream_refs:
 
 upstream_contract:                  # compact examination-specific interpretation; not a copied upstream block
   active_route:
-  route_file:                       # references/routes/{route}/examine.md
+  route_file:                       # references/routes/examine/{route}.md
   claim_boundary_ref:
   protocol_mode_ref:
   cleaned_artifact_list_ref:
@@ -213,7 +213,7 @@ This protocol applies to every cycle, mandatory or follow-up.
 
 1. Read `cycles/{cycle}.yaml`.
 2. Resolve the route and upstream snapshot:
-   - Cycle A: read `01_formulation.yaml`, `02_protocol.yaml`, `03_cleaning.yaml`, and `README.md`. Resolve exactly one active route from `02_protocol.yaml` (must match the confirmed question type in `01_formulation.yaml`). Load `references/routes/{route}/examine.md` once and keep it in context for the rest of the stage. If the route cannot be resolved or the expected route file is missing, stop and reopen `protocol`.
+   - Cycle A: read `01_formulation.yaml`, `02_protocol.yaml`, `03_cleaning.yaml`, and `README.md`. Resolve exactly one active route from `02_protocol.yaml` (must match the confirmed question type in `01_formulation.yaml`). Load `references/routes/examine/{route}.md` once and keep it in context for the rest of the stage. If the route cannot be resolved or the expected route file is missing, stop and reopen `protocol`.
    - First cycle entered in a fresh session (not Cycle A), or first cycle after a backtrack reopens the stage: read `04_examination.yaml` once to load the upstream snapshot, visibility, prior findings, and prior `decision_ledger`; reload the route file named in `upstream.route_file`.
    - Every other case (continuing the same chat session): skip the re-reads; the canonical YAML and route context are already in context from the cycle that just wrote it. If route context becomes ambiguous mid-stage, reread `01_formulation.yaml`, `02_protocol.yaml`, `03_cleaning.yaml`, and the route file before proceeding.
 3. Cycle A only: create `04_examination.yaml` with `stage`, `schema_version`, `project`, the full `upstream` snapshot copied from the three upstream YAMLs, the derived `visibility` set (which cleaned artifacts and protocol-created artifacts `examine` may inspect, which are restricted, and what access level applies to each), and `status.current_cycle: A`. Create `04_examination.py` with the shape specified below.

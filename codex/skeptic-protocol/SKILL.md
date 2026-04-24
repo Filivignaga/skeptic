@@ -212,10 +212,10 @@ This protocol applies to every cycle, mandatory or follow-up.
    - Cycle A:
      - Read `{docs_dir_name}/01_formulation.yaml` to pull `contract`, `claim_boundary`, `protocol_handoff`, and `provenance`.
      - Resolve the active route from `contract.question_type`. Expected values: `descriptive`, `exploratory`, `inferential`, `predictive`, `causal`, `mechanistic`. If `question_type` is missing, ambiguous, or does not match one of the six values, stop and route back to `/skeptic:formulate`.
-     - Load `references/routes/{route}/protocol.md` once and keep it in memory for the rest of the stage. If the route file is missing, stop.
+     - Load `references/routes/{route}.md` once and keep it in memory for the rest of the stage. If the route file is missing, stop.
      - Initialize `{docs_dir_name}/02_protocol.yaml` with `stage`, `schema_version`, `project.name`, `project.started_at` (ISO timestamp), `status.current_cycle: A`, `route.active`, and `route.resolution_evidence`.
      - Create `{scripts_dir_name}/02_protocol.py` with the shape specified below.
-   - First cycle entered in a fresh session (not Cycle A), or first cycle after a backtrack reopens the stage: read `02_protocol.yaml` and reload `references/routes/{route}/protocol.md` once.
+   - First cycle entered in a fresh session (not Cycle A), or first cycle after a backtrack reopens the stage: read `02_protocol.yaml` and reload `references/routes/{route}.md` once.
    - Every other case (continuing the same chat session): skip the re-read; the canonical YAML content and route file are already in context.
 3. Every cycle: extend `02_protocol.py` by writing or updating the cycle's function (`run_cycle_a`, `run_cycle_b`, ...). The function must produce every required evidence key named by the cycle spec.
 4. Cycle B only, when the chosen data-usage mode requires frozen artifacts: the script deterministically creates the partition index and any other frozen files under `{data_dir_name}/splits/` (or another path the approved mode requires). The script emits each artifact path and SHA-256 in `frozen_artifact_manifest`. The model records them under `frozen_artifacts.artifacts` and `provenance.files`.
@@ -301,7 +301,7 @@ Agent(
   1. {projects_root}/{project-name}/{docs_dir_name}/02_protocol.yaml
   2. {projects_root}/{project-name}/{scripts_dir_name}/02_protocol.py
   3. {projects_root}/{project-name}/{docs_dir_name}/01_formulation.yaml
-  4. references/routes/{route}/protocol.md
+  4. references/routes/{route}.md
 
   Cycle focus: {cycle focus description}
   Cycle YAML for reference: {cycles/{X}.yaml full content}
@@ -449,7 +449,7 @@ Agent(
   1. {projects_root}/{project-name}/{docs_dir_name}/01_formulation.yaml
   2. {projects_root}/{project-name}/{docs_dir_name}/02_protocol.yaml
   3. {projects_root}/{project-name}/{scripts_dir_name}/02_protocol.py
-  4. references/routes/{route}/protocol.md
+  4. references/routes/{route}.md
 
   Evaluate whether protocol adequately defines how the approved question may
   be answered and adequately constrains the downstream stages.

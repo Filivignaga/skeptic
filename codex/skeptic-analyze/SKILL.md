@@ -213,7 +213,7 @@ This protocol applies to every cycle, mandatory or follow-up.
 
 1. Read `cycles/{cycle}.yaml`.
 2. Recover prior stage state:
-   - Cycle A: read `01_formulation.yaml`, `02_protocol.yaml`, `03_cleaning.yaml`, `04_examination.yaml` once. Confirm each parses and contains the fields `analyze` depends on. Resolve exactly one `active_route` from `01_formulation.yaml` plus `02_protocol.yaml`; if they contradict or do not collapse to one route, stop and reopen `protocol`. Load `references/routes/{active_route}/analyze.md` once and keep it in memory for the rest of the stage.
+   - Cycle A: read `01_formulation.yaml`, `02_protocol.yaml`, `03_cleaning.yaml`, `04_examination.yaml` once. Confirm each parses and contains the fields `analyze` depends on. Resolve exactly one `active_route` from `01_formulation.yaml` plus `02_protocol.yaml`; if they contradict or do not collapse to one route, stop and reopen `protocol`. Load `references/routes/{active_route}.md` once and keep it in memory for the rest of the stage.
    - First cycle entered in a fresh session (not Cycle A), or first cycle after a backtrack reopens the stage: read `05_analysis.yaml` once to recover the locked contract, assumption results, execution outputs, prior `decision_ledger`, and `status.active_route`; reload the same route file.
    - Every other case (continuing the same chat session): skip the re-read; the canonical YAML content is already in context from the cycle that just wrote it.
 3. If the active route becomes ambiguous mid-stage, reread the four upstream canonical YAMLs and the same route file before proceeding. Do not guess.

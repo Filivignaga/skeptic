@@ -7,7 +7,7 @@ setup_side_effects:
 - Read {docs_dir_name}/01_formulation.yaml to pull contract, claim_boundary, protocol_handoff, and provenance
 - Resolve the active route from contract.question_type (descriptive|exploratory|inferential|predictive|causal|mechanistic);
   stop and route back to /skeptic:formulate if missing or ambiguous
-- Load ../../../routes/{route}/protocol.md once and keep it in memory for the rest of the stage
+- Load ../../../../routes/protocol/{route}.md once and keep it in memory for the rest of the stage
 - Initialize {docs_dir_name}/02_protocol.yaml with stage, schema_version, project.name, project.started_at (ISO timestamp),
   status.current_cycle A, route.active, and route.resolution_evidence
 - Create {scripts_dir_name}/02_protocol.py with the shape specified in the stage entry

@@ -276,10 +276,10 @@ Every post-`formulate` stage follows the same runtime pattern:
 1. Read the required upstream canonical YAMLs.
 2. Resolve exactly one active route from those YAMLs.
 3. Load exactly one stage-specific route file:
-   - `references/routes/{route}/protocol.md`
-   - `references/routes/{route}/clean.md`
-   - `references/routes/{route}/examine.md`
-   - `references/routes/{route}/analyze.md` when that stage file exists
+   - `references/routes/protocol/{route}.md`
+   - `references/routes/clean/{route}.md`
+   - `references/routes/examine/{route}.md`
+   - `references/routes/analyze/{route}.md` when that stage file exists
 4. Keep the route context in memory across cycles in the same chat.
 5. If route context becomes ambiguous mid-stage, reread upstream YAMLs and the same route file before proceeding.
 6. If the active route cannot be resolved or the expected route file is missing, stop and repair the routing architecture before continuing.

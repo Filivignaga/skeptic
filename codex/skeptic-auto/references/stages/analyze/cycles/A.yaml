@@ -30,7 +30,7 @@ setup_side_effects:
   widening of the claim boundary, stop and reopen the affected upstream stage.
 - Resolve exactly one active_route from 01_formulation.yaml plus 02_protocol.yaml. If they contradict or do not collapse to
   one route for analyze, stop and reopen protocol.
-- Load references/routes/{active_route}/analyze.md once; keep in memory for all cycles in this stage.
+- Load references/routes/analyze/{active_route}.md once; keep in memory for all cycles in this stage.
 - Record sha256 of each upstream artifact read into provenance.upstream_artifacts.
 - Derive the active visibility set from 02_protocol.yaml and 03_cleaning.yaml and record it in provenance.visibility_set (visible_cleaned,
   visible_protocol_created, restricted, access_level_per_artifact). Held-out artifacts are not visible unless protocol authorizes

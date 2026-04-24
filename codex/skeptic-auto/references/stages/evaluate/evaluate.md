@@ -61,7 +61,7 @@ status:
 
 route:
   active_route:                     # descriptive|exploratory|inferential|predictive|causal|mechanistic
-  route_file_loaded:                # path to references/routes/{route}/evaluate.md
+  route_file_loaded:                # path to references/routes/evaluate/{route}.md
 
 upstream_refs:
   - file: skeptic_documentation/01_formulation.yaml
@@ -205,7 +205,7 @@ This protocol applies to every cycle, mandatory or follow-up.
 
 1. Read `cycles/{cycle}.yaml`.
 2. Recover prior stage state:
-   - Cycle A: read upstream canonical YAMLs (`01_formulation.yaml`, `02_protocol.yaml`, `03_cleaning.yaml`, `04_examination.yaml`, `05_analysis.yaml`) and the `README.md`. Resolve the active route from `contract.question_type` in `01_formulation.yaml` cross-checked against the active route recorded in `02_protocol.yaml`. If they contradict or do not collapse to one route, stop and reopen `protocol`. Load the matching `references/routes/{route}/evaluate.md` once and keep it in context for the rest of the stage.
+   - Cycle A: read upstream canonical YAMLs (`01_formulation.yaml`, `02_protocol.yaml`, `03_cleaning.yaml`, `04_examination.yaml`, `05_analysis.yaml`) and the `README.md`. Resolve the active route from `contract.question_type` in `01_formulation.yaml` cross-checked against the active route recorded in `02_protocol.yaml`. If they contradict or do not collapse to one route, stop and reopen `protocol`. Load the matching `references/routes/evaluate/{route}.md` once and keep it in context for the rest of the stage.
    - First cycle entered in a fresh session (not Cycle A), or first cycle after a backtrack reopens the stage: read `06_evaluation.yaml` once to load the upstream snapshot, evaluation plan, verdicts, and prior `decision_ledger`. Reload the same route file named in `route.route_file_loaded`.
    - Every other case (continuing the same chat session): skip the re-read; the canonical YAML content is already in context from the cycle that just wrote it.
 3. Cycle A only: initialize `06_evaluation.yaml` with `stage`, `schema_version`, `project`, `status.current_cycle: A`, `route.active_route`, and `route.route_file_loaded`; create `06_evaluation.py` with the shape specified below.

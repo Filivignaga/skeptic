@@ -49,12 +49,23 @@ function Get-Description {
 }
 
 function Convert-BodyForCodex {
-  param([string]$Body)
+  param(
+    [string]$Body,
+    [string]$Stage = ''
+  )
 
   $converted = $Body
   $converted = $converted -replace '\.\./core-principles\.md', 'references/core-principles.md'
   $converted = $converted -replace '\.\./script-contract\.md', 'references/script-contract.md'
   $converted = $converted -replace '\.\./auto-mode\.md', 'references/auto-mode.md'
+  if ($Stage) {
+    $converted = $converted -replace "\.\./routes/\{route\}/$Stage\.md", 'references/routes/{route}.md'
+    $converted = $converted -replace "\.\./routes/\{active\}/$Stage\.md", 'references/routes/{active}.md'
+    $converted = $converted -replace "\.\./routes/\{active_route\}/$Stage\.md", 'references/routes/{active_route}.md'
+    $converted = $converted -replace "references/routes/\{route\}/$Stage\.md", 'references/routes/{route}.md'
+    $converted = $converted -replace "references/routes/\{active\}/$Stage\.md", 'references/routes/{active}.md'
+    $converted = $converted -replace "references/routes/\{active_route\}/$Stage\.md", 'references/routes/{active_route}.md'
+  }
   $converted = $converted -replace '\.\./routes/\{route\}/', 'references/routes/{route}/'
   $converted = $converted -replace '\.\./routes/\{active\}/', 'references/routes/{active}/'
   $converted = $converted -replace 'references/\{stage\}/\{stage\}\.md', 'references/stages/{stage}/{stage}.md'
@@ -65,9 +76,21 @@ function Convert-BodyForCodex {
 }
 
 function Convert-StandaloneReferenceText {
-  param([string]$Text)
+  param(
+    [string]$Text,
+    [string]$Stage = ''
+  )
 
   $converted = $Text
+  if ($Stage) {
+    $converted = $converted -replace "\.\./\.\./routes/([^/]+)/$Stage\.md", '../routes/$1.md'
+    $converted = $converted -replace "\.\./routes/\{route\}/$Stage\.md", 'routes/{route}.md'
+    $converted = $converted -replace "\.\./routes/\{active\}/$Stage\.md", 'routes/{active}.md'
+    $converted = $converted -replace "\.\./routes/\{active_route\}/$Stage\.md", 'routes/{active_route}.md'
+    $converted = $converted -replace "references/routes/\{route\}/[^/]+\.md", 'references/routes/{route}.md'
+    $converted = $converted -replace "references/routes/\{active\}/[^/]+\.md", 'references/routes/{active}.md'
+    $converted = $converted -replace "references/routes/\{active_route\}/[^/]+\.md", 'references/routes/{active_route}.md'
+  }
   $converted = $converted -replace '\.\./\.\./core-principles\.md', '../core-principles.md'
   $converted = $converted -replace '\.\./\.\./script-contract\.md', '../script-contract.md'
   $converted = $converted -replace '\.\./\.\./auto-mode\.md', '../auto-mode.md'
@@ -87,9 +110,13 @@ function Convert-AutoReferenceText {
   $converted = $converted -replace 'references/\{stage\}/\{stage\}\.md', 'references/stages/{stage}/{stage}.md'
   $converted = $converted -replace 'references/\{stage\}/cycles/\{cycle\}\.yaml', 'references/stages/{stage}/cycles/{cycle}.yaml'
   $converted = $converted -replace 'references/\{stage\}/cycles/\*\.yaml', 'references/stages/{stage}/cycles/*.yaml'
+  $converted = $converted -replace 'references/routes/\{route\}/([^/]+)\.md', 'references/routes/$1/{route}.md'
+  $converted = $converted -replace 'references/routes/\{active\}/([^/]+)\.md', 'references/routes/$1/{active}.md'
+  $converted = $converted -replace 'references/routes/\{active_route\}/([^/]+)\.md', 'references/routes/$1/{active_route}.md'
   $converted = $converted -replace '\.\./\.\./core-principles\.md', '../../../core-principles.md'
   $converted = $converted -replace '\.\./\.\./script-contract\.md', '../../../script-contract.md'
   $converted = $converted -replace '\.\./\.\./auto-mode\.md', '../../../auto-mode.md'
+  $converted = $converted -replace '\.\./\.\./routes/([^/]+)/([^/]+)\.md', '../../../routes/$2/$1.md'
   $converted = $converted -replace '\.\./\.\./routes/', '../../../routes/'
   $converted = $converted -replace '(?<!\.\./)\.\./core-principles\.md', '../../core-principles.md'
   $converted = $converted -replace '(?<!\.\./)\.\./script-contract\.md', '../../script-contract.md'
@@ -102,7 +129,8 @@ function Convert-AutoReferenceText {
 function Convert-MarkdownAndYamlFiles {
   param(
     [string]$Root,
-    [string]$Mode
+    [string]$Mode,
+    [string]$Stage = ''
   )
 
   Get-ChildItem -LiteralPath $Root -Recurse -File | Where-Object { $_.Extension -in @('.md', '.yaml', '.yml') } | ForEach-Object {
@@ -110,7 +138,7 @@ function Convert-MarkdownAndYamlFiles {
     if ($Mode -eq 'auto') {
       $converted = Convert-AutoReferenceText -Text $text
     } else {
-      $converted = Convert-StandaloneReferenceText -Text $text
+      $converted = Convert-StandaloneReferenceText -Text $text -Stage $Stage
     }
     if ($converted -ne $text) {
       Write-Utf8NoBom -Path $_.FullName -Text $converted
@@ -132,6 +160,7 @@ function Repair-AutoCycleReferences {
     $converted = $converted -replace '\.\./\.\./core-principles\.md', '../../../core-principles.md'
     $converted = $converted -replace '\.\./\.\./script-contract\.md', '../../../script-contract.md'
     $converted = $converted -replace '\.\./\.\./auto-mode\.md', '../../../auto-mode.md'
+    $converted = $converted -replace '\.\./\.\./routes/([^/]+)/([^/]+)\.md', '../../../routes/$2/$1.md'
     $converted = $converted -replace '\.\./\.\./routes/', '../../../routes/'
     if ($converted -ne $text) {
       Write-Utf8NoBom -Path $_.FullName -Text $converted
@@ -192,13 +221,12 @@ function Copy-RoutesForStage {
 
   $routesRoot = Join-Path $RepoRoot 'references\routes'
   $destinationRoot = Join-Path $SkillDir 'references\routes'
+  New-Item -ItemType Directory -Force -Path $destinationRoot | Out-Null
 
   Get-ChildItem -LiteralPath $routesRoot -Directory | ForEach-Object {
     $sourceFile = Join-Path $_.FullName "$Stage.md"
     if (Test-Path -LiteralPath $sourceFile) {
-      $destinationDir = Join-Path $destinationRoot $_.Name
-      New-Item -ItemType Directory -Force -Path $destinationDir | Out-Null
-      Copy-Item -LiteralPath $sourceFile -Destination (Join-Path $destinationDir "$Stage.md") -Force
+      Copy-Item -LiteralPath $sourceFile -Destination (Join-Path $destinationRoot "$($_.Name).md") -Force
     }
   }
 }
@@ -219,13 +247,13 @@ foreach ($stageInfo in $Stages) {
   $parts = Split-Frontmatter -Text $sourceText
   $sourceDescription = Get-Description -Frontmatter $parts.Frontmatter
   $description = "$($stageInfo.DescriptionPrefix) $sourceDescription Use when Codex should run the Skeptic $stage stage as a standalone skill."
-  $body = Convert-BodyForCodex -Body $parts.Body
+  $body = Convert-BodyForCodex -Body $parts.Body -Stage $stage
 
   Write-SkillMarkdown -Path (Join-Path $skillDir 'SKILL.md') -Name $skillName -Description $description -Body $body
   Copy-CommonReferences -SkillDir $skillDir
   Copy-StageReferences -Stage $stage -SkillDir $skillDir
   Copy-RoutesForStage -Stage $stage -SkillDir $skillDir
-  Convert-MarkdownAndYamlFiles -Root (Join-Path $skillDir 'references') -Mode 'standalone'
+  Convert-MarkdownAndYamlFiles -Root (Join-Path $skillDir 'references') -Mode 'standalone' -Stage $stage
 }
 
 $autoDir = Join-Path $CodexRoot 'skeptic-auto'
@@ -247,14 +275,30 @@ foreach ($stageInfo in $Stages) {
 
   $sourceText = Get-Content -LiteralPath (Join-Path $RepoRoot $stageInfo.Source) -Raw
   $parts = Split-Frontmatter -Text $sourceText
-  Write-Utf8NoBom -Path (Join-Path $stageDestination "$stage.md") -Text (Convert-BodyForCodex -Body $parts.Body)
+  $stageBody = Convert-BodyForCodex -Body $parts.Body
+  $stageBody = $stageBody -replace "references/routes/\{route\}/$stage\.md", "references/routes/$stage/{route}.md"
+  $stageBody = $stageBody -replace "references/routes/\{active\}/$stage\.md", "references/routes/$stage/{active}.md"
+  $stageBody = $stageBody -replace "references/routes/\{active_route\}/$stage\.md", "references/routes/$stage/{active_route}.md"
+  Write-Utf8NoBom -Path (Join-Path $stageDestination "$stage.md") -Text $stageBody
 
   Copy-Item -LiteralPath (Join-Path $RepoRoot "references\$stage\cycles") -Destination $stageDestination -Recurse -Force
   Get-ChildItem -LiteralPath (Join-Path $RepoRoot "references\$stage") -File | Where-Object { $_.Name -ne "$stage.md" } | ForEach-Object {
     Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $stageDestination $_.Name) -Force
   }
 }
-Copy-Item -LiteralPath (Join-Path $RepoRoot 'references\routes') -Destination $autoRefs -Recurse -Force
+$autoRoutes = Join-Path $autoRefs 'routes'
+New-Item -ItemType Directory -Force -Path $autoRoutes | Out-Null
+foreach ($stageInfo in $Stages) {
+  $stage = $stageInfo.Stage
+  $stageRouteDestination = Join-Path $autoRoutes $stage
+  New-Item -ItemType Directory -Force -Path $stageRouteDestination | Out-Null
+  Get-ChildItem -LiteralPath (Join-Path $RepoRoot 'references\routes') -Directory | ForEach-Object {
+    $sourceFile = Join-Path $_.FullName "$stage.md"
+    if (Test-Path -LiteralPath $sourceFile) {
+      Copy-Item -LiteralPath $sourceFile -Destination (Join-Path $stageRouteDestination "$($_.Name).md") -Force
+    }
+  }
+}
 Convert-MarkdownAndYamlFiles -Root $autoRefs -Mode 'auto'
 Repair-AutoCycleReferences -AutoReferencesRoot $autoRefs
 Get-ChildItem -LiteralPath $autoRefs -Recurse -File | Where-Object { $_.Extension -in @('.md', '.yaml', '.yml') } | ForEach-Object {

@@ -47,9 +47,7 @@ Required checks:
    - `references/core-principles.md`
    - `references/{stage}/{stage}.md` for all seven stages
    - `references/{stage}/cycles/*.yaml` for all required cycles
-   - route files under `references/routes/{route}/` when the route is known
-5. Python available for project-side stage scripts
-6. project directories resolvable from `skeptic.yaml` or defaults in `core-principles.md`
+   - route files under `references/routes/{route}.md`
 
 If any preflight check fails:
 

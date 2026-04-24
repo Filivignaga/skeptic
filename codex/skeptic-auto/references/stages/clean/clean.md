@@ -68,7 +68,7 @@ status:
 
 route:
   active:                           # descriptive|exploratory|inferential|predictive|causal|mechanistic
-  route_file:                       # references/routes/{active}/clean.md
+  route_file:                       # references/routes/clean/{active}.md
 
 upstream_refs:                      # pointers to upstream fields; do not copy upstream fact blocks
   - file: skeptic_documentation/01_formulation.yaml
@@ -228,7 +228,7 @@ This protocol applies to every cycle, mandatory or follow-up.
    - Every other case (continuing the same chat session): skip the re-read; the canonical YAML content is already in context.
 3. Cycle A only:
    - Resolve the active route from `01_formulation.yaml` plus `02_protocol.yaml`. If they contradict, or do not collapse to one route for `clean`, stop and reopen `protocol`.
-   - Load `references/routes/{route}/clean.md` once and keep it in memory for the rest of the stage. If the expected route file is missing, stop and reopen upstream.
+   - Load `references/routes/clean/{route}.md` once and keep it in memory for the rest of the stage. If the expected route file is missing, stop and reopen upstream.
    - Run the precondition check: verify `01_formulation.yaml`, `02_protocol.yaml`, `{readme_name}`, at least one raw file, and every protocol-required artifact exist. Recompute SHA-256 for each raw file and compare to `provenance.files.{filename}.sha256` in `01_formulation.yaml`. Any mismatch is a blocking defect; stop until raw data is restored or formulate is reopened.
    - Verify `01_formulation.yaml` carries an approved question, question type, target quantity, claim boundary, unit of analysis, operationalization, and key assumptions. Verify `02_protocol.yaml` carries question type, active route, data usage mode, visibility rules, frozen-artifact status, leakage rules, forbidden variable classes, clean prohibitions, validation logic, and backtracking triggers. Missing or contradictory fields block the stage.
    - Derive the active visibility set from protocol and record it under `visibility_ref` as a protocol pointer plus compact execution summary: visible raw files, visible protocol artifacts, restricted artifacts, access levels.

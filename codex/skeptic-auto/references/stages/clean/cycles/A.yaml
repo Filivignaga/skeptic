@@ -17,7 +17,7 @@ upstream:
 - protocol.required_artifacts
 setup_side_effects:
 - Resolve the active route from 01_formulation.yaml and 02_protocol.yaml; reopen protocol on contradiction
-- Load references/routes/{route}/clean.md once and keep it in memory for the stage
+- Load references/routes/clean/{route}.md once and keep it in memory for the stage
 - Verify 01_formulation.yaml, 02_protocol.yaml, {readme_name}, at least one raw file, and every protocol-required artifact
   exist
 - Recompute SHA-256 for each raw file and compare to provenance.files.{filename}.sha256 recorded in 01_formulation.yaml

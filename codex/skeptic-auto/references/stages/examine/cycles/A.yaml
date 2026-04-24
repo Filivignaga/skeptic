@@ -20,7 +20,7 @@ setup_side_effects:
   protocol_created_artifact_list, leakage_rules_summary, examine_prohibitions, backtracking_triggers, carried_assumptions,
   carried_open_questions).
 - Resolve the active route from 02_protocol.yaml (must match the confirmed question type in 01_formulation.yaml) and load
-  `references/routes/{route}/examine.md` once; record the route file path in upstream.route_file.
+  `references/routes/examine/{route}.md` once; record the route file path in upstream.route_file.
 - Derive the visibility set from 02_protocol.yaml and 03_cleaning.yaml: list visible_cleaned_artifacts, visible_protocol_artifacts,
     restricted_artifacts, and access levels per artifact. Held-out partitions that protocol does not authorize for examine
     remain in restricted_artifacts.
