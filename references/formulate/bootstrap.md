@@ -11,7 +11,7 @@ existing filesystem state stays authoritative.
 5. Copy any provided documentation (codebook, README, data dictionary, collection notes) into `{data_dir_name}/`.
 6. Create `{readme_name}` with the project name, the bootstrap date, and the data source names.
 7. Initialize `{docs_dir_name}/01_formulation.yaml` with `stage`, `schema_version`, `project` (including `project.started_at` as an ISO 8601 timestamp), and `status.current_cycle: A`.
-8. Create `{scripts_dir_name}/01_formulation.py` by copying `references/formulate/script_shape.py` into place. Do not rename or remove the fixed-surface helpers (`sha256_of`, `detect_encoding`, `load_source`, `profile_by_dtype`, `load_state`, `main`, `CYCLES`). `read_csv` may remain only as a backward-compatible adapter. Add the first cycle function (`run_cycle_a`) below the existing scaffold.
+8. Create `{scripts_dir_name}/01_formulation.py` for the current project by following `references/script-contract.md`. Do not copy a shared scaffold. Include only the helpers needed for the actual data sources and Cycle A evidence keys.
 
 After these steps complete, proceed with Cycle A Step 1 execution exactly as
 specified in `formulate.md`.

@@ -217,7 +217,7 @@ This protocol applies to every cycle, mandatory or follow-up.
 7. Parse stdout as JSON. Use the parsed dict as this cycle's candidate evidence for Step 2 and Step 3; Step 5 records a compact summary in `decision_ledger[*].script_evidence`. The script has already mirrored the same JSON to `{scripts_dir_name}/stdout/cycle_{cycle}.json` for external inspection; do not copy it into the canonical YAML.
 8. Scan stderr and stdout for unhandled exceptions. Any unhandled exception is a blocking defect and must be fixed before continuing. Functions that intentionally demonstrate failure must be explicitly flagged with a `# expected_failure` comment.
 
-Script shape: one `run_cycle_*` function per cycle, a `load_state()` helper that reads `05_analysis.yaml`, an `argparse --cycle X` CLI, and a `main()` that prints exactly one JSON object to stdout. Claude writes the file from scratch in Cycle A and extends it with a new function at the start of every subsequent cycle. The Cycle F function contains the reproducibility re-run logic that re-executes primary, sensitivity, and challenger pipelines from cleaned artifacts plus protocol-defined frozen artifacts.
+Script contract: generate `05_analysis.py` for the current project and follow `../script-contract.md`. Include only the helpers needed for the locked analysis contract, visible artifacts, and active cycle evidence. Cycle F contains the reproducibility re-run logic for the executed contract.
 
 Script rules:
 - The script prints exactly one JSON object to stdout. Nothing else on stdout.
@@ -362,7 +362,7 @@ Digest the subagent replies into `decision_ledger[*].subagents`; the replies the
 
 Include:
 - `research_sources`: URLs that actually tipped a call, each paired with a one-line claim. Drop sources that merely confirmed obvious baseline facts or rephrased what was already known.
-- `decisions`: operational choices where a reasonable alternative existed. Tag each with its PCS axis (`P`, `C`, `S`, or `null` when not PCS-relevant). Set `source` to the index into `research_sources` when a specific source drove the call. Default choices (reading a CSV with `read_csv`, computing sha256 with hashlib) are not decisions.
+- `decisions`: operational choices where a reasonable alternative existed. Tag each with its PCS axis (`P`, `C`, `S`, or `null` when not PCS-relevant). Set `source` to the index into `research_sources` when a specific source drove the call. Default implementation choices that do not affect evidence or interpretation are not decisions.
 - `rejected_alternatives`: paths actively weighed and dropped, with the reason and PCS axis. This is the stability counterfactual record.
 - `open_risks`: one line each. Unresolved concerns downstream stages must carry forward.
 

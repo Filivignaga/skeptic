@@ -174,13 +174,13 @@ This protocol applies to every cycle, mandatory or follow-up.
    - Cycle A: no prior state to recover.
    - First cycle entered in a fresh session (not Cycle A), or first cycle after a backtrack reopens the stage: read `01_formulation.yaml` once to load the contract, claim boundary, protocol handoff, and prior `decision_ledger`.
    - Every other case (continuing the same chat session): skip the re-read; the canonical YAML content is already in context from the cycle that just wrote it.
-3. Cycle A only: execute the bootstrap sequence in `bootstrap.md`. It covers folder creation, raw-data and documentation copy, `README` init, canonical-YAML init (`stage`, `schema_version`, `project`, `status.current_cycle: A`), and the `script_shape.py` copy that produces `01_formulation.py`. One-time only; not rerun on backtrack.
+3. Cycle A only: execute the bootstrap sequence in `bootstrap.md`. It covers folder creation, raw-data and documentation copy, `README` init, canonical-YAML init (`stage`, `schema_version`, `project`, `status.current_cycle: A`), and creation of a project-specific `01_formulation.py` that follows `../script-contract.md`. One-time only; not rerun on backtrack.
 4. Every cycle: extend `01_formulation.py` by writing or updating the cycle's function (`run_cycle_a`, `run_cycle_b`, ...). The function must produce every required evidence key named by the cycle spec.
 5. Run `python {scripts_dir_name}/01_formulation.py --cycle {cycle}`. Capture stdout.
 6. Parse stdout as JSON. Use the parsed dict as this cycle's candidate evidence for Step 2 and Step 3; Step 5 records a compact summary in `decision_ledger[*].script_evidence`. The script has already mirrored the same JSON to `{scripts_dir_name}/stdout/cycle_{cycle}.json` for external inspection; do not copy it into the canonical YAML.
 7. Scan stderr and stdout for unhandled exceptions. Any unhandled exception is a blocking defect and must be fixed before continuing. Functions that intentionally demonstrate failure must be explicitly flagged with a `# expected_failure` comment.
 
-Script shape: start from `references/formulate/script_shape.py`. It provides the mandatory surface -- `sha256_of`, `detect_encoding`, `load_source`, `profile_by_dtype`, `load_state`, the `CYCLES` dispatch, and a `main()` that prints exactly one JSON object to stdout. `read_csv` remains only as a backward-compatible adapter. Copy it into `01_formulation.py` at Cycle A, then add one `run_cycle_*` function per cycle at the start of every subsequent cycle. Stable deterministic helpers are allowed when they reduce duplication and improve reproducibility; they must not write canonical YAML or access restricted artifacts.
+Script contract: generate `01_formulation.py` for the actual data sources and follow `../script-contract.md`. The script must accept `--cycle`, run only the requested cycle, print exactly one JSON object to stdout, mirror that JSON to `stdout/cycle_{cycle}.json`, and never write canonical YAML. Use only the loaders and helpers the current dataset needs.
 
 Script rules:
 - The script prints exactly one JSON object to stdout. Nothing else on stdout.
@@ -300,7 +300,7 @@ Digest the subagent replies into `decision_ledger[*].subagents`; the replies the
 
 Include:
 - `research_sources`: URLs that actually tipped a call, each paired with a one-line claim. Drop sources that merely confirmed obvious baseline facts or rephrased what was already known.
-- `decisions`: operational choices where a reasonable alternative existed. Tag each with its PCS axis (`P`, `C`, `S`, or `null` when not PCS-relevant). Set `source` to the index into `research_sources` when a specific source drove the call. Default choices (reading a CSV with `read_csv`, computing sha256 with hashlib) are not decisions.
+- `decisions`: operational choices where a reasonable alternative existed. Tag each with its PCS axis (`P`, `C`, `S`, or `null` when not PCS-relevant). Set `source` to the index into `research_sources` when a specific source drove the call. Default implementation choices that do not affect evidence or interpretation are not decisions.
 - `rejected_alternatives`: paths actively weighed and dropped, with the reason and PCS axis. This is the stability counterfactual record.
 - `open_risks`: one line each. Unresolved concerns downstream stages must carry forward.
 

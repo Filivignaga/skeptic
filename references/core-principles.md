@@ -313,6 +313,8 @@ Each stage may produce a project-side Python script at `scripts_dir_name/{NN}_{s
 
 Rules:
 
+- Generate stage scripts for the current project. Do not copy a shared Python scaffold.
+- Follow the compact contract in `references/script-contract.md`.
 - One file per stage, containing one function per cycle (`run_cycle_a`, `run_cycle_b`, ...).
 - CLI contract: `python {NN}_{stage}.py --cycle {cycle}`. Only the requested cycle runs.
 - Each function returns a dict. `main()` prints exactly one JSON object to stdout. Nothing else on stdout.
@@ -346,7 +348,7 @@ Before loading any source data file for the first time (typically in Formulate C
 - Try reading with UTF-8 strict first. If it succeeds, the file is UTF-8.
 - If UTF-8 fails, check for a BOM (byte order mark) indicating UTF-16 or UTF-8-BOM.
 - If no BOM and UTF-8 fails, attempt Latin-1 / Windows-1252 as a fallback. Log the detected encoding.
-- Record the detected encoding for each source file in the canonical YAML. All downstream reads must pass the detected encoding explicitly (for example `pd.read_csv(path, encoding='...')`). Do not rely on default encoding inference.
+- Record the detected encoding for each text source file in the canonical YAML. All downstream text reads must pass the detected encoding explicitly. Do not rely on default encoding inference.
 - If the source contains non-ASCII text, verify values display correctly before proceeding.
 
 Encoding detection is mandatory for CSV, TSV, and other text-based data files. Binary formats (Parquet, HDF5, SQLite) handle encoding internally and do not need this check.

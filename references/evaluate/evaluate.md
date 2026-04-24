@@ -198,7 +198,7 @@ This protocol applies to every cycle, mandatory or follow-up.
 
 If route context becomes ambiguous mid-stage, reread `01_formulation.yaml`, `02_protocol.yaml`, `05_analysis.yaml`, and the same route file before proceeding. If the active route cannot be resolved or the expected route file is missing, stop and route back upstream.
 
-Script shape: one `run_cycle_*` function per cycle, a `load_state()` helper that reads `06_evaluation.yaml` plus the upstream canonical YAMLs it needs, an `argparse --cycle X` CLI, and a `main()` that prints exactly one JSON object to stdout. Claude writes the file from scratch in Cycle A and extends it with a new function at the start of every subsequent cycle.
+Script contract: generate `06_evaluation.py` for the current project and follow `../script-contract.md`. Include only the helpers needed to read upstream canonical YAMLs, inspect analysis outputs, and produce route-appropriate evaluation evidence.
 
 Script rules:
 - The script prints exactly one JSON object to stdout. Nothing else on stdout.
@@ -347,7 +347,7 @@ Digest the subagent replies into `decision_ledger[*].subagents`; the replies the
 
 Include:
 - `research_sources`: URLs that actually tipped a call, each paired with a one-line claim. Drop sources that merely confirmed obvious baseline facts or rephrased what was already known.
-- `decisions`: operational choices where a reasonable alternative existed. Tag each with its PCS axis (`P`, `C`, `S`, or `null` when not PCS-relevant). Set `source` to the index into `research_sources` when a specific source drove the call. Default choices (reading a CSV with `read_csv`, computing sha256 with hashlib) are not decisions.
+- `decisions`: operational choices where a reasonable alternative existed. Tag each with its PCS axis (`P`, `C`, `S`, or `null` when not PCS-relevant). Set `source` to the index into `research_sources` when a specific source drove the call. Default implementation choices that do not affect evidence or interpretation are not decisions.
 - `rejected_alternatives`: paths actively weighed and dropped, with the reason and PCS axis. This is the stability counterfactual record.
 - `open_risks`: one line each. Unresolved concerns downstream stages must carry forward.
 
