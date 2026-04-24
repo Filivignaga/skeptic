@@ -55,7 +55,7 @@ description: Stage-specific route file for the Skeptic evaluate stage for causal
 
 ## Predictability Checks
 - The predictability reality check for causal routes is the falsification or placebo suite, not held-out prediction. Causal estimands do not have a held-out ground truth.
-- Execute the protocol-specified falsification tests on actual data in the notebook: negative control outcomes (outcomes known not to be affected by treatment should show null effects), placebo treatments (treatments known to have no effect should produce null estimates), pre-trend tests (for DiD and event-study designs), predetermined-covariate balance tests (for RD designs), and any other protocol-specified falsification.
+- Execute the protocol-specified falsification tests on actual data in the script: negative control outcomes (outcomes known not to be affected by treatment should show null effects), placebo treatments (treatments known to have no effect should produce null estimates), pre-trend tests (for DiD and event-study designs), predetermined-covariate balance tests (for RD designs), and any other protocol-specified falsification.
 - For each falsification test, assess: does the test produce the expected null result, or does it show an effect that should not exist?
 - A falsification test that shows an unexpected effect is evidence that the identification strategy may be confounded or that the design has a flaw the analysis did not detect.
 - Adjudicate the falsification suite as a whole: does the suite pass, partially pass, or fail? A single failure in a battery of tests requires judgment about whether it reflects a narrow problem or a systemic identification failure.
@@ -67,7 +67,7 @@ description: Stage-specific route file for the Skeptic evaluate stage for causal
 - **Cinelli-Hazlett robustness values:** Compute the partial R-squared of the unmeasured confounder with treatment and with outcome that would be needed to explain away the effect. Compare these values against the partial R-squared of the strongest observed confounder. If a confounder with less explanatory power than an observed covariate could eliminate the effect, the result is fragile.
 - **Negative control assessment:** For each negative control outcome and placebo treatment, assess whether the null result was obtained. Quantify the magnitude of any unexpected effect relative to the primary effect. A negative control effect that is a substantial fraction of the primary effect is a threat.
 - **Falsification test adjudication:** For each pre-specified falsification test (pre-trends, McCrary, predetermined covariates, placebo), render: passed, marginal, or failed. Aggregate across the suite. A preponderance of failures signals identification breakdown.
-- Apply formal tools on actual data in the notebook. Report numerical results. Do not substitute qualitative assertions for quantitative outputs.
+- Apply formal tools on actual data in the script. Report numerical results. Do not substitute qualitative assertions for quantitative outputs.
 - For each tool, state: what was tested, the numerical result, and what it implies for claim survival (defended, threatened, or fatal).
 
 ## Adversarial Review Guidance

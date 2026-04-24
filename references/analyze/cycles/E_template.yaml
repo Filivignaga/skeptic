@@ -1,61 +1,39 @@
-cycle: E{n}                          # E1, E2, E3, ... assigned in order opened
-focus: "{short description of the execution issue, e.g. 'Resolve convergence failure in primary execution under locked hyperparameters'}"
+cycle: E{n}
+focus: '{short description of the execution issue, e.g. ''Resolve convergence failure in primary execution under locked hyperparameters''}'
 mandatory: false
-
-# En cycles are narrow, execution-issue follow-ups opened only when Cycle C or
-# Cycle D surfaces a material execution-viability problem (convergence failure,
-# degenerate output, computational infeasibility, missing-data cascade).
-# They run under the exact same 5-step cycle protocol as mandatory cycles.
-#
-# Do not use En for:
-#   - result-quality judgments or post-hoc re-exploration
-#   - adding perturbation axes or challengers beyond the locked contract
-#   - widening the claim boundary
-#   - re-deciding examination, cleaning, protocol, or formulation
-#
-# If the underlying issue is actually an upstream mismatch (examine support was
-# overestimated, clean left a structural problem, protocol forbids what is now
-# needed, formulate's type no longer fits), route back upstream instead.
-#
-# The model does NOT create a new YAML file on disk for each follow-up.
-# Instead it materializes the concrete En spec inline inside 05_analysis.yaml
-# under a scratch area (status.active_followup_spec), runs the cycle, then
-# appends the closing cycle_history entry.
-
 upstream:
-  - "{list which canonical-YAML fields must be set before the follow-up runs, e.g. primary_execution.failure_details or challenger_execution.per_challenger[name].failure_details}"
-
-setup_side_effects: []
-
-checklist:
-  - id: E{n}01
-    question: "What is the specific execution issue being addressed, what evidence from Cycles C or D documents it, and why does it materially affect the locked contract's viability?"
-    evidence_key: "{key name, e.g. issue_scope}"
-    writes_to: null
-  - id: E{n}02
-    question: "What targeted resolution does this follow-up attempt, and what new evidence (re-run with adjusted parameters, diagnostic deep-dive, alternative optimizer, etc.) is gathered?"
-    evidence_key: "{key name, e.g. resolution_attempt}"
-    writes_to: "{contract-or-execution field updated, e.g. primary_execution.outputs or sensitivity_execution.per_axis[axis].outputs}"
-  - id: E{n}03
-    question: "Does the resolution restore contract viability, or must this route to an upstream reopen or to acknowledge_gap?"
-    evidence_key: "{key name, e.g. viability_verdict}"
-    writes_to: null
-  # Add E{n}04, E{n}05, ... only as required. Keep follow-ups narrow and purpose-built.
-  # Add `skip_when: <condition>` on any item that has a non-default skip condition.
-
-gates:
-  - id: "E{n}01-scope-clear"
-    condition: "The execution issue is stated concretely, tied to specific Cycle C or D evidence, and classified as an execution-viability problem rather than a result-quality judgment"
-  - id: "E{n}-contract-preserved"
-    depends_on: ["E{n}01", "E{n}02", "E{n}03"]
-    condition: "The follow-up uses only contract-approved methods, visibility-approved artifacts, and pre-specified scope; no post-hoc perturbation axis or challenger is introduced; the claim boundary is not widened"
-  # At least one gate that enforces the issue-specific exit condition is required.
-
+- '{list which canonical-YAML fields must be set before the follow-up runs, e.g. primary_execution.failure_details or challenger_execution.per_challenger[name].failure_details}'
 research_questions:
-  - "{at most a handful; narrow to the specific execution issue}"
-
+- '{at most a handful; narrow to the specific execution issue}'
 guidance:
-  - Keep the follow-up narrow. One execution issue per cycle.
-  - If the same issue recurs across follow-ups, escalate instead of looping.
-  - Close the follow-up as pass, acknowledge_gap, reopen_examine, reopen_protocol, reopen_formulate, reopen_clean, data_insufficient, or archive under the standard decision matrix.
-  - Do not use En as a side channel to reshape the contract. Contract amendments allowed under contract.assumption_failure_policy belong to Cycle B, not En.
+- Keep the follow-up narrow. One execution issue per cycle.
+- If the same issue recurs across follow-ups, escalate instead of looping.
+- Close the follow-up as pass, acknowledge_gap, reopen_examine, reopen_protocol, reopen_formulate, reopen_clean, data_insufficient,
+  or archive under the standard decision matrix.
+- Do not use En as a side channel to reshape the contract. Contract amendments allowed under contract.assumption_failure_policy
+  belong to Cycle B, not En.
+required_evidence:
+- id: E{n}01
+  question: What is the specific execution issue being addressed, what evidence from Cycles C or D documents it, and why does
+    it materially affect the locked contract's viability?
+  evidence_key: '{key name, e.g. issue_scope}'
+- id: E{n}02
+  question: What targeted resolution does this follow-up attempt, and what new evidence (re-run with adjusted parameters,
+    diagnostic deep-dive, alternative optimizer, etc.) is gathered?
+  evidence_key: '{key name, e.g. resolution_attempt}'
+- id: E{n}03
+  question: Does the resolution restore contract viability, or must this route to an upstream reopen or to acknowledge_gap?
+  evidence_key: '{key name, e.g. viability_verdict}'
+writes:
+  E{n}02: '{contract-or-execution field updated, e.g. primary_execution.outputs or sensitivity_execution.per_axis[axis].outputs}'
+acceptance_criteria:
+- id: E{n}01-scope-clear
+  condition: The execution issue is stated concretely, tied to specific Cycle C or D evidence, and classified as an execution-viability
+    problem rather than a result-quality judgment
+- id: E{n}-contract-preserved
+  depends_on:
+  - E{n}01
+  - E{n}02
+  - E{n}03
+  condition: The follow-up uses only contract-approved methods, visibility-approved artifacts, and pre-specified scope; no
+    post-hoc perturbation axis or challenger is introduced; the claim boundary is not widened

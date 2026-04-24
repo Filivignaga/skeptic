@@ -1,46 +1,22 @@
-cycle: G{n}                          # G1, G2, G3, ... assigned in order opened
-focus: "{short description of the unresolved preprocessing or derived-variable topic}"
+cycle: G{n}
+focus: '{short description of the unresolved preprocessing or derived-variable topic}'
 mandatory: false
-
-# G-series follow-ups run under the same 5-step cycle protocol as the mandatory
-# cycles. They are triggered when:
-#   1. Cycle C closeout or F closes with an unresolved representation topic the user
-#      agrees to reopen
-#   2. The evaluation subagent for R or S recommends routing a discovered
-#      representation issue back to preprocessing or derived-variable work
-#   3. The user requests one
-#
-# If the underlying issue is really a data-quality problem, route it to a
-# D-series follow-up instead of keeping it in G-series.
-#
-# The model does NOT create a new YAML file on disk. The concrete Gn spec lives
-# inline inside 03_cleaning.yaml under a scratch area until the cycle closes.
-
 upstream:
-  - "{list canonical-YAML fields that must be set before the follow-up runs, e.g. preprocessing_decisions, derived_variables}"
-
-setup_side_effects: []
-
-checklist:
-  - id: G{n}01
-    question: "{question derived from the specific unresolved representation topic}"
-    evidence_key: "{key name, or null if judgment-driven}"
-    writes_to: "{canonical-YAML field, list of fields, or null}"
-  # Add G{n}02, G{n}03, ... as required. Keep follow-ups narrow and purpose-built.
-  # Examples of writes_to targets: preprocessing_decisions (append), derived_variables (append),
-  # claim_boundary_updates.narrowing_log (append, only while clean is still open).
-
-gates:
-  - id: "G{n}01-{short-name}"
-    condition: "{condition that closes the unresolved representation topic}"
-  # Single-dep gates encode the checklist ID in the gate ID.
-  # Multi-dep gates use id: "G{n}-{short-name}" and depends_on: [G{n}01, G{n}02, ...].
-  # At least one gate is required so the cycle has an enforceable exit.
-
+- '{list canonical-YAML fields that must be set before the follow-up runs, e.g. preprocessing_decisions, derived_variables}'
 research_questions:
-  - "{at most a handful; narrow to the unresolved representation topic}"
-
+- '{at most a handful; narrow to the unresolved representation topic}'
 guidance:
-  - Keep the follow-up narrow. One representation topic per cycle.
-  - If the issue is really about upstream data quality or semantic validity, route it back to a D-series follow-up instead of keeping it here.
-  - Close the follow-up as pass, acknowledge_gap, data_insufficient, reopen_protocol, reopen_formulate, or archive under the standard decision matrix.
+- Keep the follow-up narrow. One representation topic per cycle.
+- If the issue is really about upstream data quality or semantic validity, route it back to a D-series follow-up instead of
+  keeping it here.
+- Close the follow-up as pass, acknowledge_gap, data_insufficient, reopen_protocol, reopen_formulate, or archive under the
+  standard decision matrix.
+required_evidence:
+- id: G{n}01
+  question: '{question derived from the specific unresolved representation topic}'
+  evidence_key: '{key name, or null if judgment-driven}'
+writes:
+  G{n}01: '{canonical-YAML field, list of fields, or null}'
+acceptance_criteria:
+- id: G{n}01-{short-name}
+  condition: '{condition that closes the unresolved representation topic}'

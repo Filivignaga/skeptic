@@ -1,51 +1,57 @@
 cycle: C
 focus: Question Type Classification
 mandatory: true
-
 upstream:
-  - contract.audience
-  - contract.decision_context
-  - contract.unit_of_analysis
-
-setup_side_effects: []
-
-checklist:
-  - id: C01
-    question: Based on the rough question and Cycle A-B findings, which of the six question types best fits (descriptive, exploratory, inferential, predictive, causal, mechanistic)?
-    evidence_key: type_candidates               # {candidate_type: {fit_score, supporting_evidence, conflicting_evidence}} for each of the six types the model considers
-    writes_to: contract.question_type
-  - id: C02
-    question: Does the current data collection, design, and variable coverage support the proposed type? If not, what is the strongest defensible alternative?
-    evidence_key: type_support_evidence         # {chosen_type: {design_support, variable_coverage_support, known_blockers}}
-    writes_to: null
-  - id: C03
-    question: What are the downstream consequences for `protocol`, route overlays, and later `analyze`?
-    evidence_key: null
-    writes_to: [contract.route_candidates, protocol_handoff.data_usage_considerations, protocol_handoff.validation_needs]
-  - id: C04
-    question: If the data cannot support the preferred type, what would be required for the original?
-    skip_when: data supports the preferred type
-    evidence_key: unmet_requirements            # list of {requirement, current_gap, hypothetical_fix} when the preferred type is not currently supported; else []
-    writes_to: null
-
-gates:
-  - id: C02-type-supported
-    condition: Data collection and design plausibly support the classified type (an answer of "not supported; alternative is X" fails this gate)
-
+- contract.audience
+- contract.decision_context
+- contract.unit_of_analysis
 research_questions:
-  - What question types and study designs have been used to answer similar questions?
-  - What methodological requirements typically apply to each plausible type in this domain?
-  - Are there published examples where similar data was sufficient or insufficient for this type of question?
-
+- What question types and study designs have been used to answer similar questions?
+- What methodological requirements typically apply to each plausible type in this domain?
+- Are there published examples where similar data was sufficient or insufficient for this type of question?
 guidance:
-  - The six types are descriptive, exploratory, inferential, predictive, causal, mechanistic. See `../../core-principles.md` for admissible evidence and interpretation boundary per type.
-  - Cycle C produces exactly two things. A locked primary question type, plus the set of "facts and recommended ranges" that `protocol` will use to make its own decisions.
-  - Classification and unsupervised methods are predictive only when the question targets unseen-outcome forecasting in a defined deployment; otherwise they serve exploratory, descriptive, or inferential questions.
-  - Inferential questions estimate quantities in a population or sampling frame. Predictive questions target unseen outcomes in a deployment context.
-  - contract.route_candidates is seeded here and refined further in Cycle D.
-
+- The six types are descriptive, exploratory, inferential, predictive, causal, mechanistic. See `../../core-principles.md`
+  for admissible evidence and interpretation boundary per type.
+- Cycle C produces exactly two things. A locked primary question type, plus the set of "facts and recommended ranges" that
+  `protocol` will use to make its own decisions.
+- Classification and unsupervised methods are predictive only when the question targets unseen-outcome forecasting in a defined
+  deployment; otherwise they serve exploratory, descriptive, or inferential questions.
+- Inferential questions estimate quantities in a population or sampling frame. Predictive questions target unseen outcomes
+  in a deployment context.
+- contract.route_candidates is seeded here and refined further in Cycle D.
 pcs_focus:
   items:
-    - "P: Does the classified type match what Cycle A's prior art used for similar questions? Cite the closest comparable."
-    - "C: Is the classification traceable to specific C01-C04 evidence entries?"
-    - "S: Would the nearest alternative framing change the type?"
+  - 'P: Does the classified type match what Cycle A''s prior art used for similar questions? Cite the closest comparable.'
+  - 'C: Is the classification traceable to specific C01-C04 evidence entries?'
+  - 'S: Would the nearest alternative framing change the type?'
+required_evidence:
+- id: C01
+  question: Based on the rough question and Cycle A-B findings, which of the six question types best fits (descriptive, exploratory,
+    inferential, predictive, causal, mechanistic)?
+  evidence_key: type_candidates
+  evidence_shape: '{candidate_type: {fit_score, supporting_evidence, conflicting_evidence}} for each of the six types the
+    model considers'
+- id: C02
+  question: Does the current data collection, design, and variable coverage support the proposed type? If not, what is the
+    strongest defensible alternative?
+  evidence_key: type_support_evidence
+  evidence_shape: '{chosen_type: {design_support, variable_coverage_support, known_blockers}}'
+- id: C03
+  question: What are the downstream consequences for `protocol`, route overlays, and later `analyze`?
+  evidence_key: null
+- id: C04
+  question: If the data cannot support the preferred type, what would be required for the original?
+  evidence_key: unmet_requirements
+  evidence_shape: list of {requirement, current_gap, hypothetical_fix} when the preferred type is not currently supported;
+    else []
+  skip_when: data supports the preferred type
+writes:
+  C01: contract.question_type
+  C03:
+  - contract.route_candidates
+  - protocol_handoff.data_usage_considerations
+  - protocol_handoff.validation_needs
+acceptance_criteria:
+- id: C02-type-supported
+  condition: Data collection and design plausibly support the classified type (an answer of "not supported; alternative is
+    X" fails this criterion)

@@ -1,73 +1,88 @@
 cycle: B
 focus: Stability Adjudication
 mandatory: true
-
 upstream:
-  - upstream_contract.analysis_contract_ref
-  - evaluation_plan.perturbation_axes
-  - evaluation_plan.dependency_map_ref
-  - evaluation_plan.challengers
-  - evaluation_plan.divergence_triage
-
-setup_side_effects: []
-
-checklist:
-  - id: B01
-    question: Which perturbation axes and challengers from the analysis contract are being adjudicated in this cycle, and is every axis and challenger from the contract accounted for?
-    evidence_key: axes_and_challengers_covered     # {perturbation_axes: [id, ...], challengers: [id, ...], missing_from_contract: []}
-    writes_to: null
-  - id: B02
-    question: For each perturbation axis, what is the direction of change, magnitude of change, expected coupled movements from the dependency map, whether unexpected coupled movement occurred, whether the qualitative conclusion changes, and whether the claim boundary needs narrowing?
-    evidence_key: perturbation_axis_details         # {axis_id: {direction, magnitude, expected_coupled_movements: [], unexpected_movements: [], qualitative_change: bool, narrowing_required: bool}}
-    writes_to: null
-  - id: B03
-    question: For each challenger, does it contradict the primary conclusion, what is the magnitude and direction of disagreement, and is the disagreement structural or parametric?
-    evidence_key: challenger_details                # {challenger_id: {contradicts: bool, direction, magnitude, kind: structural|parametric}}
-    writes_to: null
-  - id: B04
-    question: If formulate Cycle D identified competing operationalizations that diverged on claim_type or top-ranked route, are they represented in the challenger set, and if not is the gap documented as a caveat on claim stability?
-    evidence_key: competing_ops_representation      # {competing_ops: [{term, represented_in_challengers: bool, caveat_if_absent}]}
-    writes_to: null
-  - id: B05
-    question: Are judgment-call perturbation axes weighted alongside data perturbation axes (contributing equally to the stability verdict) rather than dismissed as less important?
-    evidence_key: judgment_axis_weighting           # {judgment_axes: [...], data_axes: [...], weighting_rationale}
-    writes_to: null
-  - id: B06
-    question: Applying the convergence/divergence framework, is each axis or challenger classified as convergent (strengthens the claim), divergent reflecting genuine instability, divergent reflecting a known method limitation, or divergent reflecting an execution artifact?
-    evidence_key: convergence_classification        # {axis_or_challenger_id: {class: convergent|unstable|limitation|artifact, evidence}}
-    writes_to: null
-  - id: B07
-    question: For each claim the analysis contract was designed to support, what is the stability verdict (stable, conditionally stable, or unstable), and which specific notebook or script outputs from analyze ground the verdict?
-    evidence_key: null
-    writes_to: stability_verdicts
-  - id: B08
-    question: If any claim is unstable, is backtracking required or can the instability be carried as an explicit caveat, and what is the assessed disposition?
-    skip_when: no claim is unstable
-    evidence_key: null
-    writes_to: null
-
-gates:
-  - id: B-perturbation-axes-covered
-    depends_on: [B01, B02]
-    condition: Every perturbation axis from the analysis contract is adjudicated with direction, magnitude, qualitative-change determination, and narrowing determination
-  - id: B-challengers-adjudicated
-    depends_on: [B01, B03]
-    condition: Every challenger from the analysis contract is adjudicated with contradiction status, direction, magnitude, and structural-or-parametric classification
-  - id: B-divergence-classified
-    depends_on: [B02, B03, B06]
-    condition: Each divergence is classified as acceptable variation, instability requiring a caveat, instability requiring backtracking, a known method limitation, or an execution artifact
-  - id: B07-verdict-grounded
-    condition: Stability verdicts reference specific notebook or script outputs from analyze, not assertions
-
+- upstream.analysis_contract
+- evaluation_plan.perturbation_axes
+- evaluation_plan.challengers
+- evaluation_plan.divergence_triage
 research_questions:
-  - What stability thresholds are standard for this route and method family?
-  - What magnitude of perturbation divergence is typical versus concerning in published work with similar data profiles?
-  - How do domain standards treat judgment-call perturbation versus data perturbation uncertainty?
-  - Do any perturbation or challenger results suggest an execution artifact rather than genuine sensitivity?
-
+- What stability thresholds are standard for this route and method family?
+- What magnitude of perturbation divergence is typical versus concerning in published work with similar data profiles?
+- How do domain standards treat judgment-call perturbation versus data perturbation uncertainty?
+- Do any perturbation or challenger results suggest an execution artifact rather than genuine sensitivity?
 guidance:
-  - Small numeric shifts with preserved qualitative conclusions are acceptable variation, not instability. Document the magnitude of every shift; adjudicate the qualitative-conclusion change.
-  - Convergent results strengthen the claim; divergent results must be diagnosed (genuine instability, known method limitation, or execution artifact) before driving a verdict.
-  - Use the dependency map from analyze when interpreting perturbations; coupled metrics that should move together must be expected together rather than noticed selectively after the fact.
-  - All challengers producing materially different results from the primary is NOT a backtracking trigger on its own. Backtracking is warranted only when divergence invalidates the primary conclusion across the claim boundary.
-  - The three stability verdicts are: stable (conclusions survive every perturbation), conditionally stable (survives most, sensitive to specific axes -- caveats required), unstable (changes materially under reasonable perturbations -- claim must be downgraded or killed).
+- Small numeric shifts with preserved qualitative conclusions are acceptable variation, not instability. Document the magnitude
+  of every shift; adjudicate the qualitative-conclusion change.
+- Convergent results strengthen the claim; divergent results must be diagnosed (genuine instability, known method limitation,
+  or execution artifact) before driving a verdict.
+- All challengers producing materially different results from the primary is NOT a backtracking trigger on its own. Backtracking
+  is warranted only when divergence invalidates the primary conclusion across the claim boundary.
+- The three stability verdicts are: stable (conclusions survive every perturbation), conditionally stable (survives most,
+    sensitive to specific axes -- caveats required), unstable (changes materially under reasonable perturbations -- claim
+    must be downgraded or killed).
+required_evidence:
+- id: B01
+  question: Which perturbation axes and challengers from the analysis contract are being adjudicated in this cycle, and is
+    every axis and challenger from the contract accounted for?
+  evidence_key: axes_and_challengers_covered
+  evidence_shape: '{perturbation_axes: [id, ...], challengers: [id, ...], missing_from_contract: []}'
+- id: B02
+  question: For each perturbation axis, what is the direction of change, magnitude of change, whether the qualitative conclusion
+    changes, and whether the claim boundary needs narrowing?
+  evidence_key: perturbation_axis_details
+  evidence_shape: '{axis_id: {direction, magnitude, qualitative_change: bool, narrowing_required: bool}}'
+- id: B03
+  question: For each challenger, does it contradict the primary conclusion, what is the magnitude and direction of disagreement,
+    and is the disagreement structural or parametric?
+  evidence_key: challenger_details
+  evidence_shape: '{challenger_id: {contradicts: bool, direction, magnitude, kind: structural|parametric}}'
+- id: B04
+  question: If formulate Cycle D identified competing operationalizations that diverged on claim_type or top-ranked route,
+    are they represented in the challenger set, and if not is the gap documented as a caveat on claim stability?
+  evidence_key: competing_ops_representation
+  evidence_shape: '{competing_ops: [{term, represented_in_challengers: bool, caveat_if_absent}]}'
+- id: B05
+  question: Are judgment-call perturbation axes weighted alongside data perturbation axes (contributing equally to the stability
+    verdict) rather than dismissed as less important?
+  evidence_key: judgment_axis_weighting
+  evidence_shape: '{judgment_axes: [...], data_axes: [...], weighting_rationale}'
+- id: B06
+  question: Applying the convergence/divergence framework, is each axis or challenger classified as convergent (strengthens
+    the claim), divergent reflecting genuine instability, divergent reflecting a known method limitation, or divergent reflecting
+    an execution artifact?
+  evidence_key: convergence_classification
+  evidence_shape: '{axis_or_challenger_id: {class: convergent|unstable|limitation|artifact, evidence}}'
+- id: B07
+  question: For each claim the analysis contract was designed to support, what is the stability verdict (stable, conditionally
+    stable, or unstable), and which specific script outputs from analyze ground the verdict?
+  evidence_key: null
+- id: B08
+  question: If any claim is unstable, is backtracking required or can the instability be carried as an explicit caveat, and
+    what is the assessed disposition?
+  evidence_key: null
+  skip_when: no claim is unstable
+writes:
+  B07: stability_verdicts
+acceptance_criteria:
+- id: B-perturbation-axes-covered
+  depends_on:
+  - B01
+  - B02
+  condition: Every perturbation axis from the analysis contract is adjudicated with direction, magnitude, qualitative-change
+    determination, and narrowing determination
+- id: B-challengers-adjudicated
+  depends_on:
+  - B01
+  - B03
+  condition: Every challenger from the analysis contract is adjudicated with contradiction status, direction, magnitude, and
+    structural-or-parametric classification
+- id: B-divergence-classified
+  depends_on:
+  - B02
+  - B03
+  - B06
+  condition: Each divergence is classified as acceptable variation, instability requiring a caveat, instability requiring
+    backtracking, a known method limitation, or an execution artifact
+- id: B07-verdict-grounded
+  condition: Stability verdicts reference specific script outputs from analyze, not assertions

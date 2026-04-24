@@ -1,47 +1,20 @@
-cycle: F{n}                          # F1, F2, F3, ... assigned in order opened
-focus: "{short description of the follow-up topic, e.g. 'Resolve unit-of-analysis ambiguity for transactions vs. accounts'}"
+cycle: F{n}
+focus: '{short description of the follow-up topic, e.g. ''Resolve unit-of-analysis ambiguity for transactions vs. accounts''}'
 mandatory: false
-
-# Follow-up cycles run under the exact same 5-step cycle protocol as the
-# mandatory cycles A through E. They are triggered when:
-#   1. Claude proposes one based on accumulated findings across A-E
-#   2. The evaluation subagent recommends one
-# The user approves or skips each proposed follow-up.
-#
-# The model does NOT create a new YAML file on disk for each follow-up.
-# Instead, it materializes the concrete Fn spec inline inside
-# 01_formulation.yaml under a scratch area (e.g., status.active_followup_spec),
-# runs the cycle, then appends the closing cycle_history entry.
-#
-# Use this template as the shape for that inline spec.
-
 upstream:
-  - "{list which canonical-YAML fields must be set before the follow-up runs}"
-
-setup_side_effects: []
-
-checklist:
-  - id: F{n}01
-    question: "{question derived from the specific follow-up topic}"
-    evidence_key: "{key name, or null if judgment-driven}"
-    writes_to: "{canonical-YAML field, list of fields, or null}"
-  # Add F{n}02, F{n}03, ... as required. Keep follow-ups narrow and purpose-built.
-  # Add `skip_when: <condition>` on any item that has a non-default skip condition.
-  # Examples of writes_to targets for follow-ups: claim_boundary.verbs_forbidden_added
-  # (append), claim_boundary.narrowing_log (append, only while formulate is still open),
-  # contract.operationalization[term].
-
-gates:
-  - id: "F{n}01-{short-name}"
-    condition: "{condition that closes the follow-up topic}"
-  # Single-dep gates encode the checklist ID in the gate ID (e.g. F{n}01-resolved).
-  # Multi-dep gates use id: "F{n}-{short-name}" and depends_on: [F{n}01, F{n}02, ...].
-  # At least one gate is required so the cycle has an enforceable exit.
-
+- '{list which canonical-YAML fields must be set before the follow-up runs}'
 research_questions:
-  - "{at most a handful; narrow to the follow-up topic}"
-
+- '{at most a handful; narrow to the follow-up topic}'
 guidance:
-  - Keep the follow-up narrow. One topic per cycle.
-  - If the same topic recurs across follow-ups, escalate instead of looping.
-  - Close the follow-up as pass, acknowledge_gap, data_insufficient, reformulate, or archive under the standard decision matrix.
+- Keep the follow-up narrow. One topic per cycle.
+- If the same topic recurs across follow-ups, escalate instead of looping.
+- Close the follow-up as pass, acknowledge_gap, data_insufficient, reformulate, or archive under the standard decision matrix.
+required_evidence:
+- id: F{n}01
+  question: '{question derived from the specific follow-up topic}'
+  evidence_key: '{key name, or null if judgment-driven}'
+writes:
+  F{n}01: '{canonical-YAML field, list of fields, or null}'
+acceptance_criteria:
+- id: F{n}01-{short-name}
+  condition: '{condition that closes the follow-up topic}'

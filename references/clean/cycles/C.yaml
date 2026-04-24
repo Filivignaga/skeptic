@@ -1,92 +1,105 @@
 cycle: C
 focus: Cleaning Resolution
 mandatory: true
-
 upstream:
-  - data_contract.raw_artifacts
-  - data_contract.cleaned_artifacts
-  - data_contract.missing_vs_censored_rule
-  - visibility_ref.visible_raw_files
-  - visibility_ref.visible_protocol_artifacts
-  - question_critical_variables
-  - upstream_refs
-  - upstream_contract.claim_boundary_ref
-  - upstream_contract.protocol_visibility_ref
-
-setup_side_effects: []
-
-checklist:
-  - id: C01
-    question: For each material issue surfaced in Cycles A and B, what are the real policy options (keep, drop, impute, replace with sentinel, flag, split into subpopulations, route back upstream), and what does each option preserve or destroy?
-    evidence_key: issue_resolutions             # list of {issue_id, issue_description, options: [{option, preserves, destroys}], chosen_policy, rationale, rationale_source, alternatives, reversibility, code_reference, population_shift, claim_consequence, narrowing_entry_if_any}
-    writes_to: null
-  - id: C02
-    question: For each chosen policy, what is the rationale, which rationale class does it come from (measurement meaning, domain knowledge, data-generating process, protocol rule, transferability evidence), and what are the named alternatives?
-    evidence_key: issue_resolutions             # same list as C01; each entry includes chosen_policy, rationale, rationale_source, alternatives, reversibility
-    writes_to: cleaning_decisions
-  - id: C03
-    question: For each material action, which function or cell in {scripts_dir_name}/03_cleaning.py implements it, and is the transformation traceable to the rationale recorded in C02?
-    evidence_key: issue_resolutions             # same list as C01; each entry includes code_reference and matches_rationale
-    writes_to: cleaning_decisions               # updates each decision's code_reference
-  - id: C04
-    question: For each material action, what changed (rows, values, fields, analyzable population), and does the row-count reconciliation (raw_rows minus ordered exclusions equals cleaned_rows) match the actual cleaned artifact row count?
-    evidence_key: row_count_and_population      # {raw_rows, exclusions: [{reason, rows_removed}], cleaned_rows, arithmetic_match: bool, issue_resolutions_ref: issue_resolutions}
-    writes_to: [cleaning_decisions, row_count_reconciliation]
-  - id: C05
-    question: For each material action, what is the claim consequence (none, narrower coverage, changed interpretation, or backtracking required), and does any action require appending a narrowing entry to claim_boundary_updates.narrowing_log?
-    evidence_key: issue_resolutions             # same list as C01; each entry includes claim_consequence and narrowing_entry_if_any
-    writes_to: [cleaning_decisions, claim_boundary_updates.narrowing_log]
-  - id: C06
-    question: Is the cleaned dataset still fit for the approved question, is additional data now required, is the approved question still appropriate for this dataset, did cleaning reveal a protocol mismatch, and did cleaning reveal a formulation mismatch?
-    evidence_key: fitness_checkpoint            # {still_fit, new_data_required, question_still_appropriate, protocol_mismatch, formulation_mismatch, notes}
-    writes_to: dataset_fitness_reviews
-  - id: C07
-    question: Does the cleaned output look suspiciously neat (remaining missingness zero, zero edge cases, perfectly uniform distributions, identifier collisions vanished without an explicit policy, high-signal columns dominating the data), and if trigger conditions appear, how were they challenged?
-    skip_when: no trigger conditions observed in the cleaned output after inspection
-    evidence_key: suspicious_cleanliness_audit  # {trigger_conditions_observed: [{trigger, description}], challenge_response, final_verdict: clean|re_examine}
-    writes_to: null
-  - id: C08
-    question: Which low-regret preprocessing checks are resolved at closeout (category labels, rare levels, numeric/date parsing, deferred transforms, fit scope, and categorical expansion conventions), and which are deferred to F, G-series, analyze, or a D-series cleaning follow-up?
-    evidence_key: preprocessing_closeout         # {batched_noop_decisions: [{columns_or_artifacts, rationale, consequence}], representation_actions: [], deferred_transforms: [], fit_scope_audit: [], categorical_expansion_audit: [], followup_needed: []}
-    writes_to: preprocessing_decisions
-
-gates:
-  - id: C01-policies-defined
-    condition: Every material issue from Cycles A and B carries at least two real policy options and a stated tradeoff between them
-  - id: C02-policies-chosen
-    condition: Every chosen policy carries a named rationale drawn from measurement meaning, domain knowledge, data-generating process, protocol rule, or transferability evidence, plus named alternatives and a reversibility class
-  - id: C03-transforms-auditable
-    condition: Every material transformation is implemented in {scripts_dir_name}/03_cleaning.py and traceable to its C02 rationale
-  - id: C04-row-count-reconciled
-    condition: Row-count arithmetic (raw_rows minus ordered exclusions equals cleaned_rows) matches the actual cleaned artifact row count; any discrepancy is a blocking defect
-  - id: C05-claim-impact-stated
-    condition: Every material action has an explicit claim consequence; narrowing entries are appended to claim_boundary_updates.narrowing_log where applicable
-  - id: C06-fitness-checkpoint-run
-    condition: The dataset fitness checkpoint is completed and any no or unclear answer is surfaced to the user as a decision point rather than buried in gaps
-  - id: C07-suspicious-cleanliness-reviewed
-    condition: Trigger conditions are challenged on the record with a final verdict; the skip_when path is taken only when no trigger conditions were observed after inspection
-  - id: C08-preprocessing-closeout
-    condition: Low-regret preprocessing checks are either batched as no-op decisions with shared rationale, implemented with code references, or explicitly deferred; fit-from-data transforms respect protocol visibility and no uncertain representation choice is silently applied
-
+- data_contract.raw_artifacts
+- data_contract.cleaned_artifacts
+- data_contract.missing_vs_censored_rule
+- visibility.visible_raw_files
+- visibility.visible_protocol_artifacts
+- question_critical_variables
+- upstream_snapshot.claim_boundary
+- upstream_snapshot.clean_prohibitions
+- upstream_snapshot.forbidden_variable_classes
 research_questions:
-  - Which competing cleaning policies are defensible for the flagged issues?
-  - What population or interpretation shifts follow from each plausible cleaning action?
-  - Are any proposed actions likely to erase meaningful variation or create artificial regularity?
-  - Does any unresolved issue indicate a protocol mismatch rather than a pure cleaning problem?
-  - Which rationale classes (measurement meaning, domain knowledge, data-generating process, protocol rule, transferability evidence) best support each candidate policy?
-
+- Which competing cleaning policies are defensible for the flagged issues?
+- What population or interpretation shifts follow from each plausible cleaning action?
+- Are any proposed actions likely to erase meaningful variation or create artificial regularity?
+- Does any unresolved issue indicate a protocol mismatch rather than a pure cleaning problem?
+- Which rationale classes (measurement meaning, domain knowledge, data-generating process, protocol rule, transferability
+  evidence) best support each candidate policy?
 guidance:
-  - When convenience conflicts with meaning, choose meaning.
-  - If a proposed action requires protocol-forbidden visibility, unauthorized use of restricted artifacts, or a wider claim than the approved boundary, stop and reopen upstream instead of forcing it through.
-  - A cleaning action that materially changes the analyzable population must carry an explicit population-shift statement and, where relevant, a narrowing entry in claim_boundary_updates.narrowing_log.
-  - Keep one `issue_resolutions` entry per issue. Do not split policy options, chosen policies, code trace, population shift, and claim consequence across parallel lists.
-  - Batch identical retained-as-is decisions when the rationale and consequence are identical; carry the affected column or artifact list in one entry.
-  - Fold preprocessing closeout into this cycle. Retire old Cycle E behavior: do not write one no-op decision per column when one batched rationale applies.
-  - If a value-cleaning fix would really require a semantic rethink, route the issue to a D-series follow-up or back upstream rather than resolving it in C.
-
-
+- When convenience conflicts with meaning, choose meaning.
+- If a proposed action requires protocol-forbidden visibility, unauthorized use of restricted artifacts, or a wider claim
+  than the approved boundary, stop and reopen upstream instead of forcing it through.
+- A cleaning action that materially changes the analyzable population must carry an explicit population-shift statement and,
+  where relevant, a narrowing entry in claim_boundary_updates.narrowing_log.
+- If a value-cleaning fix would really require a semantic rethink, route the issue to a D-series follow-up or back upstream
+  rather than resolving it in C.
 pcs_focus:
   items:
-    - "P: Do cleaning policies match the data-generating process rather than convenience? Cite the rationale source for each material decision."
-    - "C: Is every material transformation implemented in {scripts_dir_name}/03_cleaning.py code that another analyst can rerun from the canonical YAML and the raw files alone?"
-    - "S: Would any single judgment call, reversed, change the analyzable population enough to alter the claim boundary?"
+  - 'P: Do cleaning policies match the data-generating process rather than convenience? Cite the rationale source for each
+    material decision.'
+  - 'C: Is every material transformation implemented in {scripts_dir_name}/03_cleaning.py code that another analyst can rerun
+    from the canonical YAML and the raw files alone?'
+  - 'S: Would any single judgment call, reversed, change the analyzable population enough to alter the claim boundary?'
+required_evidence:
+- id: C01
+  question: For each material issue surfaced in Cycles A and B, what are the real policy options (keep, drop, impute, replace
+    with sentinel, flag, split into subpopulations, route back upstream), and what does each option preserve or destroy?
+  evidence_key: policy_options
+  evidence_shape: 'list of {issue_id, issue_description, options: [{option, preserves, destroys}]}'
+- id: C02
+  question: For each chosen policy, what is the rationale, which rationale class does it come from (measurement meaning, domain
+    knowledge, data-generating process, protocol rule, transferability evidence), and what are the named alternatives?
+  evidence_key: chosen_policies
+  evidence_shape: 'list of {issue_id, policy, rationale, rationale_source, alternatives, reversibility: reversible|partially_reversible|irreversible}'
+- id: C03
+  question: For each material action, which function or cell in {scripts_dir_name}/03_cleaning.py implements it, and is the
+    transformation traceable to the rationale recorded in C02?
+  evidence_key: action_code_trace
+  evidence_shape: 'list of {issue_id, function_or_cell, matches_rationale: bool, notes}'
+- id: C04
+  question: For each material action, what changed (rows, values, fields, analyzable population), and does the row-count reconciliation
+    (raw_rows minus ordered exclusions equals cleaned_rows) match the actual cleaned artifact row count?
+  evidence_key: row_count_and_population
+  evidence_shape: '{raw_rows, exclusions: [{reason, rows_removed}], cleaned_rows, arithmetic_match: bool, population_shift_per_action:
+    [{issue_id, before, after, interpretation}]}'
+- id: C05
+  question: For each material action, what is the claim consequence (none, narrower coverage, changed interpretation, or backtracking
+    required), and does any action require appending a narrowing entry to claim_boundary_updates.narrowing_log?
+  evidence_key: claim_consequences
+  evidence_shape: 'list of {issue_id, consequence: none|narrower|changed_interpretation|backtracking_required, narrowing_entry_if_any}'
+- id: C06
+  question: Is the cleaned dataset still fit for the approved question, is additional data now required, is the approved question
+    still appropriate for this dataset, did cleaning reveal a protocol mismatch, and did cleaning reveal a formulation mismatch?
+  evidence_key: fitness_checkpoint
+  evidence_shape: '{still_fit, new_data_required, question_still_appropriate, protocol_mismatch, formulation_mismatch, notes}'
+- id: C07
+  question: Does the cleaned output look suspiciously neat (remaining missingness zero, zero edge cases, perfectly uniform
+    distributions, identifier collisions vanished without an explicit policy, high-signal columns dominating the data), and
+    if trigger conditions appear, how were they challenged?
+  evidence_key: suspicious_cleanliness_audit
+  evidence_shape: '{trigger_conditions_observed: [{trigger, description}], challenge_response, final_verdict: clean|re_examine}'
+  skip_when: no trigger conditions observed in the cleaned output after inspection
+writes:
+  C02: cleaning_decisions
+  C03: cleaning_decisions
+  C04:
+  - cleaning_decisions
+  - row_count_reconciliation
+  C05:
+  - cleaning_decisions
+  - claim_boundary_updates.narrowing_log
+  C06: dataset_fitness_reviews
+acceptance_criteria:
+- id: C01-policies-defined
+  condition: Every material issue from Cycles A and B carries at least two real policy options and a stated tradeoff between
+    them
+- id: C02-policies-chosen
+  condition: Every chosen policy carries a named rationale drawn from measurement meaning, domain knowledge, data-generating
+    process, protocol rule, or transferability evidence, plus named alternatives and a reversibility class
+- id: C03-transforms-auditable
+  condition: Every material transformation is implemented in {scripts_dir_name}/03_cleaning.py and traceable to its C02 rationale
+- id: C04-row-count-reconciled
+  condition: Row-count arithmetic (raw_rows minus ordered exclusions equals cleaned_rows) matches the actual cleaned artifact
+    row count; any discrepancy is a blocking defect
+- id: C05-claim-impact-stated
+  condition: Every material action has an explicit claim consequence; narrowing entries are appended to claim_boundary_updates.narrowing_log
+    where applicable
+- id: C06-fitness-checkpoint-run
+  condition: The dataset fitness checkpoint is completed and any no or unclear answer is surfaced to the user as a decision
+    point rather than buried in gaps
+- id: C07-suspicious-cleanliness-reviewed
+  condition: Trigger conditions are challenged on the record with a final verdict; the skip_when path is taken only when no
+    trigger conditions were observed after inspection

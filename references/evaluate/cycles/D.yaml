@@ -1,79 +1,100 @@
 cycle: D
 focus: Threats to Validity
 mandatory: true
-
 upstream:
-  - upstream.examine_support_registry
-  - upstream.analysis_contract
-  - route.route_file_loaded
-
-setup_side_effects: []
-
-checklist:
-  - id: D01
-    question: Which formal validity tools does the loaded route file require for this route (for example E-values or Gamma bounds for causal, calibration slope or reliability diagrams for predictive, aggregation stability or denominator integrity for descriptive)?
-    evidence_key: null
-    writes_to: null
-  - id: D02
-    question: Was each required formal tool executed on actual data through the script?
-    skip_when: the loaded route file requires no formal tools
-    evidence_key: formal_tool_outputs               # {tool_name: {inputs, output_summary, implication_for_claim_survival}}
-    writes_to: null
-  - id: D03
-    question: For each formal tool, is it documented what was tested, what the output was, and what it implies for claim survival?
-    skip_when: the loaded route file requires no formal tools
-    evidence_key: null
-    writes_to: null
-  - id: D04
-    question: Against a named bias taxonomy (ROBINS-I seven domains -- confounding, participant_selection, exposure_classification, protocol_departure, missing_data, outcome_measurement, reporting_selection -- plus immortal_time, berkson, and positivity_violation), what is the presence, direction, severity, current mitigation, and verdict (defended, threatened, or fatal) for each domain, reached by assuming the primary result is incorrect and reasoning backward?
-    evidence_key: bias_inversion_table              # list of {domain, presence: present|absent|uncertain, direction: toward_null|away|unknown, severity: critical|serious|moderate|low, current_mitigation, verdict: defended|threatened|fatal}
-    writes_to: null
-  - id: D05
-    question: Does the operationalized measure from formulate still capture the intended concept after the full pipeline through clean, examine, and analyze, or did the measurement chain drift?
-    evidence_key: null
-    writes_to: null
-  - id: D06
-    question: Was expert falsification attempted using only already-executed challengers, protocol-specified falsification outputs, or conceptual critique from a domain expert, and if no expert was available is the gap documented with justification?
-    evidence_key: null
-    writes_to: null
-  - id: D07
-    question: For each threat assessed in D02, D04, and D05, what is the validity verdict (defended, threatened, or fatal), and which specific evidence grounds it?
-    evidence_key: null
-    writes_to: validity_verdicts
-  - id: D08
-    question: How do the primary result's direction and magnitude compare to the support expectations recorded in examine's support registry (upstream.examine_support_registry), and is any reversal or material shift explicitly explained?
-    evidence_key: examine_alignment                 # {per_claim: {expected_direction, observed_direction, expected_magnitude_band, observed_magnitude, alignment: aligned|shifted|reversed, explanation_if_shifted_or_reversed}}
-    writes_to: null
-  - id: D09
-    question: Are the key effect sizes or differences translated into human-relevant or scientific-scale units before validity verdicts are rendered?
-    evidence_key: scale_translation                 # {per_claim: {raw_value, translated_value, unit, human_relevance_summary}}
-    writes_to: null
-  - id: D10
-    question: How does variance induced by cleaning and preprocessing judgment calls compare against sampling or resampling variance, and does upstream-choice variance dominate?
-    evidence_key: variance_comparison               # {judgment_variance, sampling_variance, ratio, dominant_source}
-    writes_to: null
-  - id: D11
-    question: When rival outputs or alternative summaries were compared, were masked or blinded labels used to reduce confirmation bias (or is the gap documented when blinding was infeasible)?
-    evidence_key: null
-    writes_to: null
-
-gates:
-  - id: D-formal-tools-applied
-    depends_on: [D01, D02, D03]
-    condition: Every formal tool required by the loaded route file is executed on actual data and its implication for claim survival is documented
-  - id: D-threats-grounded
-    depends_on: [D01, D02, D03, D04, D05, D06]
-    condition: Validity verdicts reference specific formal-tool outputs, bias-inversion table entries, or construct-validity evidence rather than speculation
-
+- upstream.examine_support_registry
+- upstream.analysis_contract
+- route.route_file_loaded
 research_questions:
-  - What known confounders, biases, or validity threats exist for this domain, question type, and method family?
-  - What systematic errors are most plausible given the data-generating process and collection method?
-  - What construct validity evidence exists for the operationalized measures?
-  - When similar studies have produced incorrect conclusions, what was the root cause?
-
+- What known confounders, biases, or validity threats exist for this domain, question type, and method family?
+- What systematic errors are most plausible given the data-generating process and collection method?
+- What construct validity evidence exists for the operationalized measures?
+- When similar studies have produced incorrect conclusions, what was the root cause?
 guidance:
-  - Cycle D has two phases. Phase 1 executes the route-specific formal tools named in the loaded route file. Phase 2 performs qualitative adversarial review (bias inversion, construct validity, expert falsification, examine alignment, scale translation, variance comparison, blinded comparison).
-  - This cycle is distinct from analyze Cycle B (assumption verification). Analyze Cycle B checked whether model assumptions held before execution; Cycle D asks, given execution succeeded, what could still make the result wrong.
-  - For any bias domain rated serious or critical, state either a quantitative bound (E-value, Lash-style range, or direction-and-magnitude estimate) or an explicit deferral naming what data would allow bounding it. "Unknown" is acceptable only with a concrete deferral.
-  - The three validity verdicts are: defended (threat assessed and ruled out), threatened (threat plausible; caveat required), fatal (threat strong enough to kill the claim or trigger backtracking).
-  - Scale translation applies before verdicts. A statistically-notable effect on an uninterpretable scale is insufficient evidence for a survived verdict.
+- Cycle D has two parts. First execute the route-specific formal tools named in the loaded route file. Then perform
+  qualitative adversarial review (bias inversion, construct validity, expert falsification, examine alignment, scale translation,
+  variance comparison, blinded comparison).
+- This cycle is distinct from analyze Cycle B (assumption verification). Analyze Cycle B checked whether model assumptions
+  held before execution; Cycle D asks, given execution succeeded, what could still make the result wrong.
+- For any bias domain rated serious or critical, state either a quantitative bound (E-value, Lash-style range, or direction-and-magnitude
+  estimate) or an explicit deferral naming what data would allow bounding it. "Unknown" is acceptable only with a concrete
+  deferral.
+- The three validity verdicts are: defended (threat assessed and ruled out), threatened (threat plausible; caveat required),
+    fatal (threat strong enough to kill the claim or trigger backtracking).
+- Scale translation applies before verdicts. A statistically-notable effect on an uninterpretable scale is insufficient evidence
+  for a survived verdict.
+required_evidence:
+- id: D01
+  question: Which formal validity tools does the loaded route file require for this route (for example E-values or Gamma bounds
+    for causal, calibration slope or reliability diagrams for predictive, aggregation stability or denominator integrity for
+    descriptive)?
+  evidence_key: null
+- id: D02
+  question: Was each required formal tool executed on actual data through the script?
+  evidence_key: formal_tool_outputs
+  evidence_shape: '{tool_name: {inputs, output_summary, implication_for_claim_survival}}'
+  skip_when: the loaded route file requires no formal tools
+- id: D03
+  question: For each formal tool, is it documented what was tested, what the output was, and what it implies for claim survival?
+  evidence_key: null
+  skip_when: the loaded route file requires no formal tools
+- id: D04
+  question: Against a named bias taxonomy (ROBINS-I seven domains -- confounding, participant_selection, exposure_classification,
+    protocol_departure, missing_data, outcome_measurement, reporting_selection -- plus immortal_time, berkson, and positivity_violation),
+    what is the presence, direction, severity, current mitigation, and verdict (defended, threatened, or fatal) for each domain,
+    reached by assuming the primary result is incorrect and reasoning backward?
+  evidence_key: bias_inversion_table
+  evidence_shape: 'list of {domain, presence: present|absent|uncertain, direction: toward_null|away|unknown, severity: critical|serious|moderate|low,
+    current_mitigation, verdict: defended|threatened|fatal}'
+- id: D05
+  question: Does the operationalized measure from formulate still capture the intended concept after the full pipeline through
+    clean, examine, and analyze, or did the measurement chain drift?
+  evidence_key: null
+- id: D06
+  question: Was expert falsification attempted using only already-executed challengers, protocol-specified falsification outputs,
+    or conceptual critique from a domain expert, and if no expert was available is the gap documented with justification?
+  evidence_key: null
+- id: D07
+  question: For each threat assessed in D02, D04, and D05, what is the validity verdict (defended, threatened, or fatal),
+    and which specific evidence grounds it?
+  evidence_key: null
+- id: D08
+  question: How do the primary result's direction and magnitude compare to the support expectations recorded in examine's
+    support registry (upstream.examine_support_registry), and is any reversal or material shift explicitly explained?
+  evidence_key: examine_alignment
+  evidence_shape: '{per_claim: {expected_direction, observed_direction, expected_magnitude_band, observed_magnitude, alignment:
+    aligned|shifted|reversed, explanation_if_shifted_or_reversed}}'
+- id: D09
+  question: Are the key effect sizes or differences translated into human-relevant or scientific-scale units before validity
+    verdicts are rendered?
+  evidence_key: scale_translation
+  evidence_shape: '{per_claim: {raw_value, translated_value, unit, human_relevance_summary}}'
+- id: D10
+  question: How does variance induced by cleaning and preprocessing judgment calls compare against sampling or resampling
+    variance, and does upstream-choice variance dominate?
+  evidence_key: variance_comparison
+  evidence_shape: '{judgment_variance, sampling_variance, ratio, dominant_source}'
+- id: D11
+  question: When rival outputs or alternative summaries were compared, were masked or blinded labels used to reduce confirmation
+    bias (or is the gap documented when blinding was infeasible)?
+  evidence_key: null
+writes:
+  D07: validity_verdicts
+acceptance_criteria:
+- id: D-formal-tools-applied
+  depends_on:
+  - D01
+  - D02
+  - D03
+  condition: Every formal tool required by the loaded route file is executed on actual data and its implication for claim
+    survival is documented
+- id: D-threats-grounded
+  depends_on:
+  - D01
+  - D02
+  - D03
+  - D04
+  - D05
+  - D06
+  condition: Validity verdicts reference specific formal-tool outputs, bias-inversion table entries, or construct-validity
+    evidence rather than speculation

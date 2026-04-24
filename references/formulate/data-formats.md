@@ -1,8 +1,8 @@
 # Data Format Ingest Checklists
 
-This file provides format-specific ingest guidance for Formulate Cycle A. When loading source data, identify the format of each source file and apply the relevant checklist below. Multiple formats may apply if the project has heterogeneous sources.
+This file provides format-specific ingest guidance for Formulate Cycle A. When loading source data, identify the format of each source file and apply the relevant checks below. Multiple formats may apply if the project has heterogeneous sources.
 
-These checklists supplement, not replace, the Cycle A checklist in `formulate.md`. They address format-specific failure modes that the generic checklist does not cover.
+These checks supplement, not replace, the Cycle A required evidence and acceptance criteria. They address format-specific failure modes that the generic profile does not cover.
 
 ## CSV / TSV / Delimited Text
 
@@ -63,7 +63,7 @@ These checklists supplement, not replace, the Cycle A checklist in `formulate.md
 |-------|----------|
 | API01 | Is authentication required? Verify access without embedding secrets in tracked files. |
 | API02 | Is the response paginated? Verify all pages were fetched and the total row count matches the expected count. |
-| API03 | What is the response format (JSON, CSV, XML)? Apply the relevant format checklist above after downloading. |
+| API03 | What is the response format (JSON, CSV, XML)? Apply the relevant format checks above after downloading. |
 | API04 | Is there rate limiting? Document the limit and ensure the fetch script respects it. |
 | API05 | Is the API response stable? Check whether the same query returns the same data on repeated calls. If not, document the snapshot date. |
 

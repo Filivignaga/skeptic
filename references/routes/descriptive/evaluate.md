@@ -68,7 +68,7 @@ The protocol-specified reality check for descriptive routes typically uses one o
 Adequate: the description reemerges on the reality-check data or procedure, with no material shift. Marginal: partial replication -- some components hold, others shift. Inadequate: the description fails to reemerge or coverage is below threshold.
 
 ## Formal Validity Tools
-These are the route-specific formal tools for Cycle D Phase 1. For descriptive routes:
+These are the route-specific formal tools for the first part of Cycle D. For descriptive routes:
 
 1. **Aggregation stability analysis.** Compute headline summaries at multiple defensible aggregation levels (total, by major subgroup, by finer subgroup). Document whether the qualitative conclusion holds, reverses, or changes materially across levels. This is the primary formal tool for descriptive routes.
 2. **Denominator integrity under alternative definitions.** Recompute key rates and proportions using each alternative denominator from the analysis contract. Document direction and magnitude of change. Flag any alternative where the qualitative conclusion reverses.
@@ -76,10 +76,10 @@ These are the route-specific formal tools for Cycle D Phase 1. For descriptive r
 4. **Standardization sensitivity.** If standardized summaries were produced, recompute using each alternative reference population from the analysis contract. Document whether the standardized comparison changes qualitatively.
 5. **Completeness audit.** Verify that the final coverage matches or exceeds the coverage threshold from the protocol. Document the gap if it does not.
 
-Execute each applicable tool on actual data in the notebook. For each tool, document: what was tested, what the output was, and what it implies for claim survival.
+Execute each applicable tool on actual data in the script. For each tool, document: what was tested, what the output was, and what it implies for claim survival.
 
 ## Adversarial Review Guidance
-This is the route-specific guidance for Cycle D Phase 2.
+This is the route-specific guidance for the second part of Cycle D.
 
 **Bias inversion for descriptive questions:** Assume the headline description is wrong. Reason backward to identify what systematic error would produce the observed description from data that actually looks different. Plausible candidate errors for descriptive routes include:
 
@@ -93,4 +93,4 @@ This is the route-specific guidance for Cycle D Phase 2.
 
 For each candidate error, assess plausibility given the data, design, and upstream audit trail. Document whether each is ruled out, plausible but unlikely, or plausible and concerning.
 
-**Expert falsification for descriptive questions:** Present the headline description alongside a plausible alternative description that could have emerged under a different but defensible set of analytic choices (different denominator, different aggregation level, different subgroup boundaries). Ask whether the real description makes more domain sense. If no domain expert is available, document the gap explicitly. The alternative description must come from actual sensitivity or challenger outputs in the analysis notebook, not from hypothetical scenarios.
+**Expert falsification for descriptive questions:** Present the headline description alongside a plausible alternative description that could have emerged under a different but defensible set of analytic choices (different denominator, different aggregation level, different subgroup boundaries). Ask whether the real description makes more domain sense. If no domain expert is available, document the gap explicitly. The alternative description must come from actual sensitivity or challenger outputs in the analysis script, not from hypothetical scenarios.
