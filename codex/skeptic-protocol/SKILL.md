@@ -1,8 +1,12 @@
 ---
 name: skeptic-protocol
-description: Skeptic protocol and project rules. Use after formulate to lock the project rules of the game before clean starts. Defines the data-usage mode, admissible evidence logic, validation requirements, stage prohibitions, and backtracking triggers through iterative question-first cycles. Second stage of Skeptic. Use when Codex should run the Skeptic protocol stage as a standalone skill.
+description: Skeptic protocol and project rules. Use after formulate to lock the project rules of the game before clean starts. Defines the data-usage mode, admissible evidence logic, validation requirements, stage prohibitions, and backtracking triggers through iterative question-first cycles. Second stage of Skeptic. Use when Codex should run the Skeptic protocol stage as a standalone skill, including requests like skeptic protocol --auto to run this stage with autonomous cycle execution.
 ---
 
+
+## Codex Invocation
+
+Use this skill for `skeptic protocol`. If the user writes `skeptic protocol --auto`, run this same stage in auto mode: read `references/auto-mode.md` and apply its autonomous cycle protocol only to the `protocol` stage. This folder is self-contained for this stage.
 
 # /skeptic:protocol - Project Rules of the Game
 

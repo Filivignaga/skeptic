@@ -1,8 +1,12 @@
 ---
 name: skeptic-analyze
-description: Skeptic analysis contract lock and execution. Use after formulate, protocol, clean, and examine to lock one executable analysis contract within upstream constraints and execute it, producing auditable outputs for route-appropriate PCS evaluation without widening the claim boundary or self-revising based on result quality. Use when Codex should run the Skeptic analyze stage as a standalone skill.
+description: Skeptic analysis contract lock and execution. Use after formulate, protocol, clean, and examine to lock one executable analysis contract within upstream constraints and execute it, producing auditable outputs for route-appropriate PCS evaluation without widening the claim boundary or self-revising based on result quality. Use when Codex should run the Skeptic analyze stage as a standalone skill, including requests like skeptic analyze --auto to run this stage with autonomous cycle execution.
 ---
 
+
+## Codex Invocation
+
+Use this skill for `skeptic analyze`. If the user writes `skeptic analyze --auto`, run this same stage in auto mode: read `references/auto-mode.md` and apply its autonomous cycle protocol only to the `analyze` stage. This folder is self-contained for this stage.
 
 # /skeptic:analyze - Analysis Contract Lock and Execution
 

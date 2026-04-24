@@ -1,8 +1,12 @@
 ---
 name: skeptic-examine
-description: Skeptic cleaned-data examination. Use after formulate, protocol, and clean. Characterize what the cleaned, protocol-visible data can actually support through iterative cycles that stay inside the approved question and the protocol contract. Fourth stage of Skeptic. Use when Codex should run the Skeptic examine stage as a standalone skill.
+description: Skeptic cleaned-data examination. Use after formulate, protocol, and clean. Characterize what the cleaned, protocol-visible data can actually support through iterative cycles that stay inside the approved question and the protocol contract. Fourth stage of Skeptic. Use when Codex should run the Skeptic examine stage as a standalone skill, including requests like skeptic examine --auto to run this stage with autonomous cycle execution.
 ---
 
+
+## Codex Invocation
+
+Use this skill for `skeptic examine`. If the user writes `skeptic examine --auto`, run this same stage in auto mode: read `references/auto-mode.md` and apply its autonomous cycle protocol only to the `examine` stage. This folder is self-contained for this stage.
 
 # /skeptic:examine - Data Examination and Support Characterization
 

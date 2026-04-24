@@ -68,11 +68,26 @@ function Convert-BodyForCodex {
   }
   $converted = $converted -replace '\.\./routes/\{route\}/', 'references/routes/{route}/'
   $converted = $converted -replace '\.\./routes/\{active\}/', 'references/routes/{active}/'
-  $converted = $converted -replace 'references/\{stage\}/\{stage\}\.md', 'references/stages/{stage}/{stage}.md'
-  $converted = $converted -replace 'references/\{stage\}/cycles/\{cycle\}\.yaml', 'references/stages/{stage}/cycles/{cycle}.yaml'
-  $converted = $converted -replace 'references/\{stage\}/cycles/\*\.yaml', 'references/stages/{stage}/cycles/*.yaml'
 
   return $converted.TrimEnd() + "`r`n"
+}
+
+function Add-StageAutoInstruction {
+  param(
+    [string]$Body,
+    [string]$Stage
+  )
+
+  $instruction = @'
+
+## Codex Invocation
+
+Use this skill for `skeptic __STAGE__`. If the user writes `skeptic __STAGE__ --auto`, run this same stage in auto mode: read `references/auto-mode.md` and apply its autonomous cycle protocol only to the `__STAGE__` stage. This folder is self-contained for this stage.
+
+'@
+  $instruction = $instruction.Replace('__STAGE__', $Stage)
+
+  return ($instruction + $Body)
 }
 
 function Convert-StandaloneReferenceText {
@@ -103,65 +118,15 @@ function Convert-StandaloneReferenceText {
   return $converted
 }
 
-function Convert-AutoReferenceText {
-  param([string]$Text)
-
-  $converted = $Text
-  $converted = $converted -replace 'references/\{stage\}/\{stage\}\.md', 'references/stages/{stage}/{stage}.md'
-  $converted = $converted -replace 'references/\{stage\}/cycles/\{cycle\}\.yaml', 'references/stages/{stage}/cycles/{cycle}.yaml'
-  $converted = $converted -replace 'references/\{stage\}/cycles/\*\.yaml', 'references/stages/{stage}/cycles/*.yaml'
-  $converted = $converted -replace 'references/routes/\{route\}/([^/]+)\.md', 'references/routes/$1/{route}.md'
-  $converted = $converted -replace 'references/routes/\{active\}/([^/]+)\.md', 'references/routes/$1/{active}.md'
-  $converted = $converted -replace 'references/routes/\{active_route\}/([^/]+)\.md', 'references/routes/$1/{active_route}.md'
-  $converted = $converted -replace '\.\./\.\./core-principles\.md', '../../../core-principles.md'
-  $converted = $converted -replace '\.\./\.\./script-contract\.md', '../../../script-contract.md'
-  $converted = $converted -replace '\.\./\.\./auto-mode\.md', '../../../auto-mode.md'
-  $converted = $converted -replace '\.\./\.\./routes/([^/]+)/([^/]+)\.md', '../../../routes/$2/$1.md'
-  $converted = $converted -replace '\.\./\.\./routes/', '../../../routes/'
-  $converted = $converted -replace '(?<!\.\./)\.\./core-principles\.md', '../../core-principles.md'
-  $converted = $converted -replace '(?<!\.\./)\.\./script-contract\.md', '../../script-contract.md'
-  $converted = $converted -replace '(?<!\.\./)\.\./auto-mode\.md', '../../auto-mode.md'
-  $converted = $converted -replace '(?<!\.\./)\.\./routes/\{route\}/', '../../routes/{route}/'
-  $converted = $converted -replace '(?<!\.\./)\.\./routes/\{active\}/', '../../routes/{active}/'
-  return $converted
-}
-
 function Convert-MarkdownAndYamlFiles {
   param(
     [string]$Root,
-    [string]$Mode,
     [string]$Stage = ''
   )
 
   Get-ChildItem -LiteralPath $Root -Recurse -File | Where-Object { $_.Extension -in @('.md', '.yaml', '.yml') } | ForEach-Object {
     $text = Get-Content -LiteralPath $_.FullName -Raw
-    if ($Mode -eq 'auto') {
-      $converted = Convert-AutoReferenceText -Text $text
-    } else {
-      $converted = Convert-StandaloneReferenceText -Text $text -Stage $Stage
-    }
-    if ($converted -ne $text) {
-      Write-Utf8NoBom -Path $_.FullName -Text $converted
-    }
-  }
-}
-
-function Repair-AutoCycleReferences {
-  param([string]$AutoReferencesRoot)
-
-  Get-ChildItem -LiteralPath (Join-Path $AutoReferencesRoot 'stages') -Recurse -File | Where-Object {
-    $_.FullName -match '\\cycles\\' -and $_.Extension -in @('.md', '.yaml', '.yml')
-  } | ForEach-Object {
-    $text = Get-Content -LiteralPath $_.FullName -Raw
-    $converted = $text
-    while ($converted.Contains('../../../../core-principles.md')) {
-      $converted = $converted.Replace('../../../../core-principles.md', '../../../core-principles.md')
-    }
-    $converted = $converted -replace '\.\./\.\./core-principles\.md', '../../../core-principles.md'
-    $converted = $converted -replace '\.\./\.\./script-contract\.md', '../../../script-contract.md'
-    $converted = $converted -replace '\.\./\.\./auto-mode\.md', '../../../auto-mode.md'
-    $converted = $converted -replace '\.\./\.\./routes/([^/]+)/([^/]+)\.md', '../../../routes/$2/$1.md'
-    $converted = $converted -replace '\.\./\.\./routes/', '../../../routes/'
+    $converted = Convert-StandaloneReferenceText -Text $text -Stage $Stage
     if ($converted -ne $text) {
       Write-Utf8NoBom -Path $_.FullName -Text $converted
     }
@@ -246,67 +211,14 @@ foreach ($stageInfo in $Stages) {
   $sourceText = Get-Content -LiteralPath $sourcePath -Raw
   $parts = Split-Frontmatter -Text $sourceText
   $sourceDescription = Get-Description -Frontmatter $parts.Frontmatter
-  $description = "$($stageInfo.DescriptionPrefix) $sourceDescription Use when Codex should run the Skeptic $stage stage as a standalone skill."
-  $body = Convert-BodyForCodex -Body $parts.Body -Stage $stage
+  $description = "$($stageInfo.DescriptionPrefix) $sourceDescription Use when Codex should run the Skeptic $stage stage as a standalone skill, including requests like `skeptic $stage --auto` to run this stage with autonomous cycle execution."
+  $body = Add-StageAutoInstruction -Body (Convert-BodyForCodex -Body $parts.Body -Stage $stage) -Stage $stage
 
   Write-SkillMarkdown -Path (Join-Path $skillDir 'SKILL.md') -Name $skillName -Description $description -Body $body
   Copy-CommonReferences -SkillDir $skillDir
   Copy-StageReferences -Stage $stage -SkillDir $skillDir
   Copy-RoutesForStage -Stage $stage -SkillDir $skillDir
-  Convert-MarkdownAndYamlFiles -Root (Join-Path $skillDir 'references') -Mode 'standalone' -Stage $stage
-}
-
-$autoDir = Join-Path $CodexRoot 'skeptic-auto'
-New-Item -ItemType Directory -Force -Path $autoDir | Out-Null
-Copy-CommonReferences -SkillDir $autoDir
-
-$autoBody = Convert-BodyForCodex -Body (Get-Content -LiteralPath (Join-Path $RepoRoot 'references\auto-mode.md') -Raw)
-$autoBody = $autoBody -replace 'For each stage:', "For each stage, read the corresponding local stage file under ``references/stages/{stage}/{stage}.md``:"
-$autoDescription = 'Skeptic Auto Mode - run the full question-first Veridical Data Science lifecycle end to end with autonomous cycle execution, bounded escalation, stage-boundary approvals, and cross-stage audit. Use when Codex should run Skeptic automatically, run the full Skeptic lifecycle, invoke skeptic auto, or execute all Skeptic stages in order.'
-Write-SkillMarkdown -Path (Join-Path $autoDir 'SKILL.md') -Name 'skeptic-auto' -Description $autoDescription -Body $autoBody
-
-$autoRefs = Join-Path $autoDir 'references'
-$autoStages = Join-Path $autoRefs 'stages'
-New-Item -ItemType Directory -Force -Path $autoStages | Out-Null
-foreach ($stageInfo in $Stages) {
-  $stage = $stageInfo.Stage
-  $stageDestination = Join-Path $autoStages $stage
-  New-Item -ItemType Directory -Force -Path $stageDestination | Out-Null
-
-  $sourceText = Get-Content -LiteralPath (Join-Path $RepoRoot $stageInfo.Source) -Raw
-  $parts = Split-Frontmatter -Text $sourceText
-  $stageBody = Convert-BodyForCodex -Body $parts.Body
-  $stageBody = $stageBody -replace "references/routes/\{route\}/$stage\.md", "references/routes/$stage/{route}.md"
-  $stageBody = $stageBody -replace "references/routes/\{active\}/$stage\.md", "references/routes/$stage/{active}.md"
-  $stageBody = $stageBody -replace "references/routes/\{active_route\}/$stage\.md", "references/routes/$stage/{active_route}.md"
-  Write-Utf8NoBom -Path (Join-Path $stageDestination "$stage.md") -Text $stageBody
-
-  Copy-Item -LiteralPath (Join-Path $RepoRoot "references\$stage\cycles") -Destination $stageDestination -Recurse -Force
-  Get-ChildItem -LiteralPath (Join-Path $RepoRoot "references\$stage") -File | Where-Object { $_.Name -ne "$stage.md" } | ForEach-Object {
-    Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $stageDestination $_.Name) -Force
-  }
-}
-$autoRoutes = Join-Path $autoRefs 'routes'
-New-Item -ItemType Directory -Force -Path $autoRoutes | Out-Null
-foreach ($stageInfo in $Stages) {
-  $stage = $stageInfo.Stage
-  $stageRouteDestination = Join-Path $autoRoutes $stage
-  New-Item -ItemType Directory -Force -Path $stageRouteDestination | Out-Null
-  Get-ChildItem -LiteralPath (Join-Path $RepoRoot 'references\routes') -Directory | ForEach-Object {
-    $sourceFile = Join-Path $_.FullName "$stage.md"
-    if (Test-Path -LiteralPath $sourceFile) {
-      Copy-Item -LiteralPath $sourceFile -Destination (Join-Path $stageRouteDestination "$($_.Name).md") -Force
-    }
-  }
-}
-Convert-MarkdownAndYamlFiles -Root $autoRefs -Mode 'auto'
-Repair-AutoCycleReferences -AutoReferencesRoot $autoRefs
-Get-ChildItem -LiteralPath $autoRefs -Recurse -File | Where-Object { $_.Extension -in @('.md', '.yaml', '.yml') } | ForEach-Object {
-  $text = Get-Content -LiteralPath $_.FullName -Raw
-  $converted = $text.Replace('../../../../core-principles.md', '../../../core-principles.md')
-  if ($converted -ne $text) {
-    Write-Utf8NoBom -Path $_.FullName -Text $converted
-  }
+  Convert-MarkdownAndYamlFiles -Root (Join-Path $skillDir 'references') -Stage $stage
 }
 
 Write-Host "Codex Skeptic skills synchronized to $CodexRoot"

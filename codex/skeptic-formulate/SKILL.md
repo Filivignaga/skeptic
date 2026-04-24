@@ -1,8 +1,12 @@
 ---
 name: skeptic-formulate
-description: Skeptic problem formulation and data context. Use when starting a new data analysis project. Refine a vague domain question into a precise, data-answerable question through iterative question-first cycles with format-aware dataset inspection. First stage of Skeptic. Use when Codex should run the Skeptic formulate stage as a standalone skill.
+description: Skeptic problem formulation and data context. Use when starting a new data analysis project. Refine a vague domain question into a precise, data-answerable question through iterative question-first cycles with format-aware dataset inspection. First stage of Skeptic. Use when Codex should run the Skeptic formulate stage as a standalone skill, including requests like skeptic formulate --auto to run this stage with autonomous cycle execution.
 ---
 
+
+## Codex Invocation
+
+Use this skill for `skeptic formulate`. If the user writes `skeptic formulate --auto`, run this same stage in auto mode: read `references/auto-mode.md` and apply its autonomous cycle protocol only to the `formulate` stage. This folder is self-contained for this stage.
 
 # /skeptic:formulate - Problem Formulation and Data Context
 

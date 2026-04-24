@@ -1,8 +1,12 @@
 ---
 name: skeptic-communicate
-description: Skeptic communication of evaluated results. Use after formulate, protocol, clean, examine, analyze, and evaluate to package only claims that survived evaluation for the intended audience, without upgrading claims, widening the claim boundary, or introducing new analysis. Terminal stage of Skeptic. Use when Codex should run the Skeptic communicate stage as a standalone skill.
+description: Skeptic communication of evaluated results. Use after formulate, protocol, clean, examine, analyze, and evaluate to package only claims that survived evaluation for the intended audience, without upgrading claims, widening the claim boundary, or introducing new analysis. Terminal stage of Skeptic. Use when Codex should run the Skeptic communicate stage as a standalone skill, including requests like skeptic communicate --auto to run this stage with autonomous cycle execution.
 ---
 
+
+## Codex Invocation
+
+Use this skill for `skeptic communicate`. If the user writes `skeptic communicate --auto`, run this same stage in auto mode: read `references/auto-mode.md` and apply its autonomous cycle protocol only to the `communicate` stage. This folder is self-contained for this stage.
 
 # /skeptic:communicate - Communication of Evaluated Results
 

@@ -1,8 +1,12 @@
 ---
 name: skeptic-clean
-description: Skeptic auditable data cleaning. Use after formulate and protocol to build an auditable cleaning pipeline under protocol-defined data visibility, without widening the claim boundary or assuming predictive workflow defaults. Third stage of Skeptic. Use when Codex should run the Skeptic clean stage as a standalone skill.
+description: Skeptic auditable data cleaning. Use after formulate and protocol to build an auditable cleaning pipeline under protocol-defined data visibility, without widening the claim boundary or assuming predictive workflow defaults. Third stage of Skeptic. Use when Codex should run the Skeptic clean stage as a standalone skill, including requests like skeptic clean --auto to run this stage with autonomous cycle execution.
 ---
 
+
+## Codex Invocation
+
+Use this skill for `skeptic clean`. If the user writes `skeptic clean --auto`, run this same stage in auto mode: read `references/auto-mode.md` and apply its autonomous cycle protocol only to the `clean` stage. This folder is self-contained for this stage.
 
 # /skeptic:clean - Data Cleaning and Preprocessing
 

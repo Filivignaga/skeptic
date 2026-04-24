@@ -1,8 +1,12 @@
 ---
 name: skeptic-evaluate
-description: Skeptic route-appropriate PCS evaluation. Use after formulate, protocol, clean, examine, and analyze to adjudicate whether outputs and claims survive route-appropriate PCS checks, rendering per-claim survival verdicts that determine what communicate may package. Use when Codex should run the Skeptic evaluate stage as a standalone skill.
+description: Skeptic route-appropriate PCS evaluation. Use after formulate, protocol, clean, examine, and analyze to adjudicate whether outputs and claims survive route-appropriate PCS checks, rendering per-claim survival verdicts that determine what communicate may package. Use when Codex should run the Skeptic evaluate stage as a standalone skill, including requests like skeptic evaluate --auto to run this stage with autonomous cycle execution.
 ---
 
+
+## Codex Invocation
+
+Use this skill for `skeptic evaluate`. If the user writes `skeptic evaluate --auto`, run this same stage in auto mode: read `references/auto-mode.md` and apply its autonomous cycle protocol only to the `evaluate` stage. This folder is self-contained for this stage.
 
 # /skeptic:evaluate - Route-Appropriate PCS Evaluation
 
