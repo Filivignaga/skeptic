@@ -1,0 +1,207 @@
+cycle: A
+focus: Contract Lock
+mandatory: true
+upstream:
+- 01_formulation.yaml:contract.approved_question
+- 01_formulation.yaml:contract.question_type
+- 01_formulation.yaml:contract.target_quantity
+- 01_formulation.yaml:contract.decision_context
+- 01_formulation.yaml:contract.unit_of_analysis
+- 01_formulation.yaml:claim_boundary
+- 02_protocol.yaml:active_route
+- 02_protocol.yaml:data_usage_mode
+- 02_protocol.yaml:visibility_rules
+- 02_protocol.yaml:leakage_rules
+- 02_protocol.yaml:forbidden_variable_classes
+- 02_protocol.yaml:validation_logic
+- 02_protocol.yaml:analyze_contract_lock_obligations
+- 02_protocol.yaml:analyze_claim_limits
+- 02_protocol.yaml:backtracking_triggers
+- 02_protocol.yaml:protocol_committed_analyses
+- 03_cleaning.yaml:final_visible_artifacts
+- 03_cleaning.yaml:final_variable_list
+- 03_cleaning.yaml:population_shift_summary
+- 04_examination.yaml:support_registry
+- 04_examination.yaml:analysis_handoff
+- 04_examination.yaml:analysis_constraints
+- 04_examination.yaml:fragility_verdicts
+setup_side_effects:
+- Verify each upstream artifact parses and contains the fields analyze depends on. If any are missing, contradictory, or force
+  widening of the claim boundary, stop and reopen the affected upstream stage.
+- Resolve exactly one active_route from 01_formulation.yaml plus 02_protocol.yaml. If they contradict or do not collapse to
+  one route for analyze, stop and reopen protocol.
+- Load references/routes/{active_route}/analyze.md once; keep in memory for all cycles in this stage.
+- Record sha256 of each upstream artifact read into provenance.upstream_artifacts.
+- Derive the active visibility set from 02_protocol.yaml and 03_cleaning.yaml and record it in provenance.visibility_set (visible_cleaned,
+  visible_protocol_created, restricted, access_level_per_artifact). Held-out artifacts are not visible unless protocol authorizes
+  them for analyze.
+- Initialize {docs_dir_name}/05_analysis.yaml with stage, schema_version, project (project.name, project.started_at as ISO
+  timestamp), status.current_cycle set to A, and status.active_route.
+- Create {scripts_dir_name}/05_analysis.py with the shape specified in the stage entry.
+research_questions:
+- What method families are standard for this question type, route, and data profile given the examination support registry,
+  and which are admissible under the protocol contract?
+- What are known limitations of the proposed primary method under conditions matching the visible cleaned data?
+- What perturbation axes are standard for this route and domain, and which have the highest discriminating power for route-relevant
+  instability?
+- What challenger alternatives would expose genuine structural weaknesses rather than cosmetic variation?
+- What missing-data handling strategies are defensible for the locked method family, and which introduce leakage or visibility
+  violations?
+guidance:
+- Cycle A produces a locked specification. Do not execute the primary analysis, perturbations, or challengers here. Execution
+  begins in Cycle C after assumption verification in Cycle B.
+- Contract lock is not a second examination stage. Examination tells you what the data can support; Cycle A translates that
+  into one executable specification inside those constraints.
+- Route overlays may add route-specific fields (causal adds identification strategy; mechanistic adds structural model; predictive
+  adds hyperparameter search space). Capture overlay-specific fields under contract.route_overlay_requirements rather than
+  inventing new top-level contract fields.
+- Competing operationalizations surfaced in formulate must be stability-tested at the contract level. If any reasonable alternative
+  would change method family or active route, append a narrowing entry to claim_boundary.narrowing_log_additions.
+- If A13 or A14 forces narrowing, record the rationale in claim_boundary.narrowing_log_additions. Do not widen elsewhere to
+  compensate.
+step4_additions:
+  description: After the standard decision, present the fully drafted analysis contract to the user for explicit approval.
+    Record the approval timestamp and channel in contract.user_approval before setting status.current_cycle to B.
+  items:
+  - estimand_and_decision_anchor
+  - method_family_with_upstream_justification
+  - primary_specification
+  - accuracy_metric_when_required
+  - perturbation_plan_axes_types_scope
+  - challenger_alternatives_with_structural_differentiation
+  - assumption_failure_policy_with_named_fallbacks
+  - missing_data_rule
+  - subgroup_rule_when_required
+  - claim_boundary_as_locked
+  - visibility_confirmation
+  - examination_support_alignment
+  - route_overlay_requirements
+  - backtracking_triggers
+  user_approval: required
+pcs_focus:
+  items:
+  - 'P: Does the locked contract produce outputs that the protocol-specified reality check can actually evaluate?'
+  - 'C: Can another analyst reproduce the full execution from contract fields plus the locked artifacts without ambiguity?'
+  - 'S: Does the primary specification survive obvious operationalization variants, or does it depend on fragile examination-stage
+    support?'
+required_evidence:
+- id: A01
+  question: Is the estimand or target quantity stated precisely enough to execute without further specification decisions,
+    and is the decision anchor (stakeholder decision, candidate actions, action-change logic) inherited from formulate A06
+    stated inline?
+  evidence_key: null
+- id: A02
+  question: What method family is selected, and what upstream evidence (examination support registry, protocol admissible
+    evidence pattern, route overlay) justifies the choice?
+  evidence_key: null
+- id: A03
+  question: What is the primary specification in full (variables, functional form, parameters, configuration) so another analyst
+    could execute it without additional decisions?
+  evidence_key: null
+- id: A04
+  question: What accuracy metric applies, and how does it match the route overlay requirement?
+  evidence_key: null
+  skip_when: route overlay does not require an accuracy metric
+- id: A05
+  question: What perturbation plan is locked -- axes, types, and scope -- and how does each axis probe route-relevant instability?
+  evidence_key: null
+- id: A06
+  question: What challenger alternatives are pre-specified, and for each one, what structural difference from the primary
+    makes it a genuine stress test rather than cosmetic variation?
+  evidence_key: null
+- id: A07
+  question: What is the assumption-failure policy for Cycle B -- backtrack_only, or amendment_allowed with explicitly named
+    pre-approved narrowing fallbacks?
+  evidence_key: null
+- id: A08
+  question: What contract-level backtracking triggers (execution-viability conditions that invalidate this specification)
+    are explicit?
+  evidence_key: null
+- id: A09
+  question: What missing-data rule specifies how missingness interacts with the locked method at execution time?
+  evidence_key: null
+- id: A10
+  question: What claim boundary as-locked (same or narrower than the upstream boundary, never wider) applies to this contract,
+    and what narrowing entries does the contract introduce?
+  evidence_key: null
+- id: A11
+  question: Which cleaned and protocol-created artifacts does the contract use, which are restricted, and what access level
+    is allowed for each visible artifact?
+  evidence_key: null
+- id: A12
+  question: What subgroup rule (stratify, pool, mixture) applies, and how does it match the route overlay requirement?
+  evidence_key: null
+  skip_when: route overlay does not require a subgroup rule
+- id: A13
+  question: For each contract field, which examination support registry entry (supported, weakly supported, unsupported) informs
+    it, and how does the contract address weak or unsupported fields?
+  evidence_key: null
+- id: A14
+  question: For each contract field covered by the loaded route overlay, which overlay requirement or prohibition is in effect
+    and how does the contract satisfy it?
+  evidence_key: null
+writes:
+  A01:
+  - contract.estimand
+  - contract.decision_anchor
+  A02: contract.method_family
+  A03: contract.primary_specification
+  A04: contract.accuracy_metric
+  A05: contract.perturbation_plan
+  A06: contract.challenger_alternatives
+  A07: contract.assumption_failure_policy
+  A08: contract.backtracking_triggers
+  A09: contract.missing_data_rule
+  A10:
+  - contract.claim_boundary_as_locked
+  - claim_boundary.narrowing_log_additions
+  A11: contract.visibility_confirmation
+  A12: contract.subgroup_rule
+  A13: contract.examination_support_alignment
+  A14: contract.route_overlay_requirements
+acceptance_criteria:
+- id: A01-precise
+  condition: Estimand is specified precisely enough to execute without further decisions, and the decision anchor names stakeholder
+    decision, candidate actions, and action-change logic inline
+- id: A-method-executable
+  depends_on:
+  - A02
+  - A03
+  condition: Method family and primary specification are concrete and executable with no placeholders, "to be determined"
+    fields, or unresolved choices
+- id: A05-axes-types-scope
+  condition: Perturbation plan explicitly names axes, types, and scope; each axis probes a route-relevant instability
+- id: A06-stress-tests
+  condition: Each challenger alternative is structurally different enough from the primary to expose genuine weaknesses; cosmetic
+    variation does not satisfy this criterion
+- id: A07-fallbacks-named
+  condition: Assumption-failure policy is backtrack_only (no fallbacks) or amendment_allowed with each pre-approved narrowing
+    fallback named explicitly
+- id: A10-not-widened
+  condition: Claim boundary as-locked preserves or narrows the upstream claim boundary; scope, evidence_ceiling, generalization_limit,
+    and effective verb set are never widened
+- id: A11-no-forbidden
+  condition: Visibility confirmation names only protocol-approved artifacts; held-out, frozen, or forbidden artifacts are
+    excluded
+- id: A-support-aligned
+  depends_on:
+  - A01
+  - A02
+  - A03
+  - A05
+  - A06
+  - A13
+  condition: Every contract field that the examination support registry could affect carries an explicit alignment entry naming
+    the registry classification and how the contract addresses weak or unsupported support
+- id: A-overlay-aligned
+  depends_on:
+  - A02
+  - A03
+  - A04
+  - A05
+  - A06
+  - A09
+  - A12
+  - A14
+  condition: Every contract field covered by the loaded route overlay carries an explicit entry stating the overlay requirement
+    or prohibition and how the contract satisfies it

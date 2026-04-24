@@ -1,0 +1,6 @@
+projects_root: ~/skeptic-projects
+data_dir_name: data
+docs_dir_name: skeptic_documentation
+scripts_dir_name: scripts
+readme_name: README.md
+subagent_model: sonnet

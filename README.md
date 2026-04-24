@@ -100,9 +100,45 @@ skeptic/
 ## Requirements
 
 - Claude Code with local skills enabled
+- Codex with local skills enabled, for the Codex skill pack
 - Python 3.10+
 
 ## Install
+
+### Codex on Windows
+
+Clone or download this repository, then run the Codex installer from PowerShell:
+
+```powershell
+git clone https://github.com/Filivignaga/skeptic.git
+cd skeptic
+.\setup-codex.ps1
+```
+
+The installer validates the Codex skill pack under `codex/`, then copies each skill into `%CODEX_HOME%\skills` when `CODEX_HOME` is set, otherwise into `%USERPROFILE%\.codex\skills`.
+
+If you already have Skeptic skills installed and want to overwrite them:
+
+```powershell
+.\setup-codex.ps1 -Force
+```
+
+Restart Codex after installation. Codex will discover these skills:
+
+```text
+skeptic-formulate
+skeptic-protocol
+skeptic-clean
+skeptic-examine
+skeptic-analyze
+skeptic-evaluate
+skeptic-communicate
+skeptic-auto
+```
+
+Each Codex stage skill is self-contained. Its `SKILL.md` reads stage files from its own `references/` folder, avoiding command-wrapper indirection.
+
+### Claude Code
 
 macOS, Linux, WSL, Git Bash:
 

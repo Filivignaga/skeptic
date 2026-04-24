@@ -1,0 +1,83 @@
+cycle: D
+focus: Uncertainty and Evidence Presentation
+mandatory: true
+upstream:
+- audience.technical_level
+- translations
+- upstream_snapshot.mandatory_limitations
+- upstream_snapshot.unresolved_risks
+research_questions:
+- What uncertainty communication formats are effective for this audience type?
+- What formats are standard for perturbation and sensitivity results in this domain?
+- How do similar reports present stability and predictability evidence to non-technical audiences?
+- What known patterns of uncertainty misrepresentation exist for this type of analysis?
+guidance:
+- The EFSA three-tier model is a useful default. Entry-level audiences get qualitative uncertainty statements, frequency framing
+  ("3 out of 10"), and plain-language summaries of what was tested and what held. Informed audiences get ranges with point
+  estimates, summary stability tables, and verbal descriptions of perturbation results. Technical audiences get full perturbation
+  distributions, specification curves, sensitivity tables, quantile dotplots, or hypothetical outcome plots.
+- State both what was tested and what was not tested. Do not imply all possible perturbations were explored.
+- If a mandatory limitation would weaken the headline finding, present it at the same visual weight as the finding; do not
+  hide it in an appendix.
+- Calibration is symmetric: false confidence and false alarm both count as miscommunication.
+required_evidence:
+- id: D01
+  question: What uncertainty presentation depth is appropriate for the audience tier identified in Cycle B (entry-level, informed,
+    or technical)?
+  evidence_key: null
+- id: D02
+  question: For each surviving claim, what perturbation axes were tested in evaluate, and did the claim hold (stable, conditionally
+    stable, unstable) along each axis?
+  evidence_key: stability_summary
+  evidence_shape: '{per_claim: {claim_id, axes_tested: [...], per_axis_verdict: {axis: stable|conditionally_stable|unstable}}}'
+- id: D03
+  question: What reality check was applied by evaluate (holdout, rolling validation, resampling, replication, falsification,
+    external corroboration), did it pass, and what does "passed" mean for this audience in plain language?
+  evidence_key: predictability_evidence
+  evidence_shape: '{reality_check_method, pass_fail, audience_plain_language_meaning}'
+- id: D04
+  question: Are all mandatory limitations from the evaluate handoff stated clearly in the deliverable draft at the same visual
+    weight as the findings, not omitted or downplayed?
+  evidence_key: null
+- id: D05
+  question: Are all unresolved risks from the evaluate handoff presented, with each risk named and its practical consequence
+    stated?
+  evidence_key: null
+- id: D06
+  question: Is the scope of perturbation testing disclosed -- both what was tested AND what was not tested -- so the audience
+    cannot assume all perturbations were explored?
+  evidence_key: perturbation_scope
+  evidence_shape: '{axes_tested: [...], axes_not_tested: [...], rationale_for_untested}'
+- id: D07
+  question: Is the uncertainty representation neither overstated (creating false alarm beyond what evaluate reported) nor
+    understated (creating false confidence against what evaluate reported)?
+  evidence_key: null
+writes:
+  D01: uncertainty.depth_tier
+  D02: uncertainty.stability_summary_per_claim
+  D03: uncertainty.predictability_summary
+  D06:
+  - uncertainty.perturbation_axes_disclosed
+  - uncertainty.scope_disclosure
+  D07: uncertainty.calibration_notes
+acceptance_criteria:
+- id: D-perturbation-presented
+  depends_on:
+  - D01
+  - D02
+  condition: The perturbation landscape is presented at a depth matched to the audience tier; every surviving claim has its
+    stability evidence stated
+- id: D02-stability-presented
+  condition: Stability evidence is presented for each surviving claim with per-axis verdicts
+- id: D03-predictability-presented
+  condition: The reality check method, its pass/fail result, and the plain-language meaning for this audience are all stated
+- id: D04-limitations-presented
+  condition: Every mandatory limitation from the evaluate handoff is present at the same visual weight as the findings
+- id: D05-risks-presented
+  condition: Every unresolved risk from the evaluate handoff is named with its practical consequence stated
+- id: D-uncertainty-calibrated
+  depends_on:
+  - D06
+  - D07
+  condition: Uncertainty depth matches the audience tier without over- or understatement, and the scope of testing (tested
+    and not tested) is disclosed

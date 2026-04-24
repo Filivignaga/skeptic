@@ -1,0 +1,113 @@
+cycle: A
+focus: Intake Audit and Communication Plan
+mandatory: true
+upstream:
+- upstream_snapshot.approved_question
+- upstream_snapshot.claim_survival_registry
+setup_side_effects:
+- Verify every upstream artifact listed under Required Inputs exists and parses. Abort with a concrete failure list if any
+  precondition is violated.
+- Create {projects_root}/{project-name}/deliverables/ if it does not already exist.
+- Initialize {docs_dir_name}/07_communication.yaml with stage, schema_version, project (including project.started_at as ISO
+  timestamp), status.current_cycle A, and an upstream_snapshot scaffold populated from 01_formulation.yaml, 02_protocol.yaml,
+  05_analysis.yaml, and 06_evaluation.yaml.
+- Create {scripts_dir_name}/07_communication.py with the shape specified in the stage entry.
+research_questions:
+- What communication standards are typical for this question type and domain (STROBE, TRIPOD, CONSORT, or domain-specific)?
+- What reporting guidelines apply to the active route in this domain?
+- What are common terminal-stage fidelity failures for similar projects?
+- When zero claims survive, what null-result reporting patterns are used in this domain?
+guidance:
+- The evaluate handoff is the primary input. All other upstream documents provide traceability and context. Keep the handoff
+  in active context throughout the stage.
+- When zero claims survived, set plan.null_result_mode true and activate the null-result path. Cycles C through E run lighter;
+  the deliverable at Cycle F documents what was attempted and why nothing survived.
+- Every recommendation must cite a surviving claim and stay within the claim boundary.
+- If upstream artifacts contradict each other (for example, 05_analysis.md narrows the boundary further than 06_evaluation.md
+  records), stop and reopen the affected upstream stage.
+required_evidence:
+- id: A01
+  question: What is the approved question, question type, target quantity, final claim boundary, and active route from the
+    upstream artifacts?
+  evidence_key: upstream_contract
+  evidence_shape: '{approved_question, question_type, target_quantity, claim_boundary, active_route, decision_context}'
+- id: A02
+  question: Does the evaluate communicate handoff contain all required sections (claim survival registry, per-dimension summaries
+    for stability/predictability/validity, mandatory limitations, unresolved risks, handoff discipline)?
+  evidence_key: handoff_completeness_scan
+  evidence_shape: '{required_sections: [...], present: [...], missing: [...], missing_fields: [...]}'
+- id: A03
+  question: How many claims survived, survived with caveats, and did not survive?
+  evidence_key: claim_counts
+  evidence_shape: '{survived: n, survived_with_caveats: n, did_not_survive: n}'
+- id: A04
+  question: For each claim in the evaluate claim survival registry, what is its claim_id, statement, verdict, caveats, and
+    one-line evidence summary?
+  evidence_key: claim_inventory
+  evidence_shape: '[{claim_id, statement, verdict, caveats, evidence_summary}]'
+- id: A05
+  question: What mandatory limitations exist in the evaluate handoff, what is the source of each, and are all non-droppable?
+  evidence_key: limitation_inventory
+  evidence_shape: '[{description, source, droppable}]'
+- id: A06
+  question: Did zero claims survive (including survived-with-caveats), requiring activation of the null-result path?
+  evidence_key: null_result_trigger
+  evidence_shape: '{zero_survived: bool, rationale}'
+- id: A07
+  question: Which claims will be communicated, which limitations must be disclosed, and which mandatory sections must the
+    deliverable contain?
+  evidence_key: null
+- id: A08
+  question: What recommendations are possible within the final claim boundary, and is each traceable to a specific surviving
+    claim?
+  evidence_key: null
+- id: A09
+  question: Does the communication plan confirm that surviving claims speak to the stakeholder decision and candidate actions
+    named in formulate's decision_context (or, if academic, to the prior and evidence threshold)?
+  evidence_key: decision_context_alignment
+  evidence_shape: '{decision_context_from_formulate, claims_addressing_it, gap_if_any}'
+writes:
+  A01:
+  - upstream_snapshot.approved_question
+  - upstream_snapshot.question_type
+  - upstream_snapshot.target_quantity
+  - upstream_snapshot.claim_boundary
+  - upstream_snapshot.active_route
+  - upstream_snapshot.decision_context
+  A02: upstream_snapshot.handoff_discipline
+  A04: upstream_snapshot.claim_survival_registry
+  A05: upstream_snapshot.mandatory_limitations
+  A06: plan.null_result_mode
+  A07:
+  - plan.claims_to_communicate
+  - plan.limitations_to_disclose
+  - plan.sections_required
+  A08: plan.recommendations_possible
+  A09: plan.decision_support_verified
+acceptance_criteria:
+- id: A-handoff-complete
+  depends_on:
+  - A01
+  - A02
+  condition: Upstream contract fields are present and non-empty, and the evaluate handoff contains every required section
+    and field without contradictions across upstream artifacts
+- id: A-claims-inventoried
+  depends_on:
+  - A03
+  - A04
+  condition: Every claim in the evaluate claim survival registry is explicitly listed in claim_inventory with its verdict
+    and caveats, and the totals in claim_counts equal the evaluate registry totals
+- id: A05-limitations-inventoried
+  condition: Every mandatory limitation from the evaluate handoff is listed with its source, and all are marked non-droppable
+- id: A06-null-result-handled
+  condition: plan.null_result_mode is true when zero claims survived and false otherwise; the null-result path is explicitly
+    activated when true
+- id: A-plan-derived
+  depends_on:
+  - A07
+  - A08
+  condition: Every claim, limitation, and recommendation in the plan is sourced to a specific evaluate handoff entry; none
+    are invented ad hoc
+- id: A09-decision-support-aligned
+  condition: The plan addresses the stakeholder decision and candidate actions in formulate's decision_context (or the academic
+    prior and evidence threshold); gaps are flagged

@@ -1,0 +1,94 @@
+cycle: R
+focus: Reproducibility
+mandatory: true
+upstream:
+- cleaning_decisions
+- preprocessing_decisions
+- derived_variables
+- data_contract.cleaned_artifacts
+- visibility.visible_raw_files
+- visibility.visible_protocol_artifacts
+setup_side_effects:
+- Extend {scripts_dir_name}/03_cleaning.py with clean_data(visible_inputs, **judgment_call_params) covering every cleaning
+  transform recorded in cleaning_decisions (Cycles A through C and any D-series follow-ups)
+- Extend {scripts_dir_name}/03_cleaning.py with preprocess_data(clean_outputs, **judgment_call_params, fit_params=None) covering
+  every preprocessing and derived-variable transform recorded in preprocessing_decisions and derived_variables (Cycles E,
+  F, and any G-series follow-ups); declare the helper as no-op with an explicit reason when Cycles E and F contributed no
+  distinct transforms
+- Extend run_cycle_r to rerun both helpers against the protocol-visible inputs and compare against the stage-produced cleaned
+  and preprocessed outputs under a deterministic equality rule
+- Emit {scripts_dir_name}/clean_constraints.json with declared constraints from domain rules and derived constraints from
+  observed clean outputs
+- Emit {scripts_dir_name}/preprocess_constraints.json, or an explicit no-additional-constraints file with a reason when Cycles
+  E and F produced nothing new
+research_questions:
+- What are accepted patterns for declaring deterministic equality across pipeline reruns for this kind of data?
+- Which constraint classes (declared error, declared warn, derived info) are commonly used on cleaned tabular data of this
+  kind?
+- When does a reasonable tolerance rule apply (floating-point comparisons, ordering, timestamp rounding) rather than exact
+  equality, and how is it documented?
+guidance:
+- The script never writes to 03_cleaning.yaml; only the model does.
+- Declared-error constraint failures are hard defects. Relabeling a declared-error as declared-warn to paper over a failure
+  is a defect of its own.
+- Keep helper signatures minimal and documented so examine and later stages can reuse them without reading the full script.
+- Constraint files keep declared constraints separate from derived constraints. Declared constraints are normative and may
+  block; derived constraints are informational unless explicitly promoted.
+step4_additions:
+  description: After the standard decision, state each field listed below before closing the cycle. These populate reproducibility.*
+    in the canonical YAML.
+  items:
+  - clean_data_signature_summary
+  - preprocess_data_signature_summary_or_no_op_reason
+  - rerun_equality_verdict
+  - declared_error_pass_rate
+  - declared_warn_pass_rate
+  - constraint_file_paths
+required_evidence:
+- id: R01
+  question: Does clean_data(...) have a stable, documented signature that matches every cleaning transform recorded in cleaning_decisions,
+    and does preprocess_data(...) match every preprocessing and derived-variable transform (or explicitly state none with
+    a reason)?
+  evidence_key: helper_signatures
+  evidence_shape: '{clean_data: {signature, inputs, judgment_call_params, outputs}, preprocess_data: {signature, inputs, judgment_call_params,
+    fit_params, outputs, no_op_reason_if_any}}'
+- id: R02
+  question: When clean_data and preprocess_data are rerun against the protocol-visible inputs, do their outputs match the
+    stage-produced cleaned and preprocessed outputs under a deterministic equality rule?
+  evidence_key: rerun_validation
+  evidence_shape: '{clean_match: bool, preprocess_match: bool_or_null, equality_rule, mismatch_examples: [{column, rows_affected,
+    max_diff}]}'
+- id: R03
+  question: Do declared-error constraints all pass on clean_data and preprocess_data outputs, and what is the count of declared-warn
+    and derived-info constraints per artifact?
+  evidence_key: constraint_check
+  evidence_shape: '{clean_constraints: {declared_error_passed, declared_error_total, declared_warn_passed, declared_warn_total,
+    derived_info_count, failures: [{constraint, observed, expected}]}, preprocess_constraints: {same_shape_or_no_additional_constraints}}'
+- id: R04
+  question: Are the constraint files written to the expected locations and do they parse successfully?
+  evidence_key: constraint_files_present
+  evidence_shape: '{clean_constraints_path, preprocess_constraints_path_or_no_additional_constraints_file, both_parse_successfully:
+    bool}'
+writes:
+  R01:
+  - reproducibility.clean_data_signature
+  - reproducibility.preprocess_data_signature
+  R02: reproducibility.snapshot_match
+  R03:
+  - reproducibility.clean_constraints
+  - reproducibility.preprocess_constraints
+  R04: reproducibility.constraint_files
+acceptance_criteria:
+- id: R01-signatures-stable
+  condition: clean_data and preprocess_data have stable documented signatures covering every recorded cleaning, preprocessing,
+    and derived-variable transform; preprocess_data is explicitly declared no-op with a reason when Cycles E and F contributed
+    no distinct transforms
+- id: R02-rerun-matches
+  condition: Rerun outputs match the stage-produced cleaned (and preprocessed, when applicable) outputs under the declared
+    equality rule; a mismatch is a blocking defect until the helpers or the cleaned outputs are fixed
+- id: R03-declared-errors-pass
+  condition: Every declared-error constraint passes on both clean_data and preprocess_data outputs; a failure is a blocking
+    defect and must not be relabeled as declared-warn
+- id: R04-constraint-files-present
+  condition: clean_constraints.json exists and parses; preprocess_constraints.json exists and parses, or the no-additional-constraints
+    file is present with a reason

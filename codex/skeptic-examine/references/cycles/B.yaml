@@ -1,0 +1,98 @@
+cycle: B
+focus: Structural Relationships and Heterogeneity
+mandatory: true
+upstream:
+- upstream.approved_question
+- upstream.question_type
+- upstream.active_route
+- upstream.claim_boundary
+- visibility.visible_cleaned_artifacts
+- structure_profile.distributions_and_coverage
+- structure_profile.subgroup_presence
+- support_registry
+research_questions:
+- What domain mechanisms, data-collection features, or measurement conventions could explain the visible relationships or
+  subgroup differences?
+- Are the observed dependence or heterogeneity patterns consistent with known structure in similar data, or are they likely
+  to be artifact-sensitive?
+- Which visible structural features materially constrain later analysis choices or interpretation language?
+- Which summary statistics are actually informative for this structure, and which are merely decorative?
+- When a plot is the first useful pass, which simpler plot or subsample should come before a more elaborate one?
+guidance:
+- Choose views because they answer the approved question under the active route, not by predictive habit.
+- Treat visibly suggestive patterns as observations, not confirmed claims. Final route and estimator selection belongs to
+  analyze.
+- When using summary statistics, pair them with a plot or supporting table when the statistic alone could hide the distribution's
+  shape.
+- If a view the route file prohibits appears important, record it in scope_excluded_views and raise the topic as a route_pressure
+  so analyze can address it under its contract lock; the view itself stays unexecuted in examine.
+required_evidence:
+- id: B01
+  question: For the approved question, question type, and active route, which relationship and dependence views are meaningful,
+    and which views are explicitly out of scope, with the reason for each inclusion or exclusion?
+  evidence_key: view_scope
+  evidence_shape: '{meaningful: [{view, why_meaningful, variables_involved}], excluded: [{view, why_out_of_scope}]}'
+- id: B02
+  question: What visible dependence and structure exists among the selected views (pairwise, multivariate, subgroup contrasts,
+    temporal, grouped, clustered, repeated-measure, or hierarchical)?
+  evidence_key: dependence_findings
+  evidence_shape: '[{finding, artifact, view_type, evidence}]'
+- id: B03
+  question: What heterogeneity exists across meaningful subgroups, time windows, groups, or hierarchies, and how strong is
+    it?
+  evidence_key: heterogeneity_findings
+  evidence_shape: '[{dimension, finding, strength, evidence}]'
+  skip_when: no heterogeneity dimensions are relevant to the approved question or the visible data has no subgroup structure
+    recorded in Cycle A
+- id: B04
+  question: For each dependence or heterogeneity finding that could influence later analyze-stage decisions, what does a reasonable
+    alternative summary, stratified view, or dependence diagnostic show?
+  evidence_key: alternative_views
+  evidence_shape: '[{original_finding, alternative_tested, outcome: confirms|weakens|contradicts}]'
+- id: B05
+  question: Which route-relevant pressures (dependence, subgroup imbalance, temporal structure, support fragmentation, measurement
+    constraints) will materially influence later analyze-stage contract lock?
+  evidence_key: null
+- id: B06
+  question: For each plot family, encoding, and summary statistic used this cycle, how does the choice match the variable
+    types and visible structure, and what alternative display was compared against?
+  evidence_key: display_justifications
+  evidence_shape: '[{plot_family_or_statistic, variable_type, alternative_compared, outcome}]'
+- id: B07
+  question: When the visible artifact is too dense for direct inspection, has a representative subsample been used for visual
+    reasoning, and how was it justified?
+  evidence_key: visual_subsample
+  evidence_shape: '{artifact: {used: bool, method, size, seed, justification}}'
+  skip_when: no visible artifact requires subsampling for visual reasoning in this cycle
+writes:
+  B01:
+  - relationships.meaningful_views
+  - relationships.scope_excluded_views
+  B02: relationships.dependence_findings
+  B03: relationships.heterogeneity_findings
+  B05: relationships.route_pressures
+  B06: relationships.display_justifications
+  B07: relationships.subsample_justification
+acceptance_criteria:
+- id: B-no-final-analysis
+  depends_on:
+  - B01
+  - B02
+  - B03
+  - B04
+  - B05
+  condition: No step in this cycle locks the final route, estimator, or analysis contract; dependence and heterogeneity findings
+    are stated as observations that inform later analyze-stage contract lock, not as confirmed conclusions.
+- id: B-views-within-route
+  depends_on:
+  - B01
+  - B05
+  condition: The meaningful_views and route_pressures are consistent with the active route file's permitted examination surface;
+    any view the route file prohibits appears in scope_excluded_views with the route-based reason.
+- id: B-alternatives-tested-for-material-findings
+  depends_on:
+  - B02
+  - B03
+  - B04
+  condition: Every finding in relationships.dependence_findings and relationships.heterogeneity_findings that will influence
+    analyze-stage decisions has at least one alternative view in B04 that confirms, weakens, or contradicts it.
